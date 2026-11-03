@@ -135,7 +135,7 @@
   function load(state) {
     if (!state) return;
     const voice = state.voice || {};
-    const appearance = state.appearance || {};
+    const appearance = state.appearance || {};window.islandLoadWindowRules?.(appearance);
     $('islandDensity').value=appearance.density||'default';$('islandMotion').value=appearance.motion||'standard';$('lineWidth').value=appearance.lineWidthDip||100;$('lineHeight').value=appearance.lineHeightDip||2;$('lineOpacity').value=appearance.lineOpacity??.35;$('hoverIntent').value=appearance.hoverIntentMs??100;$('closeGrace').value=appearance.mouseleaveGraceMs??1000;
     const q=state.quietMoments||{};$('quietEnabled').checked=q.enabled!==false;$('quietDnd').checked=!!q.dnd;$('quietAllDay').checked=q.allDay!==false;$('quietCategory').value=q.category||'mixed';for(const [id,key,fallback]of [['quietMorningStart','morningStart',6],['quietMorningEnd','morningEnd',11],['quietEveningStart','eveningStart',17],['quietEveningEnd','eveningEnd',22],['quietCap','dailyCap',3],['quietCooldown','cooldownMinutes',25]])$(id).value=q[key]??fallback;
     $('deepseekThinking').checked=!!state.deepseek?.thinking;$('deepseekStream').checked=state.deepseek?.stream!==false;
@@ -185,6 +185,7 @@
       whisper: $('voiceWhisper').checked
     },
     appearance: {
+      ...(window.islandWindowRulesValue?.()||{}),
       density:$('islandDensity').value,motion:$('islandMotion').value,lineWidthDip:+$('lineWidth').value,lineHeightDip:+$('lineHeight').value,lineOpacity:+$('lineOpacity').value,hoverIntentMs:+$('hoverIntent').value,mouseleaveGraceMs:+$('closeGrace').value,
       favorites: [...document.querySelectorAll('[data-favorite]:checked')].map(el => el.dataset.favorite).slice(0,8),
       display: $('islandDisplay').value,

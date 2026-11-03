@@ -12,12 +12,13 @@ const todoDueAt = (date, time) => {
 function createLibrary(folder, now = Date.now, monotonic = now===Date.now?()=>performance.now():now) {
   const wallAnchor=now(),monoAnchor=monotonic(),clockNow=()=>wallAnchor+Math.max(0,monotonic()-monoAnchor);
   const file = path.join(folder,'library.json');
-  const defaults = { todos:[], reminders:[], water:{goal:3000,bottle:500,interval:90,schedule:'auto',from:8,to:17,enabled:false,logs:[],lastReminder:0}, shelf:[], projects:[], dictionary:[], snippets:[], history:[], meetings:[], clips:[], clipboardEnabled:false, quiet:{day:'',count:0,lastAt:0,recent:[],favorites:[]}, retentionDays:30, timer:null, stopwatch:null, focusMinutes:25, focusSessions:[], teleprompter:{text:'',speed:30,fontSize:26,mirror:false}, city:'',calendarUrl:'' };
+  const defaults = { todos:[], reminders:[], water:{goal:3000,bottle:500,interval:90,schedule:'auto',from:8,to:17,enabled:false,logs:[],lastReminder:0}, shelf:[], projects:[], dictionary:[], snippets:[], history:[], meetings:[], clips:[], clipboardEnabled:false, quiet:{day:'',count:0,lastAt:0,recent:[],favorites:[]}, retentionDays:30, timer:null, stopwatch:null, focusMinutes:25, focusSessions:[], teleprompter:{text:'',speed:30,fontSize:26,mirror:false}, mediaAppId:'',lyricsOffsetMs:0,city:'',calendarUrl:'' };
   let data = structuredClone(defaults);
   try { const loaded = JSON.parse(fs.readFileSync(file,'utf8')); data = {...data,...loaded,water:{...data.water,...loaded.water}};if(loaded.water&&!loaded.water.schedule)data.water.schedule='custom'; } catch(e) { if(e.code !== 'ENOENT') { try { fs.copyFileSync(file,file+'.recovery-'+now()); } catch {} } }
   data.quiet={...defaults.quiet,...data.quiet};
   if(data.quiet.schemaVersion!==2){data.quiet.legacyFavorites=(data.quiet.favorites||[]).filter(id=>!require('./quotes.cjs').byId.has(id));data.quiet.favorites=(data.quiet.favorites||[]).filter(id=>require('./quotes.cjs').byId.has(id));data.quiet.recent=(data.quiet.recent||[]).filter(id=>require('./quotes.cjs').byId.has(id));data.quiet.schemaVersion=2;}
   data.quiet.muted??=[];data.quiet.shown??={};data.quiet.patches??={};
+  const hadSavedClipboard=Array.isArray(data.clips)&&data.clips.length>0;data.clips=[];if(hadSavedClipboard)save();
   function clockSnapshot(){
     const timer=data.timer?{...data.timer}:null,stopwatch=data.stopwatch?{...data.stopwatch}:null;
     if(timer&&!timer.paused){timer.remaining=Math.max(0,Math.ceil((timer.end-clockNow())/1000));timer.end=now()+Math.max(0,timer.end-clockNow());}
@@ -25,7 +26,7 @@ function createLibrary(folder, now = Date.now, monotonic = now===Date.now?()=>pe
     return{timer,stopwatch};
   }
   function save() {
-    fs.mkdirSync(folder,{recursive:true});const tmp=file+'.'+randomUUID()+'.tmp';fs.writeFileSync(tmp,JSON.stringify({...data,...clockSnapshot()}),{mode:0o600,flag:'wx'});
+    fs.mkdirSync(folder,{recursive:true});const tmp=file+'.'+randomUUID()+'.tmp';fs.writeFileSync(tmp,JSON.stringify({...data,clips:[],...clockSnapshot()}),{mode:0o600,flag:'wx'});
     // Windows antivirus can briefly hold the destination while clipboard history updates.
     for(let attempt=0;;attempt++){try{fs.renameSync(tmp,file);return;}catch(e){if(attempt>=4||!['EPERM','EBUSY','EACCES'].includes(e.code)){try{fs.unlinkSync(tmp);}catch{}throw e;}Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,10*(attempt+1));}}
   }
@@ -68,7 +69,7 @@ function createLibrary(folder, now = Date.now, monotonic = now===Date.now?()=>pe
       case 'history:add': if(data.retentionDays!==0)data.history.unshift({id:randomUUID(),at:now(),kind:String(value.kind||'dictation').slice(0,40),raw:String(value.raw||'').slice(0,20000),text:String(value.text||'').slice(0,40000),seconds:Math.max(0,Number(value.seconds)||0),app:String(value.app||'').slice(0,150),recognizedLanguage:String(value.recognizedLanguage||'unknown').slice(0,20),outputScript:String(value.outputScript||'auto').slice(0,20),responseLanguage:String(value.responseLanguage||'').slice(0,20)}); data.history=data.history.slice(0,5000); break;
       case 'history:clear': data.history=[]; break;
       case 'clips:enable': data.clipboardEnabled=value.enabled===true; break;
-      case 'clips:add': if(data.clipboardEnabled && typeof value.text==='string'&&value.text.trim()&&value.text.length<=20000){data.clips=[{id:randomUUID(),at:now(),text:value.text},...data.clips.filter(x=>x.text!==value.text)].slice(0,500);} break;
+      case 'clips:add': if(data.clipboardEnabled && !require('./clipboard-privacy.cjs').sensitiveClipboard(value.text)){data.clips=[{id:randomUUID(),at:now(),text:value.text},...data.clips.filter(x=>x.text!==value.text)].slice(0,500);} break;
       case 'clips:remove': data.clips=data.clips.filter(x=>x.id!==value.id);break;
       case 'clips:clear': data.clips=[]; break;
       case 'meeting:save': { const item={id:value.id||randomUUID(),at:now(),title:text(value.title||'Meeting',200),transcript:String(value.transcript||'').slice(0,400000),notes:String(value.notes||'').slice(0,100000)}; data.meetings=[item,...data.meetings.filter(x=>x.id!==item.id)].slice(0,100); break; }
@@ -81,10 +82,10 @@ function createLibrary(folder, now = Date.now, monotonic = now===Date.now?()=>pe
       case 'quiet:reset': data.quiet={...defaults.quiet,schemaVersion:2,muted:[],shown:{},patches:data.quiet.patches,favorites:data.quiet.favorites,legacyFavorites:data.quiet.legacyFavorites};break;
       case 'quiet:import': {if(value.schema!=='agent-notch-favorites-v1'||!Array.isArray(value.favorites)||value.favorites.length>129||value.favorites.some(id=>!require('./quotes.cjs').byId.has(id)))throw new Error('Invalid favorites file.');data.quiet.favorites=[...new Set([...data.quiet.favorites,...value.favorites])];break;}
       case 'quiet:patch': data.quiet.patches=require('./quotes.cjs').validatePatches(value);break;
-      case 'config': if(typeof value.city==='string')data.city=value.city.trim().slice(0,100); if(typeof value.calendarUrl==='string'){if(value.calendarUrl&&!/^https:\/\//.test(value.calendarUrl))throw new Error('Use an HTTPS calendar link.');data.calendarUrl=value.calendarUrl.slice(0,3000);} if(Number.isInteger(value.retentionDays)&&value.retentionDays>=-1&&value.retentionDays<=3650)data.retentionDays=value.retentionDays; break;
+      case 'config': if(typeof value.mediaAppId==='string'&&value.mediaAppId.length<=1500)data.mediaAppId=value.mediaAppId;if(Number.isFinite(value.lyricsOffsetMs))data.lyricsOffsetMs=Math.max(-10000,Math.min(10000,value.lyricsOffsetMs));if(typeof value.city==='string')data.city=value.city.trim().slice(0,100); if(typeof value.calendarUrl==='string'){if(value.calendarUrl&&!/^https:\/\//.test(value.calendarUrl))throw new Error('Use an HTTPS calendar link.');data.calendarUrl=value.calendarUrl.slice(0,3000);} if(Number.isInteger(value.retentionDays)&&value.retentionDays>=-1&&value.retentionDays<=3650)data.retentionDays=value.retentionDays; break;
       default: throw new Error('Unknown library action.');
     }
-    prune(); save(); return view();
+    prune();if(!op.startsWith('clips:')||op==='clips:enable')save();return view();
   }
   function tick({managedReminders=false}={}) {
     const events=[];

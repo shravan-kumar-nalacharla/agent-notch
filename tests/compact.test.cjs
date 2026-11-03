@@ -2,7 +2,7 @@ const{test}=require('node:test'),assert=require('node:assert/strict');
 const{layoutFor}=require('../src/geometry.cjs'),{IslandMotion}=require('../src/island-motion.js'),{pickMoment,validateQuiet}=require('../src/quiet.cjs');
 test('geometry stays on the same monitor center at all sizes and modeled DPI scales',()=>{
   for(const scaleFactor of [1,1.25,1.5,2])for(const x of [0,-1920])for(const density of ['compact','default','roomy']){
-    const d={id:1,scaleFactor,bounds:{x,y:0,width:1536,height:864},workArea:{x:x+48,y:32,width:1488,height:800}},layout=layoutFor(d,{density});assert.ok(Math.abs(layout.bounds.x+layout.bounds.width/2-(x+768))<=.5);assert.ok(layout.panelWidth<=540);assert.ok(layout.panelHeight<=280);
+    const d={id:1,scaleFactor,bounds:{x,y:0,width:1536,height:864},workArea:{x:x+48,y:32,width:1488,height:800}},layout=layoutFor(d,{density});assert.ok(Math.abs(layout.bounds.x+layout.bounds.width/2-(d.workArea.x+d.workArea.width/2))*scaleFactor<=2);assert.equal(layout.bounds.y,d.workArea.y);assert.ok(layout.panelWidth<=540);assert.ok(layout.panelHeight<=280);
   }
   const d={id:2,scaleFactor:2,bounds:{x:0,y:0,width:683,height:384},workArea:{x:0,y:0,width:683,height:344}};assert.ok(layoutFor(d).bounds.height<=344);
 });

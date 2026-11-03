@@ -17,7 +17,9 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
   handle('library:get',()=>library.view());
   handle('widgets:desktop',async value=>{
     const op=value?.op,v=value?.value||{};
-    if(['media','media.control','volume','brightness','devices','system'].includes(op)){const response=await native.request(op,v);if(op==='media.control'&&response===false)throw new Error('This media player does not support that control.');return response;}
+    if(op==='media'){return native.request('media',{appId:library.view().mediaAppId||''});}
+    if(op==='media:select'){if(typeof v.appId!=='string')throw new Error('Choose a media player.');const current=await native.request('media');if(v.appId&&!current.sources?.some(source=>source.appId===v.appId))throw new Error('That media player is no longer available. Refresh the list.');library.action('config',{mediaAppId:v.appId});return native.request('media',{appId:v.appId});}
+    if(['media.control','volume','brightness','devices','system'].includes(op)){const response=await native.request(op,v);if(op==='media.control'&&response===false)throw new Error('This media player does not support that control.');return response;}
     if(op==='shelf:choose'){const r=await dialog.showOpenDialog({properties:['openFile','multiSelections']});return r.canceled?library.view():library.action('shelf:add',{paths:r.filePaths});}
     if(op==='shelf:open'){if(!library.view().shelf.includes(v.path))throw new Error('File is not in the shelf.');const error=await shell.openPath(v.path);if(error)throw new Error(error);return true;}
     if(op==='shelf:reveal'){if(!library.view().shelf.includes(v.path))throw new Error('File is not in the shelf.');shell.showItemInFolder(v.path);return true;}
@@ -32,7 +34,7 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
     if(op==='lyrics:cancel'){lyricsAbort?.abort();return true;}
     if(op==='lyrics:diagnostics')return lookupLyrics.diagnostics();
     if(op==='lyrics:network-test'){const r=await lookupLyrics.detailed({title:'Hello',artist:'Adele',album:'25',duration:295000,app:'Explicit connection test'});return{outcome:r.outcome,message:r.message,synced:!!r.record?.syncedLyrics};}
-    if(op==='lyrics'){lyricsAbort?.abort();lyricsAbort=new AbortController();const controller=lyricsAbort;const song=await native.request('media');if(!song.available)return{lines:[],plain:'',outcome:'INVALID_METADATA',message:'No active track.'};const found=await lookupLyrics.detailed(song,{signal:controller.signal});return{song,lines:parseLyrics(found.record?.syncedLyrics||''),plain:found.record?.plainLyrics||'',outcome:found.outcome,message:found.message,retryAfter:found.retryAfter};}
+    if(op==='lyrics'){lyricsAbort?.abort();lyricsAbort=new AbortController();const controller=lyricsAbort;const song=await native.request('media',{appId:library.view().mediaAppId||''});if(v.expectedApp&&song.app!==v.expectedApp||v.expectedTitle&&song.title!==v.expectedTitle)throw new Error('The selected track changed. Refresh lyrics.');if(!song.available)return{lines:[],plain:'',outcome:'INVALID_METADATA',message:'No active track.'};const found=await lookupLyrics.detailed(song,{signal:controller.signal});return{song,lines:parseLyrics(found.record?.syncedLyrics||''),plain:found.record?.plainLyrics||'',outcome:found.outcome,message:found.message,retryAfter:found.retryAfter};}
     if(op==='screens')return screen.getAllDisplays().map(d=>({id:d.id,label:d.label||`Display ${d.id}`,bounds:d.bounds}));
     if(op==='calendar'){const url=library.view().calendarUrl;if(!url)return[];if(calendarCache?.url===url&&Date.now()-calendarCache.at<600000&&!v.refresh)return calendarCache.events;const response=await fetch(url,{signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`Calendar HTTP ${response.status}`);const content=await response.text();if(content.length>5_000_000)throw new Error('Calendar is too large.');const events=(await readCalendar(content)).filter(e=>e.end>Date.now()).sort((a,b)=>a.start-b.start).slice(0,30);calendarCache={url,at:Date.now(),events};return events;}
     throw new Error('Unsupported desktop operation.');
@@ -46,5 +48,5 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
   return{library,productivity,emit,notify,getSystem:()=>lastSystem};
 }
 async function getJSON(url){const response=await fetch(url,{signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`Service HTTP ${response.status}`);return response.json();}
-function parseLyrics(text){return String(text).split(/\r?\n/).flatMap(line=>{const times=[...line.matchAll(/\[(\d+):(\d+(?:\.\d+)?)\]/g)];const value=line.replace(/\[[^\]]*\]/g,'').trim();return times.map(m=>({at:(Number(m[1])*60+Number(m[2]))*1000,text:value}));}).sort((a,b)=>a.at-b.at);}
+const{parseLyrics}=require('./lrc.cjs');
 module.exports={setupWidgets,parseLyrics,calendarDate,parseCalendar};

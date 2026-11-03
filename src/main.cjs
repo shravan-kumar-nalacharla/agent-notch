@@ -9,6 +9,7 @@ const localization=require('./localization.cjs');
 const quoteRepository=require('./quotes.cjs');
 const keyCache=new Map(),keyErrors={};
 const {voiceStatus,loginOptions,setStartup,shouldHideFullscreen}=require('./settings-status.cjs');
+const{windowBehavior,validateWindowRules}=require('./window-policy.cjs');
 let voiceRuntime={active:false,message:''},voiceConfiguration=Promise.resolve(),startupError='';
 let quoteActivity={locked:false,voiceRecording:false,systemKnown:false,osDnd:'unknown'},quoteTransition=0;
 const { clean } = require('./voiceflow.cjs');
@@ -34,6 +35,7 @@ if(smokeMode){const smokeData=fs.mkdtempSync(path.join(process.env.TEMP||process
 let win, settingsWindow, tray, state, native, widgets, voiceEngine,agents,cursorTimer,boundsTimer,animatingBounds=false,lastCursorX=null,lastCursorY=null,lastBoundsKey='';
 let shortcutStatus={open:{accelerator:'',ok:false},voice:{accelerator:'',ok:false}};
 let fullscreenHidden=false,userHidden=false,quitting=false;
+let windowRule='normal',windowOverride=false;
 let surfaceExpanded=false,geometry,voiceHudActive=false;
 const geometryTrace=[],askRequests=new Map();
 let lastGuide,guideOverlay,windowsTask,taskCoordinator;
@@ -61,9 +63,12 @@ const publicState = () => ({ ...state,microphoneStatus:privacy?.view()||{...stat
 function persist() { fs.mkdirSync(path.dirname(file()), { recursive: true }); fs.writeFileSync(file() + '.tmp', JSON.stringify(state)); fs.renameSync(file() + '.tmp', file()); }
 function key(provider) { const value=keyCache.get(provider);if(!value)throw new Error(keyErrors[provider]||`Save your ${provider} API key in Settings.`);return value; }
 function resize(expanded, view='home', contentHeight, voiceHud=false){
+  if(!expanded&&windowOverride&&!voiceHud){windowOverride=false;win?.webContents.send('window:policy',{behavior:windowRule});}
+  if(expanded&&!windowOverride&&windowRule!=='normal')expanded=false;
   surfaceExpanded=expanded;voiceHudActive=voiceHud;
   return geometry?.present(expanded,voiceHud||geometry.reminder);
 }
+function activateIsland(value={}){if(!liveContents(win))return;windowOverride=true;userHidden=false;win.webContents.send('window:policy',{behavior:'normal'});win.showInactive();resize(true);win.webContents.send(value?.revealOnly?'window:restore':'window:open');}
 function openSettings(target='') {
   target=['quotes','voice','providers'].includes(target)?target:'';
   if(!liveContents(win))return;win.webContents.send('window:collapse'); resize(false);
@@ -81,8 +86,8 @@ function registerShortcuts(){
   for(const name of ['open','voice']){
     const accelerator=SHORTCUT_VALUES[name].includes(state.shortcuts[name])?state.shortcuts[name]:SHORTCUT_VALUES[name][0];
     const action=name==='open'
-      ?()=>{userHidden=false;win.show();resize(true);win.webContents.send('window:open');}
-      :()=>{try{privacy?.assertAllowed({capture:true});}catch{return;}userHidden=false;win.show();resize(true);win.webContents.send('voice:toggle');};
+      ?activateIsland
+      :()=>{try{privacy?.assertAllowed({capture:true});}catch{return;}activateIsland();win.webContents.send('voice:toggle');};
     shortcutStatus[name]={accelerator,ok:globalShortcut.register(accelerator,action)};
     if(!shortcutStatus[name].ok)failed.push(accelerator);
   }
@@ -166,7 +171,7 @@ else {
     native.on('event',event=>{if(quitting||!liveContents(win))return;if(event.type==='voice.begin'&&!privacy?.view().blocked&&!win.isVisible()){userHidden=false;win.showInactive();}});
     native.on('diagnostic',message=>console.log('[native]',message));
     native.on('event',event=>{if(event.type!=='capture.overlay'||!liveContents(win))return;win.webContents.send('window:capture-overlay',{active:event.active});if(event.active&&!userHidden){fullscreenHidden=false;geometry.reflow();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();win.moveTop();}});
-    widgets=setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,powerMonitor,safeStorage,screen,nativeImage,native,handle,mainWindow:()=>win,getState:()=>state,onFunctionalNotification:()=>{quoteTransition=Date.now();widgets?.emit('quiet:suppress',{});},onTransition:()=>{quoteTransition=Date.now();},onSystem:value=>{if(value.foreground!==quoteActivity.foreground)quoteActivity.foregroundChangedAt=Date.now();Object.assign(quoteActivity,{foreground:value.foreground,systemKnown:true,fullscreen:!!value.fullscreen,osDnd:value.notificationState==null?'unknown':value.notificationState!==5,meeting:!!value.meetingRecording});if(value.fullscreen||value.notificationState!==5)widgets?.emit('quiet:suppress',{});if(quitting||!liveContents(win)||process.argv.includes('--smoke-test'))return;if(shouldHideFullscreen(state.appearance,value)){if(win.isVisible()){fullscreenHidden=true;win.hide();}}else if(fullscreenHidden){fullscreenHidden=false;if(!userHidden&&liveContents(win)){geometry.reflow();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();}}if(value.captureOverlay&&!userHidden){geometry.reflow();win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}});
+    widgets=setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,powerMonitor,safeStorage,screen,nativeImage,native,handle,mainWindow:()=>win,getState:()=>({...state,microphoneStatus:privacy?.view()}),onFunctionalNotification:()=>{quoteTransition=Date.now();widgets?.emit('quiet:suppress',{});},onTransition:()=>{quoteTransition=Date.now();},onSystem:value=>{if(value.foreground!==quoteActivity.foreground)quoteActivity.foregroundChangedAt=Date.now();Object.assign(quoteActivity,{foreground:value.foreground,systemKnown:true,fullscreen:!!value.fullscreen,osDnd:value.notificationState==null?'unknown':value.notificationState!==5,meeting:!!value.meetingRecording});if(value.fullscreen||value.notificationState!==5)widgets?.emit('quiet:suppress',{});if(quitting||!liveContents(win)||process.argv.includes('--smoke-test'))return;let onIslandDisplay=true;try{if(value.monitorBounds){const dip=screen.screenToDipRect(null,value.monitorBounds);onIslandDisplay=String(screen.getDisplayMatching(dip).id)===geometry.layout.displayId;}}catch{}const behavior=windowBehavior(state.appearance,{...value,onIslandDisplay});if(behavior!==windowRule){windowRule=behavior;widgets.emit('window:policy',{behavior:windowOverride?'normal':behavior});}if(behavior==='hide'&&!windowOverride){if(win.isVisible()){fullscreenHidden=true;win.hide();}}else if(fullscreenHidden){fullscreenHidden=false;if(!userHidden&&liveContents(win)){geometry.reflow();win.setAlwaysOnTop(true,'screen-saver');win.showInactive();}}if(value.captureOverlay&&!userHidden){geometry.reflow();win.setAlwaysOnTop(true,'screen-saver');win.moveTop();}}});
     const runCommand=createCommands({app,shell,native,prepareProductivity:text=>widgets.productivity.prepareIntent(text),library:widgets.library,emit:widgets.emit,openSettings,saveNote:text=>{state.note=[state.note,text].filter(Boolean).join('\n').slice(-20000);persist();widgets.emit('settings:changed',publicState());}});
     windowsTask=createWindowsTask({...(smokeMode&&process.argv.includes('--windows-task-check')?{ask:require('./smoke-windows-task.cjs').planner}:{}),native,shell,apps:createWindowsApps({shell,findFiles:require('./commands.cjs').findFiles}),getConfig:()=>smokeMode&&process.argv.includes('--windows-task-check')?{}:({provider:state.assistant,key:key(state.assistant),model:state.models[state.assistant]?.chat,thinking:state.deepseek.thinking,taskInstruction:localization.languagePrompt(state.languages,''),onUsage:usage=>{state.lastUsage={provider:state.assistant,model:state.models[state.assistant]?.chat||PROVIDERS[state.assistant].chat,...usage,at:Date.now()};persist();widgets.emit('assistant:usage',state.lastUsage);}}),emit:(channel,value)=>{widgets.emit('quiet:suppress',{});widgets.emit(channel,value);},show:()=>{if(liveContents(win)){userHidden=false;win.showInactive();}}});
     const browser=require('./browser-controller.cjs').createBrowserController({folder:app.getPath('userData'),runtime:app.isPackaged?path.join(process.resourcesPath,'agent-browsers'):path.join(__dirname,'../tools/agent-browsers')});
@@ -216,7 +221,7 @@ else {
         if(typeof value.voice.language==='string'&&/^[a-z]{0,3}$/.test(value.voice.language))next.voice.language=value.voice.language;
       }
       if(value.appearance&&typeof value.appearance==='object'){for(const k of ['minimal','mascot','hideFullscreen','autoClose','pinned'])if(typeof value.appearance[k]==='boolean')next.appearance[k]=value.appearance[k];if(typeof value.appearance.display==='string')next.appearance.display=value.appearance.display.slice(0,30);if(typeof value.appearance.shape==='string'&&['notch','pill','line'].includes(value.appearance.shape))next.appearance.shape=value.appearance.shape;if(['dark','light','system'].includes(value.appearance.theme))next.appearance.theme=value.appearance.theme;if(Array.isArray(value.appearance.favorites))next.appearance.favorites=[...new Set(value.appearance.favorites.filter(x=>['media','timer','water','shelf','todo','reminders','clips','dictionary','snippets','history','meetings','projects','weather','calendar','mirror','prompter','system'].includes(x)))].slice(0,8);}
-      if(value.appearance){const a=value.appearance;for(const [k,min,max] of [['lineWidthDip',82,118],['lineHeightDip',2,3],['lineOpacity',.12,.75],['hoverIntentMs',0,400],['mouseleaveGraceMs',1000,5000]])if(Number.isFinite(a[k]))next.appearance[k]=Math.max(min,Math.min(max,a[k]));if(['compact','default','roomy'].includes(a.density))next.appearance.density=a.density;if(['standard','subtle','off'].includes(a.motion))next.appearance.motion=a.motion;}
+      if(value.appearance){const a=value.appearance;if(a.windowRules!==undefined)next.appearance.windowRules=validateWindowRules(a.windowRules);for(const k of ['fullscreenBehavior','maximizedBehavior'])if(a[k]!==undefined){if(!['normal','line','hide'].includes(a[k]))throw new Error('Invalid window rule behavior.');next.appearance[k]=a[k];}for(const [k,min,max] of [['lineWidthDip',82,118],['lineHeightDip',2,3],['lineOpacity',.12,.75],['hoverIntentMs',0,400],['mouseleaveGraceMs',1000,5000]])if(Number.isFinite(a[k]))next.appearance[k]=Math.max(min,Math.min(max,a[k]));if(['compact','default','roomy'].includes(a.density))next.appearance.density=a.density;if(['standard','subtle','off'].includes(a.motion))next.appearance.motion=a.motion;}
       if(value.deepseek){for(const key of ['thinking','stream'])if(typeof value.deepseek[key]==='boolean')next.deepseek[key]=value.deepseek[key];}
       if(value.visionProvider&&PROVIDERS[value.visionProvider]?.vision)next.visionProvider=value.visionProvider;
       if(value.quietMoments)next.quietMoments=require('./quiet.cjs').validateQuiet({...next.quietMoments,...value.quietMoments});
@@ -293,6 +298,7 @@ else {
     });
     handle('voice:transcribe', async value => {privacy.assertAllowed();const controller=new AbortController();privacy.uploads.add(controller);try{if(!state.languages.cloudAudioConsent)throw new Error('Allow cloud audio in Voice & typing before recording.');return transcribe({ provider: state.speech, key: key(state.speech), model: state.models[state.speech]?.speech, audio: Buffer.from(value?.audio || []), mime: value?.mime,signal:controller.signal,...localization.speechOptions(state.languages) });}finally{privacy.uploads.delete(controller);}});
     handle('text:copy', text => { if (typeof text !== 'string' || text.length > 100000) throw new Error('Invalid text.'); clipboard.writeText(text); });
+    handle('window:activate',activateIsland);
     handle('window:expand', value => resize(value === true || value?.on === true, value?.view, value?.height,value?.hud===true));
     handle('window:layout',()=>geometry.layout);
     handle('window:geometry-diagnostics',()=>({layout:geometry.layout,bounds:win.getBounds(),content:win.getContentBounds(),ignored:geometry.ignored,trace:geometryTrace}));
@@ -306,7 +312,7 @@ else {
     const icon = nativeImage.createFromPath(path.join(__dirname,'assets','icon-32.png')).resize({width:16,height:16});
     tray = new Tray(icon); tray.setToolTip('Agent Notch');
     function refreshTray(){tray.setToolTip('Agent Notch · '+(privacy?.view().reason||'Manual activation only'));tray.setContextMenu(Menu.buildFromTemplate([
-      {label:'Open Agent Notch',click:()=>{userHidden=false;win.showInactive();win.webContents.send('window:restore');}},
+      {label:'Open Agent Notch',click:()=>activateIsland({revealOnly:true})},
       {label:privacy?.view().blocked?'Microphone muted / paused':'Microphone available · '+state.microphone.mode,enabled:false},
       {label:state.microphone.muted?'Unmute microphone':'Mute microphone',click:()=>privacy.set({muted:!state.microphone.muted}).catch(()=>{})},
       {label:'Gaming / Meeting Mode',type:'checkbox',checked:state.microphone.gaming,click:item=>privacy.set({gaming:item.checked}).catch(()=>{})},
@@ -318,7 +324,7 @@ else {
       {label:state.appearance.pinned?'Unpin':'Pin open',click:()=>{state.appearance.pinned=!state.appearance.pinned;persist();widgets.emit('settings:changed',publicState());if(state.appearance.pinned){win.showInactive();win.webContents.send('window:restore');}refreshTray();}},
       {label:'Quit',click:()=>app.quit()}
     ]));}
-    trayRefresh=refreshTray;refreshTray();tray.on('click',()=>{userHidden=false;win.showInactive();win.webContents.send('window:restore');});
+    trayRefresh=refreshTray;refreshTray();tray.on('click',()=>activateIsland({revealOnly:true}));
     registerShortcuts();
     cursorTimer=setInterval(()=>{
       if(win.isDestroyed()||!win.isVisible()||win.webContents.isDestroyed())return;

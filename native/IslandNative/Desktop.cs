@@ -12,7 +12,6 @@ using static VoiceFlow.Windows.Native.NativeMethods;
 namespace IslandFusionNative;
 internal static partial class Program
 {
-    static GlobalSystemMediaTransportControlsSessionManager? MediaManager;
     static readonly Stopwatch CpuClock=Stopwatch.StartNew();
     static DateTime CpuAt=DateTime.UtcNow;
     static ulong CpuIdle,CpuKernel,CpuUser;
@@ -52,22 +51,6 @@ internal static partial class Program
     [DllImport("shell32.dll")]static extern int SHQueryUserNotificationState(out int state);
     [StructLayout(LayoutKind.Sequential)]struct Rect{public int left,top,right,bottom;}
     [DllImport("user32.dll")]static extern void mouse_event(uint flags,uint dx,uint dy,uint data,UIntPtr extra);
-    static async Task<GlobalSystemMediaTransportControlsSession?> MediaSession(){MediaManager??=await GlobalSystemMediaTransportControlsSessionManager.RequestAsync();return MediaManager.GetSessions().FirstOrDefault(x=>x.GetPlaybackInfo().PlaybackStatus==GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)??MediaManager.GetCurrentSession();}
-    static async Task<object> MediaState()
-    {
-        var session=await MediaSession();if(session==null)return new{available=false};
-        var p=await session.TryGetMediaPropertiesAsync();var info=session.GetPlaybackInfo();var time=session.GetTimelineProperties();
-        string? cover=null;
-        if(p.Thumbnail!=null)try{using var stream=await p.Thumbnail.OpenReadAsync();if(stream.Size<2_000_000){using var reader=new DataReader(stream.GetInputStreamAt(0));await reader.LoadAsync((uint)stream.Size);var bytes=new byte[stream.Size];reader.ReadBytes(bytes);cover="data:"+stream.ContentType+";base64,"+Convert.ToBase64String(bytes);}}catch{}
-        var playing=info.PlaybackStatus==GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing;
-        var position=time.Position.TotalMilliseconds+(playing?(DateTimeOffset.Now-time.LastUpdatedTime).TotalMilliseconds:0);
-        return new{available=true,title=p.Title,artist=p.Artist,album=p.AlbumTitle,app=session.SourceAppUserModelId,playing,position=Math.Max(0,Math.Min(position,time.EndTime.TotalMilliseconds)),duration=time.EndTime.TotalMilliseconds,cover};
-    }
-    static async Task<object> MediaControl(string command,double position)
-    {
-        var session=await MediaSession();if(session==null)throw new Exception("No active media player.");
-        return command switch{"toggle"=>await session.TryTogglePlayPauseAsync(),"next"=>await session.TrySkipNextAsync(),"previous"=>await session.TrySkipPreviousAsync(),"play"=>await session.TryPlayAsync(),"pause"=>await session.TryPauseAsync(),"seek"=>await session.TryChangePlaybackPositionAsync((long)(Math.Max(0,position)*10000)),_=>throw new Exception("Unsupported media command.")};
-    }
     static object Volume(JsonElement v)
     {
         using var e=new MMDeviceEnumerator();using var device=e.GetDefaultAudioEndpoint(DataFlow.Render,Role.Multimedia);
@@ -81,6 +64,7 @@ internal static partial class Program
         using var search=new ManagementObjectSearcher("root\\WMI","SELECT CurrentBrightness FROM WmiMonitorBrightness");var values=search.Get().Cast<ManagementObject>().Select(x=>Convert.ToInt32(x["CurrentBrightness"])).ToArray();if(values.Length==0)throw new Exception("This display does not expose brightness controls.");return new{level=values[0]};
     }
     static bool IsCaptureOverlay(IntPtr window){try{GetWindowThreadProcessId(window,out var processId);using var process=Process.GetProcessById((int)processId);return new[]{"SnippingTool","ScreenClippingHost","ScreenSketch","SnipAndSketch"}.Contains(process.ProcessName,StringComparer.OrdinalIgnoreCase);}catch{return false;}}
+    [DllImport("user32.dll")]static extern bool IsZoomed(IntPtr window);
     static object SystemState()
     {
         double cpu=0;if(GetSystemTimes(out var idle,out var kernel,out var user)){var total=(ulong)kernel+(ulong)user-CpuKernel-CpuUser;var id=(ulong)idle-CpuIdle;if(CpuIdle!=0&&total>0)cpu=100*(1-id/(double)total);CpuIdle=(ulong)idle;CpuKernel=(ulong)kernel;CpuUser=(ulong)user;}
@@ -93,7 +77,8 @@ internal static partial class Program
         object? volume=null;try{volume=Volume(default);}catch{}
         int? notificationState=null;try{if(SHQueryUserNotificationState(out var state)==0)notificationState=state;}catch{}
         // Shell notification state is a supplemental veto, not authoritative Windows Focus Assist detection.
-        return new{cpu=Math.Round(cpu),gpu=CachedGpuUsage(),ram=memory.load,totalRam=memory.total,availableRam=memory.available,battery=power.BatteryLifePercent>=0?Math.Round(power.BatteryLifePercent*100):-1,charging=power.PowerLineStatus==PowerLineStatus.Online,connected,capsLock=Control.IsKeyLocked(Keys.CapsLock),language,volume,fullscreen,captureOverlay,meetingRecording=MeetingMic!=null,notificationState,foreground=LastExternal.ToInt64().ToString(),app=FocusInfo.Describe(LastExternal).AppName};
+        string processName="";try{GetWindowThreadProcessId(LastExternal,out var processId);using var process=Process.GetProcessById((int)processId);processName=process.ProcessName;}catch{}
+        return new{processName,maximized=External(front)&&IsZoomed(front),monitorBounds=new{x=display.X,y=display.Y,width=display.Width,height=display.Height},cpu=Math.Round(cpu),gpu=CachedGpuUsage(),ram=memory.load,totalRam=memory.total,availableRam=memory.available,battery=power.BatteryLifePercent>=0?Math.Round(power.BatteryLifePercent*100):-1,charging=power.PowerLineStatus==PowerLineStatus.Online,connected,capsLock=Control.IsKeyLocked(Keys.CapsLock),language,volume,fullscreen,captureOverlay,meetingRecording=MeetingMic!=null,notificationState,foreground=LastExternal.ToInt64().ToString(),app=FocusInfo.Describe(LastExternal).AppName};
     }
     static object CaptureScreen()
     {

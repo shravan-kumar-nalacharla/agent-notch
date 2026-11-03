@@ -10,7 +10,7 @@ function createReminderEngine({store,deliver,openItem=()=>{},onChange=()=>{},con
   function policy(row,context,prefs){
     const kind=row.content.kind,category=prefs.categories[kind];
     if(!prefs.enabled)return'App notifications are off.';if(prefs.busy)return'Busy mode is on.';if(prefs.delivery==='windows'&&!prefs.windowsEnabled)return'Windows delivery is turned off in Agent Notch.';if(category?.enabled===false)return'This notification category is off.';
-    if(context.locked)return'Screen is locked.';if(context.suspended)return'Windows is asleep.';
+    if(context.meeting)return'Gaming / Meeting Mode is suppressing notices.';if(context.locked)return'Screen is locked.';if(context.suspended)return'Windows is asleep.';
     if(prefs.delivery==='windows'&&context.osEnabled===false)return'Windows notifications are disabled.';
     if(context.fullscreen||context.shellBlocked)return'Windows presentation or notification state is blocking interruptions.';
     if(prefs.quietEnabled&&inWindow(now(),prefs.quietStart,prefs.quietEnd,store.timezone()))return'Quiet hours are active.';

@@ -80,6 +80,10 @@ body.expanded #status{display:block;grid-column:1/-1;max-width:155px;overflow:hi
 body.expanded .audio-bars{display:flex;align-items:center;gap:2px;height:13px;margin-left:auto;margin-right:9px}
 .audio-bars i{display:block;width:2px;height:3px;border-radius:2px;background:rgba(255,255,255,.42);transition:height 90ms ease-out}
 body.expanded .header-actions{display:flex;align-items:center;gap:6px;flex:none}
+body.expanded #microphonePrivacy{display:flex;align-items:center;justify-content:center;gap:4px;min-width:64px;height:28px;padding:0 7px;border:1px solid #53616a;border-radius:14px;background:#202c31;color:#edf6fa;font-size:11px;font-weight:650;white-space:nowrap}
+body.expanded #microphonePrivacy svg{width:15px;height:15px;flex:none}
+body.expanded #microphonePrivacy.mic-muted{background:#461b27;border-color:#ce6577;color:#ffdce3}
+body.expanded #microphonePrivacy:focus-visible{outline:2px solid #8bdbef;outline-offset:2px}
 body.expanded #pin,body.expanded #mic,body.expanded #collapse{display:grid;place-items:center;width:26px;height:26px;padding:0;border-radius:50%;background:#242529}
 body.expanded #mic:hover,body.expanded #collapse:hover{background:#32343a}
 body.expanded #collapse{color:#c4c6cc}

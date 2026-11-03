@@ -8,5 +8,5 @@ class NativeClient extends EventEmitter {
   fail(error){for(const p of this.pending.values()){clearTimeout(p.timer);p.reject(error);}this.pending.clear();}
   close(){if(this.child){this.child.stdin.end();this.child=null;}this.ready=false;this.fail(new Error('Windows engine closed.'));}
 }
-function nativePath(app){return app.isPackaged?path.join(process.resourcesPath,'native','IslandNative.exe'):path.join(__dirname,'..','native','bin','IslandNative.exe');}
+function nativePath(app){if(process.argv.includes('--smoke-test')&&process.env.NOTCH_NATIVE_TEST_EXE)return process.env.NOTCH_NATIVE_TEST_EXE;return app.isPackaged?path.join(process.resourcesPath,'native','IslandNative.exe'):path.join(__dirname,'..','native','bin','IslandNative.exe');}
 module.exports={NativeClient,nativePath};

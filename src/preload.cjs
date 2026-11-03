@@ -1,7 +1,7 @@
 'use strict';
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 contextBridge.exposeInMainWorld('island', {
-  version: '0.13.0',
+  version: '0.14.0',
   microphone:value=>ipcRenderer.invoke('microphone:set',value),
   microphoneState:()=>ipcRenderer.invoke('microphone:get'),
   onMicrophone:callback=>ipcRenderer.on('microphone:state',(_e,value)=>callback(value)),
@@ -72,6 +72,8 @@ contextBridge.exposeInMainWorld('island', {
   onLibrary: callback => ipcRenderer.on('library:changed',(_e,value)=>callback(value)),
   onVoice: callback => ipcRenderer.on('voice:state',(_e,value)=>callback(value)),
   onSystem: callback => ipcRenderer.on('desktop:system',(_e,value)=>callback(value)),
+  activate:value=>ipcRenderer.invoke('window:activate',value),
+  onWindowPolicy:callback=>ipcRenderer.on('window:policy',(_e,value)=>callback(value)),
   onNotice: callback => ipcRenderer.on('widgets:notice',(_e,value)=>callback(value)),
   onMeeting: callback => ipcRenderer.on('meeting:state',(_e,value)=>callback(value)),
   onSettings: callback => ipcRenderer.on('settings:changed',(_e,value)=>callback(value)),

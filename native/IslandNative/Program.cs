@@ -147,8 +147,8 @@ internal static partial class Program
             case "meeting.start": RequireMicrophone();if(ListeningMode=="ptt")throw new Exception("Use manual mode for meeting recording.");if(MeetingMic!=null)throw new Exception("Meeting already recording.");try{MeetingMic=new CaptureMeetingSource(null,false);MeetingMic.StartCapture();if(B(v,"system",true)){MeetingSystem=new CaptureMeetingSource(null,true);MeetingSystem.StartCapture();}}catch{MeetingMic?.Dispose();MeetingSystem?.Dispose();MeetingMic=MeetingSystem=null;throw;}return true;
             case "meeting.drain": return DrainMeeting();
             case "meeting.stop": if(MeetingMic==null)return null;MeetingMic.StopCapture();MeetingSystem?.StopCapture();var audio=DrainMeeting();MeetingMic.Dispose();MeetingSystem?.Dispose();MeetingMic=MeetingSystem=null;return audio;
-            case "media": return await MediaState();
-            case "media.control": return await MediaControl(S(v,"command"),N(v,"position"));
+            case "media": return await MediaState(v);
+            case "media.control": return await MediaControl(S(v,"command"),N(v,"position"),v);
             case "volume": return Volume(v);
             case "system": return SystemState();
             case "brightness": return Brightness(v);

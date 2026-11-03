@@ -6,7 +6,7 @@ const isSmoke = new URLSearchParams(location.search).has('test');
 
 
 let state;
-let expanded = false;
+let expanded = false;let windowPolicy='normal';window.island.onWindowPolicy?.(value=>{windowPolicy=value.behavior;if(windowPolicy!=='normal'&&!settingsMode)expand(false).catch(showError);});
 let recorder;
 let stream;
 window.island.onMicrophone?.(value=>{if(value.blocked){cancelled=true;clearTimeout(recordingTimer);if(recorder?.state==='recording')recorder.stop();stream?.getTracks().forEach(track=>track.stop());window.islandStopMicTest?.();window.islandStopSpeech?.(false);}});
@@ -93,10 +93,10 @@ function canAutoClose(){return !document.body.classList.contains('has-windows-ta
 const motion=new IslandMotion({open:()=>setExpanded(true),close:()=>setExpanded(false),canClose:canAutoClose,changed:value=>document.body.dataset.motionState=value});
 async function expand(on=true){if(settingsMode)return;return on?motion.open():motion.close();}
 window.island.onCaptureOverlay?.(({active})=>{captureOverlayActive=active;if(active){motion.cancel('leave');}else if(!motion.inside&&expanded)motion.leave();});
-window.island.onHover?.(({inside})=>{if(settingsMode||isSmoke)return;inside?motion.enter():motion.leave();});
+window.island.onHover?.(({inside})=>{if(settingsMode||isSmoke||windowPolicy!=='normal')return;inside?motion.enter():motion.leave();});
 window.island.onLayout?.(layout=>{document.body.style.setProperty('--island-width',layout.panelWidth+'px');document.body.style.setProperty('--compact-height',layout.panelHeight+'px');document.body.style.setProperty('--rich-height',layout.richHeight+'px');requestAnimationFrame(sendHitbox);});
 window.island.layout?.().then(r=>{if(r.ok){document.body.style.setProperty('--island-width',r.value.panelWidth+'px');document.body.style.setProperty('--compact-height',r.value.panelHeight+'px');document.body.style.setProperty('--rich-height',r.value.richHeight+'px');requestAnimationFrame(sendHitbox);}});
-$('activationTarget').onclick=()=>expand(true);
+$('activationTarget').onclick=()=>window.island.activate?window.island.activate({revealOnly:true}).then(result).catch(showError):expand(true);
 function tab(name) {
   if (name === 'focus') { window.islandOpenTool?.('timer'); return; }
   if (name === 'settings' && !settingsMode) {
@@ -158,7 +158,7 @@ $('pin').onclick = async () => {
   }
 };
 
-$('island').addEventListener('mouseenter',()=>{if(!settingsMode&&!isSmoke)motion.enter();});
+$('island').addEventListener('mouseenter',()=>{if(!settingsMode&&!isSmoke&&windowPolicy==='normal')motion.enter();});
 $('island').addEventListener('mouseleave',()=>{if(!settingsMode&&!isSmoke)motion.leave();});
 function scheduleAutoClose(){motion.leave();}
 window.addEventListener('island:test-leave',()=>motion.leave());

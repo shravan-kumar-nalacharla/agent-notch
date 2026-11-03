@@ -21,6 +21,8 @@ test('lyrics falls back from missing exact record to a ranked search',async()=>{
   const result=await lookup({title:'Hello (Official Audio)',artist:'Adele',duration:295000});assert.equal(result.plainLyrics,'available');assert.equal(requests.length,2);assert.match(requests[1],/search/);
 });
 
+test('same-title recordings with a materially different duration are rejected',()=>{assert.equal(selectLyrics([{trackName:'Hello',artistName:'Adele',duration:180,syncedLyrics:'wrong recording'}],{title:'Hello',artist:'Adele',duration:295000}),null);});
+
 test('lyrics separates commentary, missing tracks, instrumental and network failures',async()=>{
  const{classifyError}=require('../src/lyrics.cjs');
  assert.equal(classifyError({cause:{code:'ENOTFOUND'}}).outcome,'DNS_FAILURE');assert.equal(classifyError({cause:{code:'CERT_HAS_EXPIRED'}}).outcome,'TLS_FAILURE');assert.equal(classifyError({name:'TimeoutError'}).outcome,'TIMEOUT');

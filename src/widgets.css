@@ -276,3 +276,9 @@ body.theme-light .shelf-empty{background:#fff;border-color:#b5bac4;color:#12151b
 body.theme-light .media-controls button,body.theme-light .timer-actions button{background:#e0e3e8;color:#16191f}
 body.theme-light .media-controls button:nth-child(2),body.theme-light .timer-actions .timer-primary{background:#111318;color:#fff}
 body.theme-light .utility-nav button,body.theme-light .widget-grid button{background:#eceef2;color:#363b44}
+.media-source-picker{display:flex;align-items:center;gap:8px;margin:0 0 7px;font-size:10px;color:var(--muted)}
+.media-source-picker select{min-width:0;max-width:260px;padding:3px 8px;font-size:11px}
+.lyrics-offset{display:flex;align-items:center;justify-content:space-between;gap:5px;font-size:10px;color:var(--muted);margin-top:5px}
+.lyrics-offset[hidden]{display:none}
+.lyrics-offset input{max-width:80px;font-size:11px;padding:3px}
+.lyric .sung{color:#b7f2ff;text-decoration:underline;text-underline-offset:3px}
