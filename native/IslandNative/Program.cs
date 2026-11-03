@@ -47,6 +47,9 @@ internal static partial class Program
     static int LastLevelAt;
     [STAThread] static void Main(string[] args)
     {
+        AllowedActions.Add("awake");
+        AllowedActions.UnionWith(["capture.sources","capture.desktop","ocr.local"]);
+        AllowedActions.Add("hardware");
         Console.InputEncoding=System.Text.Encoding.UTF8;
         Console.OutputEncoding=new System.Text.UTF8Encoding(false);
         Parent = uint.TryParse(Environment.GetEnvironmentVariable("ISLAND_PARENT_PID"), out var p) ? p : 0;
@@ -58,7 +61,7 @@ internal static partial class Program
         Inserter = new TextInserter(new ClipboardService(Poster.Handle));
         using var timer = new System.Windows.Forms.Timer { Interval = 200 };
         timer.Tick += (_,_) => { Tick(); timer.Interval=Capture==null?200:33; }; timer.Start();
-        Application.ApplicationExit += (_,_) => { StopMicrophone(); ReminderSound?.Dispose(); ReminderAudio?.Dispose(); Wake?.Dispose(); Capture?.Dispose(); MeetingMic?.Dispose(); MeetingSystem?.Dispose(); Hotkeys?.Dispose(); };
+        Application.ApplicationExit += (_,_) => { StopAwake(); StopMicrophone(); ReminderSound?.Dispose(); ReminderAudio?.Dispose(); Wake?.Dispose(); Capture?.Dispose(); MeetingMic?.Dispose(); MeetingSystem?.Dispose(); Hotkeys?.Dispose(); };
         _ = Task.Run(async () => {
             string? line;
             while ((line = await Console.In.ReadLineAsync()) != null)
@@ -80,6 +83,7 @@ internal static partial class Program
     static bool External(IntPtr hwnd) { if(hwnd==IntPtr.Zero)return false; GetWindowThreadProcessId(hwnd,out var pid); if(pid==(uint)Environment.ProcessId||pid==Parent)return false; try { using var process=Process.GetProcessById((int)pid);var name=process.ProcessName; return name is not "electron" and not "Agent Notch" and not "Island Fusion" && name is not "explorer"; } catch{return false;} }
     static void Tick()
     {
+        if(AwakeDeadline>0&&Environment.TickCount64>=AwakeDeadline)StopAwake();
         try { if(ParentProcess?.HasExited==true){Application.ExitThread();return;} var front=GetForegroundWindow();if(External(front))LastExternal=front;
             if(front!=LastObservedForeground){LastObservedForeground=front;var captureOverlay=IsCaptureOverlay(front);if(captureOverlay!=CaptureOverlayActive){CaptureOverlayActive=captureOverlay;Emit(new{type="capture.overlay",active=captureOverlay});}}
             Ptt?.CheckHeld();
@@ -150,8 +154,13 @@ internal static partial class Program
             case "media": return await MediaState(v);
             case "media.control": return await MediaControl(S(v,"command"),N(v,"position"),v);
             case "volume": return Volume(v);
+            case "awake": return AwakeState(v);
+            case "hardware": return await Task.Run(HardwareSnapshot);
             case "system": return SystemState();
             case "brightness": return Brightness(v);
+            case "capture.sources": return CaptureSources();
+            case "capture.desktop": return await CaptureDesktop(v,false);
+            case "ocr.local": return await CaptureDesktop(v,true);
             case "capture": return CaptureScreen();
             case "click": return ClickAt(v);
             case "shortcut": return Shortcut(S(v,"keys"));

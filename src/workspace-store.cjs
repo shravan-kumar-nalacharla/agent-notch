@@ -1,0 +1,10 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),{randomUUID}=require('node:crypto');
+const LANGUAGES=['plain','javascript','typescript','python','rust'];
+function createWorkspaceStore(folder){
+ const file=path.join(folder,'workspace-v1.json');let value={version:1,drafts:{},language:'plain',pins:[],rates:null};
+ if(fs.existsSync(file)){if(fs.statSync(file).size>2000000)throw new Error('Workspace data exceeds its limit; the original file was preserved.');const loaded=JSON.parse(fs.readFileSync(file,'utf8'));if(loaded.version!==1)throw new Error('Workspace data has an unsupported version; the original file was preserved.');if(!LANGUAGES.includes(loaded.language)||!loaded.drafts||Array.isArray(loaded.drafts)||Object.entries(loaded.drafts).some(([language,text])=>!LANGUAGES.includes(language)||typeof text!=='string'||text.length>100000)||!Array.isArray(loaded.pins)||loaded.pins.length>40||loaded.pins.some(id=>typeof id!=='string'||!/^[a-f0-9]{64}$/.test(id)))throw new Error('Workspace data is invalid; the original file was preserved.');value={...value,...loaded};}
+ function save(next){const temp=file+'.'+randomUUID()+'.tmp';fs.writeFileSync(temp,JSON.stringify(next),{flag:'wx',mode:0o600});try{fs.renameSync(temp,file);}catch(e){fs.unlinkSync(temp);throw e;}value=next;}
+ return{view:()=>structuredClone(value),set(field,data){if(!['drafts','language','pins','rates'].includes(field))throw new Error('Unknown workspace field.');save({...value,[field]:structuredClone(data)});},draft(language,text){if(!LANGUAGES.includes(language)||typeof text!=='string'||text.length>100000)throw new Error('Choose a supported language and a draft under 100,000 characters.');save({...value,language,drafts:{...value.drafts,[language]:text}});}};
+}
+module.exports={createWorkspaceStore,LANGUAGES};

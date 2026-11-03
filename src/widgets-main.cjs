@@ -2,16 +2,20 @@
 const path=require('node:path');const fs=require('node:fs');const os=require('node:os');const{createLibrary}=require('./library.cjs');
 const{calendarDate,parseCalendar,readCalendar}=require('./calendar.cjs');
 const{createLyricsClient}=require('./lyrics.cjs');
-function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,powerMonitor,safeStorage,screen,nativeImage,native,handle,mainWindow,getState=()=>({}),onFunctionalNotification=()=>{},onSystem=()=>{},onTransition=()=>{}}){
+function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,powerMonitor,safeStorage,screen,nativeImage,native,handle,mainWindow,canRestore=()=>true,getProviderKey=()=>'',getState=()=>({}),onFunctionalNotification=()=>{},onSystem=()=>{},onTransition=()=>{}}){
   const legacyLibrary=createLibrary(app.getPath('userData'));let productivity;
-  const library={...legacyLibrary,view(){const value=legacyLibrary.view();if(productivity){value.productivity=productivity.summary();value.water=productivity.store.water();value.reminders=productivity.store.db.prepare("SELECT * FROM reminder_rules WHERE kind='general' AND deleted_at IS NULL AND id NOT LIKE 'legacy:%' AND id NOT LIKE 'test:%' AND id NOT LIKE 'system:%'").all().map(row=>{const r=productivity.store.ruleView(row);return{id:r.id,text:r.title,at:r.at||r.nextAt,fired:!r.nextAt};});}return value;},action(op,value={}){
+  const library={...legacyLibrary,view(){const value=legacyLibrary.view();value.calendarUrl='' ;if(productivity){value.productivity=productivity.summary();value.water=productivity.store.water();value.reminders=productivity.store.db.prepare("SELECT * FROM reminder_rules WHERE kind='general' AND deleted_at IS NULL AND id NOT LIKE 'legacy:%' AND id NOT LIKE 'test:%' AND id NOT LIKE 'system:%'").all().map(row=>{const r=productivity.store.ruleView(row);return{id:r.id,text:r.title,at:r.at||r.nextAt,fired:!r.nextAt};});}return value;},action(op,value={}){
     if(op.startsWith('water:')){productivity.waterAction(op,value);return library.view();}
     if(op.startsWith('reminder:')){const store=productivity.store,row=value.id?store.db.prepare('SELECT * FROM reminder_rules WHERE id=?').get(value.id):null,rule=store.ruleView(row);if(op==='reminder:remove')store.db.prepare('UPDATE reminder_rules SET deleted_at=?,next_at=NULL WHERE id=?').run(store.now(),String(value.id));else if(op==='reminder:add'||op==='reminder:edit'||op==='reminder:snooze'){if(op!=='reminder:add'&&!rule)throw new Error('Reminder not found.');const at=op==='reminder:snooze'?Date.now()+Math.max(1,Math.min(1440,Number(value.minutes)||10))*60000:value.at??rule?.at;if(!Number.isSafeInteger(at)||at<=Date.now())throw new Error('Choose a future reminder time.');store.saveRule({...rule,id:rule?.id,kind:'general',enabled:true,mode:'one-off',timezone:store.timezone(),at,title:require('./productivity-store.cjs').requiredText(value.text??rule?.title,2000)});}else throw new Error('Unsupported reminder action.');return library.view();}
-    legacyLibrary.action(op,value);return library.view();
+    if(op==='config'&&Object.hasOwn(value,'calendarUrl'))throw new Error('Use the Calendar tool to manage encrypted feeds.');legacyLibrary.action(op,value);return library.view();
   }};
   const lookupLyrics=createLyricsClient();let lyricsAbort;let systemPending=false;let lastClip='',weatherCache=null,calendarCache=null,media=null,lastSystem=null;const icons=new Map();
   function emit(channel,value){for(const win of BrowserWindow.getAllWindows()){const contents=require('./window-lifecycle.cjs').liveContents(win);if(contents)contents.send(channel,value);}}
   productivity=require('./productivity-main.cjs').setupProductivity({app,BrowserWindow,Notification,powerMonitor,safeStorage,screen,native,handle,emit,shell,dialog,getState,getLibrary:()=>library.view(),getTimer:()=>legacyLibrary.view().timer,mainWindow,onFunctionalNotification});
+  const calendar=require('./secure-calendar.cjs').createSecureCalendar({secrets:productivity.secrets,legacyLibrary,shell});
+  const captures=require('./capture-tools.cjs').createCaptureTools({app,native,nativeImage,BrowserWindow,dialog,clipboard,library,screen,canRestore});
+  const workspace=require('./workspace-main.cjs').setupWorkspace({app,handle,native,shell,dialog,clipboard,calendar,captures,secrets:productivity.secrets,getProviderKey});
+  app.on('before-quit',()=>captures.close());
   function notify(title,body){productivity.engine.recordEvent({kind:'general',id:require('node:crypto').randomUUID(),title,body});}
   handle('library:action',value=>{if(!value||typeof value.op!=='string')throw new Error('Missing action.');const state=library.action(value.op,value.value);if(value.op==='todo:edit'&&value.value?.done)onTransition();emit('library:changed',state);return state;});
   handle('library:get',()=>library.view());
@@ -36,7 +40,7 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
     if(op==='lyrics:network-test'){const r=await lookupLyrics.detailed({title:'Hello',artist:'Adele',album:'25',duration:295000,app:'Explicit connection test'});return{outcome:r.outcome,message:r.message,synced:!!r.record?.syncedLyrics};}
     if(op==='lyrics'){lyricsAbort?.abort();lyricsAbort=new AbortController();const controller=lyricsAbort;const song=await native.request('media',{appId:library.view().mediaAppId||''});if(v.expectedApp&&song.app!==v.expectedApp||v.expectedTitle&&song.title!==v.expectedTitle)throw new Error('The selected track changed. Refresh lyrics.');if(!song.available)return{lines:[],plain:'',outcome:'INVALID_METADATA',message:'No active track.'};const found=await lookupLyrics.detailed(song,{signal:controller.signal});return{song,lines:parseLyrics(found.record?.syncedLyrics||''),plain:found.record?.plainLyrics||'',outcome:found.outcome,message:found.message,retryAfter:found.retryAfter};}
     if(op==='screens')return screen.getAllDisplays().map(d=>({id:d.id,label:d.label||`Display ${d.id}`,bounds:d.bounds}));
-    if(op==='calendar'){const url=library.view().calendarUrl;if(!url)return[];if(calendarCache?.url===url&&Date.now()-calendarCache.at<600000&&!v.refresh)return calendarCache.events;const response=await fetch(url,{signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`Calendar HTTP ${response.status}`);const content=await response.text();if(content.length>5_000_000)throw new Error('Calendar is too large.');const events=(await readCalendar(content)).filter(e=>e.end>Date.now()).sort((a,b)=>a.start-b.start).slice(0,30);calendarCache={url,at:Date.now(),events};return events;}
+    if(op==='calendar')return(await calendar.refresh(v.refresh===true)).events;
     throw new Error('Unsupported desktop operation.');
   });
   const timer=setInterval(async()=>{
@@ -45,7 +49,7 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
   },1000);timer.unref();
   const systemTimer=setInterval(async()=>{if(systemPending)return;systemPending=true;try{lastSystem=await native.request('system',{},3000);productivity.setSystem(lastSystem);emit('desktop:system',lastSystem);onSystem(lastSystem);}catch{}finally{systemPending=false;}},3000);systemTimer.unref();
   app.on('before-quit',()=>{clearInterval(timer);clearInterval(systemTimer);productivity.close();});
-  return{library,productivity,emit,notify,getSystem:()=>lastSystem};
+  return{library,productivity,workspace,captures,emit,notify,getSystem:()=>lastSystem};
 }
 async function getJSON(url){const response=await fetch(url,{signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`Service HTTP ${response.status}`);return response.json();}
 const{parseLyrics}=require('./lrc.cjs');

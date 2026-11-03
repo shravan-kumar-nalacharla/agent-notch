@@ -1,0 +1,8 @@
+'use strict';
+const path=require('node:path'),{execFile}=require('node:child_process'),{promisify}=require('node:util');
+function parsePlans(text){const result=[];for(const line of text.split(/\r?\n/)){const m=/\b([0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12})\s+\((.*)\)\s*(\*)?\s*$/i.exec(line);if(m&&!result.some(p=>p.id===m[1].toLowerCase()))result.push({id:m[1].toLowerCase(),name:m[2].slice(0,200),active:!!m[3]});}return result;}
+function createPowerPlans({dialog,run=promisify(execFile),env=process.env}){
+ const file=path.join(env.SystemRoot||'C:/Windows','System32','powercfg.exe');async function list(){try{const {stdout}=await run(file,['/list'],{windowsHide:true,shell:false,timeout:7000,maxBuffer:100000});const plans=parsePlans(stdout);if(!plans.length)throw Error();return plans;}catch{throw new Error('Windows power plans are unavailable on this system.');}}
+ return{list,async set(id){const plan=(await list()).find(p=>p.id===id);if(!plan)throw new Error('Choose a currently available Windows power plan.');if(plan.active)return false;const confirm=await dialog.showMessageBox({type:'question',title:'Change Windows power plan?',message:'Switch to '+plan.name+'?',detail:'This changes the system power plan and may affect battery life and performance.',buttons:['Cancel','Switch plan'],defaultId:0,cancelId:0,noLink:true});if(confirm.response!==1)return false;try{await run(file,['/setactive',plan.id],{windowsHide:true,shell:false,timeout:7000,maxBuffer:100000});}catch{throw new Error('Windows could not change the power plan. Your account or device policy may restrict it.');}return list();}};
+}
+module.exports={parsePlans,createPowerPlans};

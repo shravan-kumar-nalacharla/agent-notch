@@ -1,0 +1,4 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),{parsePlans,createPowerPlans}=require('../src/power-plans.cjs');
+const a='381b4222-f694-41f0-9685-ff5bb260df2e',b='8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c',output=`Power Scheme GUID: ${a}  (Balanced) *\nPower Scheme GUID: ${b}  (High performance)`;
+test('power plans parse real GUIDs and require explicit review for known choices',async()=>{assert.equal(parsePlans(output)[0].active,true);let allow=false,calls=[];const plans=createPowerPlans({dialog:{showMessageBox:async()=>({response:allow?1:0})},run:async(file,args,options)=>{calls.push(args);assert.equal(options.shell,false);return{stdout:output};}});await assert.rejects(plans.set('foo & calc.exe'),/currently available/);assert.equal(await plans.set(b),false);assert.equal(calls.some(c=>c[0]==='/setactive'),false);allow=true;await plans.set(b);assert.deepEqual(calls.find(c=>c[0]==='/setactive'),['/setactive',b]);});

@@ -10,7 +10,7 @@ module.exports=async function({app,win,getSettingsWindow,native,state,out,saveSn
  try{
   await open();
   if(state().assistant!=='groq'||state().speech!=='groq'||state().companion.chatEngine!=='standard')throw new Error('Groq is not the default');checks.push('Groq chat/transcription and Standard voice are the defaults');
-  await check("document.querySelectorAll('[data-provider-key]').length===5&&Array.from(document.querySelectorAll('[data-provider-key]')).every(e=>e.type==='password')",'Five separate provider key inputs are masked by default');
+  await check("document.querySelectorAll('[data-provider-key]').length===7&&Array.from(document.querySelectorAll('[data-provider-key]')).every(e=>e.type==='password')",'Seven separate provider key inputs are masked by default');
   const keys={groq:'fixture-groq-key',gemini:'fixture-gemini-key',openai:'fixture-openai-key',deepseek:'fixture-deepseek-key',deepgram:'fixture-deepgram-key'};
   for(const[p,value]of Object.entries(keys))await set('key-'+p,value);
   if(!await sj('window.islandSaveSettings()'))throw new Error('Multi-key save failed');

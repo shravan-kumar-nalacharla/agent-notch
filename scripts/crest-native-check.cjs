@@ -1,0 +1,11 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),{NativeClient}=require('../src/native.cjs');
+const executable=process.argv[2];if(!executable)throw new Error('Pass a native helper executable.');const client=new NativeClient({executable});
+(async()=>{const checks=[];try{
+ await client.request('privacy.configure',{blocked:true,mode:'manual'});const before=await client.request('privacy.status');assert.equal(before.blocked,true);
+ const sources=await client.request('capture.sources');assert.ok(sources.length>0);checks.push('Enumerated real Windows capture displays');
+ let value=await client.request('awake');assert.equal(value.enabled,false);value=await client.request('awake',{enabled:true,minutes:15});assert.equal(value.enabled,true);assert.ok(value.remainingSeconds>890);value=await client.request('awake',{enabled:false});assert.equal(value.enabled,false);checks.push('Actual Keep Awake lease starts, stops and remains independent of mute');
+ const media=await client.request('media');if(media.available){await assert.rejects(client.request('media.control',{command:'pause',expectedApp:'AgentNotch.DeliberatelyWrongSession'}));checks.push('Wrong media-session command rejected without controlling playback');}else checks.push('No current media source; real transport untested');
+ const capture=await client.request('ocr.local',{source:sources[0].id},45000);assert.ok(capture.image.startsWith('data:image/png;base64,'));assert.equal(capture.width,sources[0].width);assert.equal(capture.localOnly,true);assert.ok(Array.isArray(capture.items));checks.push('Real Windows OCR completes in memory on a selected display; content excluded from evidence');
+ assert.equal((await client.request('privacy.status')).blocked,true);checks.push('Capture and OCR keep microphone blocked');const report={windows:require('node:os').release(),checks,sources:sources.length,mediaSources:media.sources?.length||0,ocrLines:capture.items.length};if(process.env.NOTCH_NATIVE_REPORT)fs.writeFileSync(process.env.NOTCH_NATIVE_REPORT,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+ }finally{await client.request('awake',{enabled:false}).catch(()=>{});client.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

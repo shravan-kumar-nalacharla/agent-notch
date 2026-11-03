@@ -7,6 +7,8 @@
   let timerMode='focus',mediaLoading=false,lyricsPlain='',lyricsStatus='',lyricIndex=-2,volumeLevel=50,prompterOffset=0;
   const carouselPages=['media','timer','water','shelf','todo'];
   const pages=[['media','♫','Media & lyrics'],['timer','◷','Focus Time'],['water','◉','Water reminder'],['shelf','▣','Shelf'],['todo','☑','Todo list'],['reminders','♧','Reminders'],['clips','▤','Clipboard'],['dictionary','Aa','Dictionary'],['snippets','≡','Snippets'],['history','↶','History & insights'],['meetings','◌','Meeting notes'],['projects','⌂','Projects'],['weather','☀','Weather'],['calendar','▦','Calendar'],['mirror','▧','Mirror'],['prompter','▷','Teleprompter']];
+  const coreTools=new Map();let disposeCore;
+  window.islandRegisterTool=tool=>{if(coreTools.has(tool.id))throw new Error('Duplicate tool');coreTools.set(tool.id,tool);if(!pages.some(p=>p[0]===tool.id))pages.push([tool.id,tool.icon,tool.title]);};
   const root=document.createElement('section');root.id='tools';root.className='page';root.hidden=true;document.querySelector('.view-stack').append(root);
   pages.push(['system','◔','System'],['book','▥','Reading'],['course','▤','Courses'],['workout','◇','Workout'],['spotify','♫','Spotify'],['notifications','♧','Notification center']);
   const button=document.querySelector('nav [data-tab=tools]');
@@ -129,10 +131,12 @@
     try{if(mode!=='off')await root.animate([{opacity:1,transform:'translateX(0)'},{opacity:0,transform:`translateX(${-direction*32}px)`}],{duration:150,easing:'ease-in'}).finished;selected=page;waterSettings=false;editor=null;render();window.IslandSurface?.animatePage(root,direction,mode);}finally{sliding=false;}
   }
   function render(){if(!lib)return;if(selected!=='media'){clearInterval(mediaTimer);mediaTimer=null;document.body.classList.remove('rich-media');}if(selected!=='mirror')stopMirror();if(selected!=='prompter')stopPrompter();
+    disposeCore?.();disposeCore=null;
     document.querySelectorAll('nav [data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===selected));
     if(!root.hidden){button.classList.toggle('active',selected!=='timer');document.querySelector('nav [data-tab=focus]').classList.toggle('active',selected==='timer');}
     if(!selected){root.innerHTML=`<div class="utility-nav"><button type="button" data-do="mainTab" data-page="assistant">Assistant</button><button type="button" data-do="mainTab" data-page="notes">Notes</button><button type="button" data-do="mainTab" data-page="agents">Agents</button><button type="button" data-do="mainTab" data-page="settings">Settings</button></div><div class="widget-grid"><button type="button" data-do="carouselGo" data-page="media"><i>◉</i><span>Carousel</span></button>${pages.filter(([id])=>id!=='timer').map(([id,icon,name])=>btn('page',`<i>${icon}</i><span>${name}</span>`,`data-page="${id}"`)).join('')}</div>`;return;}
     if(carouselPages.includes(selected)){renderPrimary();return;}
+    if(coreTools.has(selected)){root.innerHTML=heading()+'<div class="widget-content core-tool"></div>';disposeCore=coreTools.get(selected).mount(root.querySelector('.core-tool'));return;}
     let html='';const idAttr=id=>`data-id="${esc(id)}"`;
     if(['book','course','workout','spotify','notifications'].includes(selected)){const summary=lib.productivity||{},items=summary[selected]||[],current=items.find(item=>!item.archived)||items[0];html=`<div class="widget-row"><div><span>${esc(current?.title||(selected==='notifications'?String(summary.pending||0)+' pending reminders':selected==='spotify'?'Spotify Connect':'Build a routine at your own pace'))}</span><small>${esc(current?.summary||(selected==='spotify'?'Control an authorized active Spotify device.':'Details open only when you click.'))}</small></div></div>${btn('productivityOpen','Open details',`data-section="${selected}"`)}`;}
 
@@ -178,7 +182,8 @@
     el.innerHTML=lyrics.slice(Math.max(0,index-1),Math.max(3,index+2)).map(x=>`<button class="lyric ${x===lyrics[index]?'current':''}" data-position="${x.at}" ${media.capabilities?.seek===false?'disabled':''}>${x===lyrics[index]&&x.words?x.words.map(w=>`<span class="${w.at<=at?'sung':''}">${esc(w.text)}</span>`).join(' '):esc(x.text)}</button>`).join('');
   }
   root.addEventListener('change',async event=>{try{if(event.target.id==='mediaSource'){media=await desktop('media:select',{appId:event.target.value});mediaAt=Date.now();lyrics=[];lyricsPlain='';lyricIndex=-2;root.innerHTML=renderMediaCarousel();updateMediaControls();}if(event.target.id==='lyricsOffset'){lib=await result(api.library('config',{lyricsOffsetMs:Number(event.target.value)}));lyricIndex=-2;paintLyrics();}}catch(e){error(e);}});
-  let cameraStream;async function startMirror(){stopMirror();cameraStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});$('mirrorVideo').srcObject=cameraStream;}function stopMirror(){cameraStream?.getTracks().forEach(t=>t.stop());cameraStream=null;}
+  let cameraStream,cameraGeneration=0;async function startMirror(){stopMirror();const generation=cameraGeneration,stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});if(generation!==cameraGeneration||selected!=='mirror'||root.hidden||!$('mirrorVideo')){stream.getTracks().forEach(t=>t.stop());return;}cameraStream=stream;$('mirrorVideo').srcObject=stream;const button=root.querySelector('[data-do=startMirror]');if(button){button.textContent='Camera active';button.disabled=true;}}function stopMirror(){cameraGeneration++;cameraStream?.getTracks().forEach(t=>t.stop());cameraStream=null;if($('mirrorVideo'))$('mirrorVideo').srcObject=null;const button=root.querySelector('[data-do=startMirror]');if(button){button.textContent='Start camera';button.disabled=false;}}
+  api.onMicrophone(value=>{if(value.blocked)stopMirror();});
   async function savePrompter(){
     const text=$('prompterText').value;const changed=$('prompterScript').textContent!==text;$('prompterScript').textContent=text;if(changed)prompterOffset=$('prompterViewport').scrollTop=0;
     lib=await result(api.library('teleprompter:save',{text,speed:+$('prompterSpeed').value,fontSize:+$('prompterSize').value,mirror:$('prompterMirror').checked}));
@@ -189,11 +194,13 @@
     const el=$('prompterViewport');prompterOffset+=Math.min(100,at-prompterLast)/1000*Number($('prompterSpeed').value);el.scrollTop=prompterOffset;prompterLast=at;
     if(el.scrollTop+el.clientHeight>=el.scrollHeight){stopPrompter();$('prompterStatus').textContent='Finished';}else prompterFrame=requestAnimationFrame(scrollPrompter);
   }
-  api.onLibrary(value=>{lib=value;clockReceiptAt=performance.now();clockReceiptWall=Date.now();window.islandLibrary=value;const editing=document.hasFocus()&&root.contains(document.activeElement)&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);if(selected==='timer'&&!root.hidden)updateTimer();else if(!root.hidden&&!editing&&!['mirror','prompter','media'].includes(selected))render();});api.onMeeting(value=>{meetingState=value;if(selected==='meetings')render();});
+  api.onLibrary(value=>{lib=value;clockReceiptAt=performance.now();clockReceiptWall=Date.now();window.islandLibrary=value;const editing=document.hasFocus()&&root.contains(document.activeElement)&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);if(selected==='timer'&&!root.hidden)updateTimer();else if(!root.hidden&&!editing&&!['mirror','prompter','media'].includes(selected)&&!coreTools.has(selected))render();});api.onMeeting(value=>{meetingState=value;if(selected==='meetings')render();});
   root.addEventListener('change',event=>{if(event.target.id==='todoDay')todoDay=event.target.value;if(event.target.id==='prompterSize')$('prompterViewport').style.setProperty('--prompter-size',`${event.target.value}px`);if(event.target.id==='prompterMirror')$('prompterViewport').classList.toggle('mirror',event.target.checked);});
   root.addEventListener('change',async event=>{try{if(event.target.id==='systemVolume')await desktop('volume',{level:Number(event.target.value)});if(event.target.id==='systemBrightness')await desktop('brightness',{level:Number(event.target.value)});}catch(e){error(e);}});
   root.addEventListener('click',event=>{const lyric=event.target.closest('[data-position]');if(lyric){event.stopImmediatePropagation();desktop('media.control',{command:'seek',position:Number(lyric.dataset.position)}).then(refreshCarouselMedia).catch(error);}},true);
-  new MutationObserver(()=>{if(root.hidden){stopMirror();stopPrompter();clearInterval(mediaTimer);mediaTimer=null;}}).observe(root,{attributes:true,attributeFilter:['hidden']});
+  new MutationObserver(()=>{if(root.hidden){stopMirror();stopPrompter();clearInterval(mediaTimer);mediaTimer=null;disposeCore?.();disposeCore=null;}}).observe(root,{attributes:true,attributeFilter:['hidden']});
+  window.addEventListener('island:expanded',event=>{if(!event.detail){stopMirror();disposeCore?.();disposeCore=null;}else if(coreTools.has(selected)&&!root.hidden)render();});
+  api.onVisibility(visible=>{if(!visible){stopMirror();stopPrompter();clearInterval(mediaTimer);mediaTimer=null;disposeCore?.();disposeCore=null;}else if(!root.hidden&&(coreTools.has(selected)||selected==='media'))render();});
 
   api.onNotice(value=>{if(!settingsMode){$('status').textContent=value.title;}});
   api.onSystem(value=>{if(!settingsMode){$('time').title=`CPU ${value.cpu}% · RAM ${value.ram}% · Battery ${value.battery}%`;window.islandSystem=value;}});

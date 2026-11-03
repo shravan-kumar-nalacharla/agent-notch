@@ -89,7 +89,7 @@ async function setExpanded(on){
   animation.then(()=>{if(surfaceSerial===serial&&expanded===on){document.body.classList.remove('surface-animating');if(!on)$('body').hidden=true;sendHitbox();}});
   window.dispatchEvent(new CustomEvent('island:expanded',{detail:on}));
 }
-function canAutoClose(){return !document.body.classList.contains('has-windows-task')&&!document.body.classList.contains('has-reminder-hud')&&!captureOverlayActive&&!state?.appearance?.pinned&&state?.appearance?.autoClose!==false&&!nativeRecording&&!nativeProcessing&&recorder?.state!=='recording'&&!document.body.classList.contains('is-dragging')&&!(document.hasFocus()&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))&&!(keyboardFocus&&document.hasFocus()&&$('island').contains(document.activeElement));}
+function canAutoClose(){return !document.body.classList.contains('is-capturing')&&!document.body.classList.contains('has-windows-task')&&!document.body.classList.contains('has-reminder-hud')&&!captureOverlayActive&&!state?.appearance?.pinned&&state?.appearance?.autoClose!==false&&!nativeRecording&&!nativeProcessing&&recorder?.state!=='recording'&&!document.body.classList.contains('is-dragging')&&!(document.hasFocus()&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))&&!(keyboardFocus&&document.hasFocus()&&$('island').contains(document.activeElement));}
 const motion=new IslandMotion({open:()=>setExpanded(true),close:()=>setExpanded(false),canClose:canAutoClose,changed:value=>document.body.dataset.motionState=value});
 async function expand(on=true){if(settingsMode)return;return on?motion.open():motion.close();}
 window.island.onCaptureOverlay?.(({active})=>{captureOverlayActive=active;if(active){motion.cancel('leave');}else if(!motion.inside&&expanded)motion.leave();});
@@ -382,6 +382,7 @@ window.island.onOpen(() => {
 });
 window.island.onCommand?.(value => {
   if (!value?.page) return;
+  if(value.page==='tools'&&value.tool){window.islandOpenTool?.(value.tool);expand(true).catch(showError);return;}
   tab(value.page);
   expand(true).catch(showError);
 });

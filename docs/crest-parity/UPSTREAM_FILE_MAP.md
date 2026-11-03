@@ -24,3 +24,16 @@ The matrix links all 64 capabilities to pinned source. Directly inspected docume
 - src-tauri/src/notices.rs — SHA256 b6bba10aa681a3c92ff90bb98fd8b56d9e34faa437b264331839f37fec3d4c98
 
 Hashes identify the reference, not test coverage. Additional feature-specific code is inspected as each implementation phase begins. No upstream code is imported.
+
+Additional phase-two behavior excerpts reviewed (reference only; no copied source):
+
+- src/features/convert/units.tsx — SHA256 88bfb6e531e50ef6ac8a230ddbf8dde4ae0d1abd5d547f1ebeaf0a5644cc50cc
+- src/features/convert/fx.ts — SHA256 25dfd7112c7164552082e1fc7b261a429a0848122a1dde25aded60fc5e4a7794
+- src/features/convert/currency.tsx — SHA256 d8ac3922b17a93607833df527ac3af82f68902385f40e5a69444b69865f6b42d
+- src/features/scratchpad/ScratchpadView.tsx — SHA256 a26df62fc4aec7ff9317ea5b53de5140c40fe8c2465648c79a3ee6d3a1940587
+- src/features/launcher/apps.ts — SHA256 ea541e8a4a0e3958cc47174e2036c5f45f8fe508a6f70caffbf59ee5d5b0448d
+- src-tauri/src/convert.rs — SHA256 730c193a8b5536684b5e603aa4b267caf4023a2c0b32eaa22b52a6a0c1be5d01
+- src-tauri/src/power.rs — SHA256 0bf18f4d202ebf2114c0c5a5c529677434ebb851efd3e26644326377b8c5afdb
+- src-tauri/src/capture/shot.rs — SHA256 76d443e7d4f284efb2a482e05075868e5bb33c791715968396d90158e01f4b5d
+- src-tauri/src/capture/find.rs — SHA256 6b9d3942f78b5f9b3524994cec7f5bf591a0f901c56e08b2d7e0f91f6077e614
+- src-tauri/src/github.rs — SHA256 dc80176867dd1b3c1f1550f81fac362498fbec413f261ec7bda9b6bf67442adb

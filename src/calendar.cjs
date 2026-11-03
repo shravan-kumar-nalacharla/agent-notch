@@ -18,7 +18,7 @@ function parseCalendar(text,now=Date.now()){
  for(const component of components){if(component.hasProperty('recurrence-id')||component.getFirstPropertyValue('status')==='CANCELLED')continue;
   const uid=component.getFirstPropertyValue('uid');const exceptions=components.filter(c=>c.hasProperty('recurrence-id')&&c.getFirstPropertyValue('uid')===uid);
   const event=new ICAL.Event(component,{exceptions});if(!component.hasProperty('dtstart'))continue;
-  function add(start,end,item){if(item.component.getFirstPropertyValue('status')==='CANCELLED')return;const at=milliseconds(start,item.component,'dtstart'),until=milliseconds(end,item.component,'dtend');events.push({title:String(item.summary||'Event'),start:at,end:until,allDay:start.isDate,uid:String(uid||'')});}
+  function add(start,end,item){if(item.component.getFirstPropertyValue('status')==='CANCELLED')return;const at=milliseconds(start,item.component,'dtstart'),until=milliseconds(end,item.component,'dtend');events.push({title:String(item.summary||'Event').slice(0,2000),start:at,end:until,allDay:start.isDate,uid:String(uid||''),url:String(item.component.getFirstPropertyValue('url')||'').slice(0,4000),location:String(item.component.getFirstPropertyValue('location')||'').slice(0,4000),description:String(item.component.getFirstPropertyValue('description')||'').slice(0,10000)});}
   if(!event.isRecurring()){add(event.startDate,event.endDate,event);continue;}
   const iterator=event.iterator();let count=0,occurrence;
   while((occurrence=iterator.next())){
