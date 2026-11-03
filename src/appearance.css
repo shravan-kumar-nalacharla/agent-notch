@@ -1,0 +1,44 @@
+body.minimal:not(.expanded):not(.settings-window) #island{
+  min-height:4px;
+  height:4px;
+  width:150px;
+  border-radius:0 0 4px 4px;
+  background:#777
+}
+body.minimal:not(.expanded):not(.settings-window) header{height:4px}
+body.minimal:not(.expanded):not(.settings-window) .eye,
+body.no-mascot:not(.expanded) .eye,
+body.no-mascot:not(.expanded) .face-light{visibility:hidden}
+body.no-mascot:not(.expanded) #greeting{display:grid;grid-template-columns:auto auto;justify-content:center;column-gap:7px}
+body.no-mascot:not(.expanded) #time{display:block;font-size:11px}
+body.no-mascot:not(.expanded) #date{display:block;font-size:8px;color:#888}
+body.no-mascot:not(.expanded) #status{display:none}
+
+#preferences{display:grid;gap:18px}
+#preferences .settings-group{border:0;padding:0;margin:0}
+#preferences hr{display:none}
+#preferences h3{font-size:15px;margin-bottom:4px}
+#preferences .settings-hint{margin-top:7px;line-height:1.5;color:var(--muted)}
+#preferences button{height:32px;border-radius:8px;padding:0 11px}
+#preferences #engineStatus{min-height:16px;margin-top:7px;font-size:10px;color:var(--muted)}
+
+#desktopHud{
+  display:none;position:absolute;inset:0;align-items:center;justify-content:center;
+  font-size:11px;font-weight:650;pointer-events:none;z-index:3
+}
+body.has-hud:not(.expanded):not(.settings-window) #desktopHud{display:flex}
+body.has-hud:not(.expanded) .eye,
+body.has-hud:not(.expanded) .face-light,
+body.has-hud:not(.expanded) #greeting{visibility:hidden}
+body.has-hud.minimal:not(.expanded) #island{min-height:30px;height:30px;border-radius:0 0 14px 14px;background:#000}
+body.has-hud.minimal:not(.expanded) header{height:30px}
+
+.agent-sessions{display:flex;gap:5px;overflow:auto;margin:7px 0}
+.agent-sessions button{height:26px;flex-shrink:0}
+.agent-sessions .active{background:#33363c}
+.agent-sessions span{color:var(--muted)}
+.agent-request{border:1px solid rgba(243,182,75,.38);border-radius:8px;padding:8px;margin:7px 0}
+.agent-step{font-size:10px;background:#15161a;border-radius:7px;padding:5px;margin:4px 0}
+#agents pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:118px;overflow:auto;font:9.5px/1.45 Consolas,monospace;background:#15161a;padding:6px;border-radius:6px}
+.diff-minus{color:#f59b9b}
+.diff-plus{color:#a7dfac}

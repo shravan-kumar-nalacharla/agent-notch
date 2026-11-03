@@ -1,0 +1,131 @@
+{
+  "description": "Routing regression cases for Agent Notch Codex implementation; adapt to actual schemas, verify end-to-end behavior.",
+  "cases": [
+    {
+      "id": "RT-001",
+      "utterance": "Search for Google AI Studio",
+      "expected_intent": "search_only",
+      "expected_search_query": "Google AI Studio",
+      "notes": ""
+    },
+    {
+      "id": "RT-002",
+      "utterance": "Search for Google AI Studio and then go to the API keys section",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": "Google AI Studio",
+      "notes": ""
+    },
+    {
+      "id": "RT-003",
+      "utterance": "Open Google AI Studio and go to API Keys",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": null,
+      "notes": ""
+    },
+    {
+      "id": "RT-004",
+      "utterance": "Open Google AI Studio, click the first link, and open API Keys",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": null,
+      "notes": ""
+    },
+    {
+      "id": "RT-005",
+      "utterance": "Open Brave and go to Google AI Studio and API Keys",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": null,
+      "notes": ""
+    },
+    {
+      "id": "RT-006",
+      "utterance": "Search for Google AI Studio and open the first link",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": "Google AI Studio",
+      "notes": ""
+    },
+    {
+      "id": "RT-007",
+      "utterance": "Google AI Studio, click on the first link and go to the API key section",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": null,
+      "notes": "Context required"
+    },
+    {
+      "id": "RT-008",
+      "utterance": "search for React hooks and summarize the first three sources",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": "React hooks",
+      "notes": ""
+    },
+    {
+      "id": "RT-009",
+      "utterance": "tell me what an API key is",
+      "expected_intent": "conversation",
+      "expected_search_query": null,
+      "notes": ""
+    },
+    {
+      "id": "RT-010",
+      "utterance": "Translate: open Google AI Studio then open API Keys",
+      "expected_intent": "conversation",
+      "expected_search_query": null,
+      "notes": ""
+    },
+    {
+      "id": "RT-011",
+      "utterance": "Search for 'and then' as an exact phrase",
+      "expected_intent": "search_only",
+      "expected_search_query": "and then",
+      "notes": ""
+    },
+    {
+      "id": "RT-012",
+      "utterance": "Google AI Studio kholo aur API keys section pe jao",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": null,
+      "notes": ""
+    },
+    {
+      "id": "RT-013",
+      "utterance": "Google AI Studio open chesi API keys ki vellu",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": null,
+      "notes": ""
+    },
+    {
+      "id": "RT-014",
+      "utterance": "गूगल एआई स्टूडियो खोलकर एपीआई कीज़ पर जाओ",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": null,
+      "notes": ""
+    },
+    {
+      "id": "RT-015",
+      "utterance": "గూగుల్ ఏఐ స్టూడియో తెరిచి ఏపీఐ కీస్‌కి వెళ్లండి",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": null,
+      "notes": ""
+    },
+    {
+      "id": "RT-016",
+      "utterance": "Stop this task",
+      "expected_intent": "cancel_active_task",
+      "expected_search_query": null,
+      "notes": ""
+    },
+    {
+      "id": "RT-017",
+      "utterance": "How can I open AI Studio API keys?",
+      "expected_intent": "conversation",
+      "expected_search_query": null,
+      "notes": ""
+    },
+    {
+      "id": "RT-018",
+      "utterance": "Go to the first result and open the API key page",
+      "expected_intent": "multi_step_action",
+      "expected_search_query": null,
+      "notes": "Context required"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+research/
+.env
+*.log
+artifacts/
+tools/
+**/bin/
+**/obj/
+dist-v*/
+dist-qa*/

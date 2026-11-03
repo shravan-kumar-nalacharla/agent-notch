@@ -1,0 +1,37 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path');
+module.exports=async function({win,getSettingsWindow,widgets,state,out,saveSnapshot}){
+  const delay=ms=>new Promise(r=>setTimeout(r,ms)),js=code=>win.webContents.executeJavaScript(code),checks=[];
+  async function check(code,label){if(!await js(code))throw new Error(label);checks.push(label);}
+  await js("window.island.settings('voice')");for(let i=0;i<100&&!getSettingsWindow();i++)await delay(50);const settings=getSettingsWindow();while(settings.webContents.isLoading())await delay(50);await delay(400);
+  const sj=code=>settings.webContents.executeJavaScript(code);
+  if(!await sj("document.getElementById('chatEngine').value==='standard'"))throw new Error('Groq Standard is not the default conversation engine');checks.push('Groq Standard is the conversation default; Gemini is optional');
+  await sj("window.islandProviderKeys.ready.then(()=>{document.getElementById('chatEngine').value='gemini_live';document.getElementById('chatEngine').dispatchEvent(new Event('change',{bubbles:true}));return document.getElementById('checkGeminiLive').onclick();})");
+  await delay(300);
+  if(!await sj("document.getElementById('geminiLiveCheckStatus').textContent.includes('gemini API key')"))throw new Error('Missing Gemini key not explained: '+await sj("document.getElementById('geminiLiveCheckStatus').textContent"));checks.push('Connection check explains missing key without starting microphone or network request');
+  await js("window.island.save({note:'Settings refresh regression fixture'})");await delay(150);
+  if(!await sj("document.getElementById('geminiLiveCheckStatus').textContent.includes('gemini API key')"))throw new Error('Settings refresh overwrote connection error');checks.push('Connection errors survive unrelated Settings refreshes');
+  await sj("document.getElementById('geminiKeySettings').click()");
+  if(!await sj("document.activeElement.id==='key-gemini'"))throw new Error('Gemini key shortcut did not select Gemini');checks.push('Enter Gemini key selects provider and focuses key field');
+  await sj("document.getElementById('key-gemini').value='disposable-gemini-regression-key';document.getElementById('key-gemini').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('cloudAudioConsent').checked=true;document.getElementById('speak').checked=true;window.islandSaveSettings()");
+  if(state().companion.chatEngine!=='gemini_live'||!state().keys.gemini||!state().languages.cloudAudioConsent||!state().speak)throw new Error('Gemini settings did not save');checks.push('Gemini key, conversation engine, consent and speech toggle save together');
+  if(!await sj("window.island.get().then(r=>r.value.configured.gemini&&!r.value.keys)"))throw new Error('Gemini key exposed or unavailable');checks.push('Public state keeps keys private while the Settings fields retain saved values');
+  for(const engine of ['standard','gemini_live']){await sj(`document.getElementById('chatEngine').value=${JSON.stringify(engine)};window.islandSaveSettings()`);if(state().companion.chatEngine!==engine)throw new Error('Engine selection did not persist');}checks.push('Both conversation modes persist without unchecking saved controls');
+  await sj("document.querySelector('[data-settings-target=\"voiceGroup\"]').click();document.getElementById('chatEngine').scrollIntoView({block:'center'})");
+  await saveSnapshot(settings,path.join(out,'gemini-settings.png'));
+  settings.close();await js("expand(true)");await js("tab('assistant');window.dispatchEvent(new Event('island:test-enter'))");await delay(700);
+  const send=value=>widgets().emit('voice:state',value);
+  send({phase:'listening',id:'live-fixture',kind:'live'});await delay(100);
+  send({phase:'liveText',id:'live-fixture',turn:0,raw:'హలో',text:'నమస్కారం'});
+  send({phase:'liveAudio',id:'live-fixture',audio:Buffer.alloc(4800).toString('base64'),volume:0,rate:24000});
+  send({phase:'liveTurn',id:'live-fixture'});await delay(180);
+  await check("nativeRecording&&document.getElementById('mic').classList.contains('recording')&&document.getElementById('transcript').value==='హలో'",'Transcript and recording state stay active between Live turns');
+  send({phase:'liveText',id:'live-fixture',turn:1,raw:'How are you?',text:'Ready to help.'});send({phase:'liveInterrupt',id:'live-fixture'});await delay(80);
+  await check("document.getElementById('assistant').textContent.includes('Ready to help.')&&nativeRecording",'Second turn and interruptions preserve continuous chat');
+  await check("getComputedStyle(document.getElementById('assistant')).transform==='none'&&getComputedStyle(document.getElementById('assistant')).opacity==='1'",'Streaming text does not repeatedly slide or fade the chat page');
+  await saveSnapshot(win,path.join(out,'gemini-live-chat.png'));
+  await js("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");await delay(200);
+  await check("!nativeRecording&&!nativeProcessing&&!document.getElementById('mic').classList.contains('recording')",'Escape returns the Live UI to idle and cancels native capture');
+  fs.writeFileSync(path.join(out,'gemini-live-report.json'),JSON.stringify({checks,realMicrophoneOpened:false,realCloudRequests:false,note:'Deterministic streaming fixtures; live Google audio requires the user\'s key and explicit microphone action.'},null,2));
+  console.log('GEMINI LIVE SMOKE PASS',checks.length,'checks; zero microphone capture or cloud requests');
+};

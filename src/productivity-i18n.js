@@ -1,0 +1,13 @@
+'use strict';
+((root)=>{
+  const entries={
+    Reading:['पढ़ना','చదవడం','Reading','Reading'],Courses:['पाठ्यक्रम','కోర్సులు','Courses','Courses'],Workout:['व्यायाम','వ్యాయామం','Workout','Workout'],Water:['पानी','నీరు','Paani','Neellu'],Spotify:['Spotify','Spotify','Spotify','Spotify'],Reminders:['अनुस्मारक','రిమైండర్లు','Reminders','Reminders'],
+    'Your routines':['आपकी दिनचर्या','మీ దినచర్యలు','Aapke routines','Mee routines'],Save:['सहेजें','సేవ్ చేయి','Save karo','Save chey'],Cancel:['रद्द करें','రద్దు చేయి','Cancel karo','Cancel chey'],Start:['शुरू करें','ప్రారంభించు','Shuru karo','Start chey'],Pause:['रोकें','పాజ్ చేయి','Pause karo','Pause chey'],Resume:['फिर शुरू करें','కొనసాగించు','Resume karo','Resume chey'],Stop:['बंद करें','ఆపు','Roko','Aapu'],Undo:['वापस लें','రద్దు చేయి','Undo karo','Undo chey'],Notes:['नोट्स','నోట్స్','Notes','Notes'],Search:['खोजें','వెతుకు','Search karo','Search chey'],Export:['निर्यात करें','ఎగుమతి చేయి','Export karo','Export chey'],Archive:['संग्रह करें','ఆర్కైవ్ చేయి','Archive karo','Archive chey'],Restore:['वापस लाएँ','పునరుద్ధరించు','Restore karo','Restore chey'],Delete:['मिटाएँ','తొలగించు','Delete karo','Delete chey'],
+    'Start reading':['पढ़ना शुरू करें','చదవడం ప్రారంభించు','Padhna shuru karo','Chadavadam start chey'],'Continue learning':['सीखना जारी रखें','నేర్చుకోవడం కొనసాగించు','Seekhna continue karo','Nerchukovadam continue chey'],'Start workout':['व्यायाम शुरू करें','వ్యాయామం ప్రారంభించు','Workout shuru karo','Workout start chey'],
+    'Time for a sip.':['पानी का समय।','నీరు తాగే సమయం.','Paani ka time.','Neellu taage time.'],'Snooze':['बाद में याद दिलाएँ','తర్వాత గుర్తు చేయి','Baad mein yaad dilao','Taruvatha gurthu chey'],'Skip today':['आज छोड़ें','ఈరోజు వదిలేయి','Aaj skip karo','Ee roju skip chey'],
+    'Notifications are off':['सूचनाएँ बंद हैं','నోటిఫికేషన్లు ఆఫ్‌లో ఉన్నాయి','Notifications off hain','Notifications off lo unnayi'],'Next reminder':['अगला अनुस्मारक','తదుపరి రిమైండర్','Agla reminder','Next reminder'],'No reminder scheduled':['कोई अनुस्मारक तय नहीं है','రిమైండర్ షెడ్యూల్ కాలేదు','Reminder set nahi hai','Reminder set cheyaledu'],'Test reminder':['अनुस्मारक जाँचें','రిమైండర్ పరీక్షించు','Reminder test karo','Reminder test chey'],'Test sound':['ध्वनि जाँचें','శబ్దం పరీక్షించు','Sound test karo','Sound test chey'],'Allow reminders':['अनुस्मारक चालू करें','రిమైండర్లు ప్రారంభించు','Reminders on karo','Reminders on chey']
+  };
+  const index={hi:0,te:1,hinglish:2,tenglish:3};
+  function t(text,language='en'){return entries[text]?.[index[language]]||text;}
+  const api={t,entries};if(typeof module!=='undefined')module.exports=api;else root.NotchStrings=api;
+})(globalThis);

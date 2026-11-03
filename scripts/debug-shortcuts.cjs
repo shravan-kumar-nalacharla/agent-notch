@@ -1,0 +1,1 @@
+const {app,globalShortcut}=require('electron');app.whenReady().then(()=>{for(const key of ['Control+Alt+M','Control+Alt+V','Control+Alt+F9'])console.log(key,globalShortcut.register(key,()=>{}));app.exit();});

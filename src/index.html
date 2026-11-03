@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; media-src 'self' blob:; connect-src 'none'; img-src 'self' data:">
+  <title>Agent Notch</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="appearance.css">
+  <script src="preferences.js" defer></script>
+  <script src="i18n.js" defer></script>
+  <script src="languages-ui.js" defer></script>
+  <script src="agents-ui.js" defer></script>
+  <script src="desktop-ui.js" defer></script>
+  <script src="windows-task-ui.js" defer></script>
+</head>
+<body>
+  <button id="activationTarget" aria-label="Open Agent Notch" title="Open Agent Notch"></button>
+  <main id="island">
+    <div id="companionGlow" aria-hidden="true"><i></i><i></i><i></i></div>
+    <header>
+      <button id="face" aria-label="Open island" title="Open island">
+        <span class="eye"><i class="eye-lid"></i></span>
+        <span class="eye"><i class="eye-lid"></i></span>
+      </button>
+      <div id="greeting">
+        <span id="date"></span>
+        <b id="time"></b>
+        <small id="status">Ready</small>
+      </div>
+      <span class="audio-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <div id="voiceHud" aria-live="polite">
+        <span class="voice-wave"><i></i><i></i><i></i><i></i><i></i></span>
+        <span id="voiceHudText">Listening...</span>
+      </div>
+      <div class="header-actions">
+        <button id="pin" title="Pin island open" aria-label="Pin island open">
+          <svg viewBox="0 0 24 24"><path d="m9 4 6 0 1 5 3 3v2H5v-2l3-3 1-5ZM12 14v7"/></svg>
+        </button>
+        <button id="mic" title="Voice chat" aria-label="Start voice chat">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <rect x="9" y="3" width="6" height="12" rx="3"></rect>
+            <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"></path>
+          </svg>
+        </button>
+        <button id="collapse" title="Close island" aria-label="Close island">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="m6 14 6-5 6 5"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <section id="body" hidden>
+      <aside id="quietMoment" hidden><span id="quietText" dir="auto"></span><button id="quietPin" aria-label="Pin this thought" aria-pressed="false">⌖</button><button id="quietSkip" aria-label="Skip this thought">›</button><button id="quoteMore" aria-label="Read more in quote library">↗</button><button id="quietFavorite" aria-label="Favorite this thought">♡</button><button id="quietDismiss" aria-label="Dismiss thought">×</button></aside>
+      <div class="view-stack">
+        <section id="home" class="page" hidden>
+          <div class="home-intro">
+            <div>
+              <span class="eyebrow">YOUR DAY AT A GLANCE</span>
+              <h1 id="homeTitle">Hey, I'm here.</h1>
+              <p>A little space for your day.</p>
+            </div>
+            <div class="home-actions">
+              <button class="round-action primary" id="homeAsk" title="Ask assistant" aria-label="Ask assistant">
+                <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.7 9.7 0 0 1-3.7-.7L3 21l1.6-4.6A8.2 8.2 0 0 1 3 11.5a8.4 8.4 0 0 1 9-8.5 8.4 8.4 0 0 1 9 8.5Z"/></svg>
+              </button>
+              <button class="round-action" id="homeVoice" title="Start voice assistant" aria-label="Start voice assistant">
+                <svg viewBox="0 0 24 24"><path d="M12 3v10M8 7v6M16 6v9M4 10v4M20 9v6M5 18h14"/></svg>
+              </button>
+              <button class="round-action" id="homeScreen" title="Ask about my screen" aria-label="Ask about my screen">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M8 10h8M8 13h5"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="home-live" id="homeLive" aria-live="polite">
+            <div class="live-primary">
+              <span class="live-icon" id="homeLiveIcon"></span>
+              <span><b id="homeNow">Nothing playing</b><small id="homeNowMeta">Your day is quiet</small></span>
+            </div>
+            <div class="live-metrics" id="homeMetrics">
+              <span><b>--%</b>CPU</span>
+              <span><b>--%</b>GPU</span>
+              <span><b>--%</b>RAM</span>
+              <span><b>--%</b>Battery</span>
+            </div>
+          </div>
+          <p class="home-line" id="homeLine">Tasks, reminders and what is playing will appear here.</p>
+        </section>
+
+        <section id="assistant" class="page" hidden>
+          <div class="page-head">
+            <div>
+              <span class="eyebrow">VOICE + CHAT</span>
+              <h1>Ask or say it.</h1>
+            </div>
+            <button class="soft-chip" id="openSettings" title="Provider settings">Providers</button>
+          </div>
+          <div id="messages" role="log" aria-live="polite"></div>
+          <details id="transcriptBox" hidden><summary>Last transcript</summary>
+            <label for="transcript">Dictation</label>
+            <textarea id="transcript" rows="2"></textarea>
+            <div class="row">
+              <button id="insertDraft" hidden>Insert reviewed draft</button><button id="copy">Copy</button>
+              <button id="askTranscript">Ask assistant</button>
+            </div>
+          </details>
+          <form id="chat">
+            <input id="question" placeholder="Ask anything..." aria-label="Message" maxlength="20000">
+            <button id="send" aria-label="Send message" title="Send">
+              <svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+            </button>
+          </form>
+          <div class="row hint">
+            <span>Hold Ctrl + Shift + Windows to type in other apps</span>
+            <span id="providerLabel"></span>
+          </div>
+        </section>
+
+        <section id="notes" class="page" hidden>
+          <div class="page-head">
+            <div>
+              <span class="eyebrow">A PLACE TO LAND</span>
+              <h1>Catch that thought.</h1>
+            </div>
+            <small id="noteStatus">Saved on this computer</small>
+          </div>
+          <textarea id="note" rows="7" placeholder="Ideas, lists, little reminders..." aria-label="Quick note"></textarea>
+        </section>
+
+        <section id="settings" class="page" hidden>
+          <div class="settings-heading">
+            <div>
+              <span class="eyebrow">AGENT NOTCH</span>
+              <h2>Settings</h2>
+              <p>Preferences stay on this PC. Save when you are ready.</p>
+            </div>
+            <button id="closeSettings" class="round-action" title="Close settings" aria-label="Close settings">
+              <svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="settings-layout">
+            <aside class="settings-nav" aria-label="Settings sections">
+              <button class="active" data-settings-target="providerGroup">
+                <svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/><circle cx="12" cy="12" r="3"/></svg>
+                Providers
+              </button>
+              <button data-settings-target="voiceGroup">
+                <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg>
+                Voice
+              </button>
+              <button data-settings-target="islandGroup">
+                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                Island
+              </button>
+              <button data-settings-target="historyGroup">
+                <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2"/></svg>
+                History
+              </button>
+              <button data-settings-target="diagnosticsGroup">
+                <svg viewBox="0 0 24 24"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg>
+                Diagnostics
+              </button>
+              <button data-settings-target="aboutGroup">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></svg>
+                About
+              </button>
+            </aside>
+            <div class="settings-panel">
+              <section class="settings-group" id="providerGroup">
+                <div class="group-heading">
+                  <h3>Providers</h3>
+                  <small>Keys are encrypted with Windows secure storage.</small>
+                </div>
+                <div class="field-grid two">
+                  <label>Chat & Windows tasks<select id="assistantProvider"></select></label>
+                  <label>Dictation & recorded voice<select id="speechProvider"></select></label>
+                </div>
+                <p class="settings-intro">Groq handles chat and transcription by default. Add other providers only when you want to use them. Each key stays in its own field.</p>
+                <div id="providerKeys" aria-label="Provider API keys"></div>
+                <details id="advancedModels"><summary>Advanced · model settings</summary>
+                  <label>Model settings for<select id="keyProvider"></select></label>
+                  <div class="field-grid two"><label>Assistant model<input id="chatModel"></label><label>Transcription model<input id="speechModel"></label></div>
+                  <small id="providerEndpoint"></small><div id="providerAdvancedOptions"></div>
+                </details>
+                <label class="check"><input id="speak" type="checkbox">Read assistant answers aloud</label>
+                <label>Language code (blank = automatic)<input id="language" placeholder="en, te, hi..." maxlength="3"></label>
+                <p class="hint" id="providerHint">Audio goes to the selected provider only after you stop. Raw audio is not kept.</p>
+              </section>
+              <p id="error" role="alert"></p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <nav aria-label="Island pages">
+        <button class="active" data-tab="home" title="Home" aria-label="Home">
+          <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5 10v10h14V10"/></svg>
+          <span>Home</span>
+        </button>
+        <button data-tab="assistant" title="Assistant" aria-label="Assistant">
+          <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.7 9.7 0 0 1-3.7-.7L3 21l1.6-4.6A8.2 8.2 0 0 1 3 11.5a8.4 8.4 0 0 1 9-8.5 8.4 8.4 0 0 1 9 8.5Z"/></svg>
+          <span>Ask</span>
+        </button>
+        <button data-tab="notes" title="Notes" aria-label="Notes">
+          <svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5zM16 3v4h4M8 11h8M8 15h8"/></svg>
+          <span>Notes</span>
+        </button>
+        <button data-tab="focus" title="Focus Time" aria-label="Focus Time">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>
+          <span>Focus Time</span>
+        </button>
+        <button data-tab="agents" title="Agent activity" aria-label="Agent activity">
+          <svg viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="3"/><path d="M12 3v4M9 12h.01M15 12h.01M9 16h6"/></svg>
+          <span>Agents</span>
+        </button>
+        <button data-tab="settings" title="Settings" aria-label="Settings">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
+          <span>Settings</span>
+        </button>
+        <button data-tab="tools" title="All features" aria-label="All features">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>All features</span>
+        </button>
+      </nav>
+    </section>
+  </main>
+  <p id="outsideError" role="alert"></p>
+  <footer>
+    <span>AGENT NOTCH</span>
+    <button id="hide">Hide to tray</button>
+  </footer>
+  <link rel="stylesheet" href="widgets.css">
+  <link rel="stylesheet" href="polish.css">
+  <link rel="stylesheet" href="compact.css">
+  <script src="island-motion.js"></script>
+  <script src="surface-motion.js"></script>
+  <script src="providers-ui.js"></script>
+  <script src="renderer.js"></script>
+  <script src="settings-ui.js" defer></script>
+  <link rel="stylesheet" href="settings.css">
+  <script src="home-ui.js"></script>
+  <script src="productivity-i18n.js"></script>
+  <script src="widgets-ui.js"></script>
+  <script src="productivity-settings.js" defer></script>
+  <script src="companion-ui.js"></script>
+  <script src="live-playback.js"></script>
+  <script src="microphone-ui.js" defer></script>
+  <link rel="stylesheet" href="notch-reminders.css">
+  <script src="notch-reminders-ui.js"></script>
+</body>
+</html>

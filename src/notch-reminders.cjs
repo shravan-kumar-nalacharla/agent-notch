@@ -1,0 +1,45 @@
+'use strict';
+const {number}=require('./productivity-store.cjs');
+function createNotchReminders({store,engine,routines,emit,present=()=>{},onFunctionalNotification=()=>{}}){
+  const{db,now}=store,pending=new Map();let selected='',last='',closed=false;
+  function bottle(){const state=store.getSetting('waterBottle',{capacityMl:Math.max(1000,store.water().bottle),afterRow:0}),afterRow=state.afterId?db.prepare('SELECT rowid AS n FROM water_drinks WHERE id=?').get(state.afterId)?.n||0:state.afterRow||0,used=db.prepare('SELECT COALESCE(SUM(volume_ml),0) AS ml FROM water_drinks WHERE rowid>? AND deleted_at IS NULL').get(afterRow).ml;return{capacityMl:state.capacityMl,remainingMl:Math.max(0,state.capacityMl-used)};}
+  function refill(capacity){const old=bottle(),capacityMl=capacity===undefined?old.capacityMl:number(capacity,100,5000,'bottle capacity');if(capacityMl<store.water().bottle)throw new Error('Bottle capacity must fit one default drink.');if(!Number.isInteger(capacityMl))throw new Error('Use whole millilitres.');store.setSetting('waterBottle',{capacityMl,afterId:db.prepare('SELECT id FROM water_drinks ORDER BY rowid DESC LIMIT 1').get()?.id||null,afterRow:0});return bottle();}
+  function rows(){return db.prepare("SELECT * FROM reminder_occurrences WHERE state IN ('dispatching','delivered','unknown') AND action_at IS NULL AND json_extract(content,'$.surface')='notch' ORDER BY scheduled_for,id LIMIT 100").all();}
+  function card(row){const content=JSON.parse(row.content);if((!['water','book','course','workout'].includes(content.kind)||content.rest)&&row.delivered_at&&now()-row.delivered_at>8000){db.prepare("UPDATE reminder_occurrences SET state='dismissed',action_at=?,reason='Status notice expired.' WHERE id=?").run(now(),row.id);return null;}let item;
+    if(content.targetId){try{item=routines.record(content.targetId);if(item.archived||['finished','completed','abandoned','paused'].includes(item.status))return null;}catch{return null;}}
+    const sessionRow=content.sessionId?db.prepare('SELECT * FROM activity_sessions WHERE id=? AND record_id=?').get(content.sessionId,content.targetId):null,session=sessionRow?routines.sessionView(sessionRow):null;
+    if(session&&['stopped','completed'].includes(session.status)){db.prepare("UPDATE reminder_occurrences SET state='completed',action_at=? WHERE id=?").run(now(),row.id);return null;}
+    const water=content.kind==='water'?store.water():null;if(water&&!water.continueAfterGoal&&water.today>=water.goal){db.prepare("UPDATE reminder_occurrences SET state='completed',action_at=?,reason='Daily water goal reached.' WHERE id=?").run(now(),row.id);return null;}const level=water?bottle():null,phase=water?(level.remainingMl<water.bottle?'refill':'drink'):session?session.status:'ready';
+    const asset=water?(phase==='refill'?'water-bottle.gif':'water.gif'):content.kind==='book'?'open-book.gif':content.kind==='workout'&&(/treadmill|walk|run/i.test([item?.title,...(item?.exercises||[]).map(e=>e.name)].join(' '))||item?.category==='cardio')?'treadmill.gif':null;
+    return{id:row.id,attempt:row.attempts,kind:content.kind,title:water?(phase==='refill'?'Time to Refill':'Time to Drink'):item?.title||content.title,body:water?`${water.today} / ${water.goal} ml today · ${level.remainingMl} ml in bottle`:content.body,phase,asset,targetId:content.targetId,sessionId:session?.id||null,elapsedMs:session?.elapsedMs||0,plannedMinutes:content.plannedMinutes||item?.plannedMinutes||(content.kind==='book'?10:20),servingMl:water?.bottle||null,bottle:level,rest:content.rest===true};
+  }
+  function state(context={}){const prefs=engine.settings();if(prefs.delivery==='windows'||engine.blockReason({kind:'notch',rest:true},context))return{cards:[],selected:'',busy:prefs.busy===true};const cards=rows().map(card).filter(Boolean).filter(c=>prefs.categories[c.kind]?.enabled!==false);cards.sort((a,b)=>(a.kind==='water'?0:1)-(b.kind==='water'?0:1));if(!cards.some(c=>c.id===selected))selected=cards[0]?.id||'';return{cards,selected,busy:false,snoozeMinutes:prefs.snoozeMinutes};}
+  function refresh(context={}){if(closed)return;const value=state(context),serialized=JSON.stringify(value);if(serialized!==last){last=serialized;emit('notch:state',value);present(value.cards.length>0);}return value;}
+  function deliver(request){const current=selected?db.prepare('SELECT content FROM reminder_occurrences WHERE id=?').get(selected):null;if(['water','book','course','workout'].includes(request.content.kind)&&(!current||!['water','book','course','workout'].includes(JSON.parse(current.content).kind)))selected=request.ids[0];for(const id of request.ids){const row=db.prepare('SELECT content FROM reminder_occurrences WHERE id=?').get(id);if(row)db.prepare('UPDATE reminder_occurrences SET content=? WHERE id=?').run(JSON.stringify({...JSON.parse(row.content),surface:'notch'}),id);}const timeout=setTimeout(()=>{pending.delete(request.ids[0]);if(!closed)request.onUnknown();},15000);timeout.unref?.();pending.set(request.ids[0],{request,timeout});last='';refresh(request.context);}
+  function shown(ids){if(!Array.isArray(ids)||ids.length>100)throw new Error('Invalid reminder acknowledgement.');for(const id of ids){const entry=pending.get(id);if(entry){pending.delete(id);clearTimeout(entry.timeout);entry.request.onShow();}db.prepare("UPDATE reminder_occurrences SET state='delivered',delivered_at=COALESCE(delivered_at,?),reason='Displayed at the notch.' WHERE id=? AND state IN ('dispatching','delivered','unknown') AND json_extract(content,'$.surface')='notch'").run(now(),id);}if(ids.length)onFunctionalNotification();}
+  function action(value){const row=db.prepare('SELECT * FROM reminder_occurrences WHERE id=?').get(value.id);if(!row||JSON.parse(row.content).surface!=='notch')throw new Error('This notch reminder is no longer available.');if(!['dispatching','delivered','unknown'].includes(row.state)||row.action_at)return false;const content=JSON.parse(row.content),current=card(row);if(!current)return false;
+    const result=store.tx(()=>{
+      if(value.action==='select'){selected=row.id;return true;}
+      if(value.action==='refill'){if(content.kind!=='water')throw new Error('Choose a water reminder.');return refill(value.capacityMl);}
+      if(value.action==='drink'){if(content.kind!=='water')throw new Error('Choose a water reminder.');if(bottle().remainingMl<store.water().bottle)throw new Error('Refill your bottle first.');return engine.action({ids:[row.id],action:'drink'});}
+      if(value.action==='start'){
+        if(!['book','course','workout'].includes(content.kind)||!content.targetId)throw new Error('Open this item to continue.');
+        const plannedMinutes=number(value.minutes??current.plannedMinutes,1,600,'session minutes');if(!Number.isInteger(plannedMinutes))throw new Error('Use whole minutes.');let session;
+        if(current.sessionId){if(current.phase==='paused')session=routines.action('session:resume',{id:current.sessionId});else return true;}
+        else session=routines.action('session:start',{id:content.targetId});
+        db.prepare('UPDATE reminder_occurrences SET content=? WHERE id=?').run(JSON.stringify({...content,sessionId:session.id,plannedMinutes}),row.id);return session;
+      }
+      if(value.action==='pause'){if(!current.sessionId)throw new Error('Start the activity first.');return routines.action('session:pause',{id:current.sessionId});}
+      if(value.action==='snooze'){if(current.phase==='active')routines.action('session:pause',{id:current.sessionId});return engine.action({ids:[row.id],action:'snooze',minutes:value.minutes});}
+      if(value.action==='complete'){
+        if(!['book','course','workout'].includes(content.kind))throw new Error('Use the Drink action for water.');if(!current.sessionId)throw new Error('Start the activity first.');
+        if(content.kind==='book'&&value.pages!==undefined&&value.pages!==0)routines.action('book:log',{id:content.targetId,mode:'delta',value:value.pages,requestId:'notch-pages:'+row.id});
+        routines.action(content.kind==='workout'?'session:complete':'session:stop',{id:current.sessionId,confirmed:true});return engine.action({ids:[row.id],action:'done'});
+      }
+      if(value.action==='cancel'){if(content.kind==='water')throw new Error('Water stays available: drink, refill, snooze, or use the global busy switch.');if(current.sessionId)routines.action('session:stop',{id:current.sessionId});return engine.action({ids:[row.id],action:'dismiss'});}
+      throw new Error('Unknown notch reminder action.');
+    });last='';return result;
+  }
+  return{deliver,shown,action,refill,bottle,state,refresh,close(){closed=true;for(const entry of pending.values())clearTimeout(entry.timeout);pending.clear();}};
+}
+module.exports={createNotchReminders};

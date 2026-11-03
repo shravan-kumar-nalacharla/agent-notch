@@ -1,0 +1,5 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {safeUrl,verifyApiKeys,redact}=require('../src/browser-controller.cjs');
+test('browser policy blocks local, private, credential and non-HTTPS navigation',async()=>{for(const url of ['file:///C:/Users/shrav','http://example.com','https://127.0.0.1','https://10.1.2.3','https://192.168.0.2','https://[::1]','https://user:password@example.com'])await assert.rejects(safeUrl(url));assert.equal(await safeUrl('http://127.0.0.1:5000/',{testOrigins:['http://127.0.0.1:5000']}),'http://127.0.0.1:5000/');});
+test('API Keys verifier requires official origin, page heading, route, and absence of authentication/error',()=>{const page={url:'https://aistudio.google.com/api-keys',headings:['API Keys'],auth:false,error:false};assert.equal(verifyApiKeys(page),true);for(const patch of [{url:'https://evil.example/api-keys'},{url:'https://aistudio.google.com/'},{headings:['Welcome']},{auth:true},{error:true}])assert.equal(verifyApiKeys({...page,...patch}),false);assert.equal(redact('AIza'+'x'.repeat(35)),'[redacted]');});

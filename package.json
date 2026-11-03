@@ -1,0 +1,75 @@
+{
+  "name": "agent-notch",
+  "version": "0.13.0",
+  "private": true,
+  "description": "Agent Notch - a voice and screen assistant for Windows",
+  "author": "Shravan Kumar",
+  "main": "src/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/*.test.cjs",
+    "build:native": "node scripts/build-native.cjs",
+    "make:icon": "electron scripts/rasterize-icon.cjs",
+    "prepack": "node scripts/prepare-package.cjs",
+    "pack": "electron-builder --dir",
+    "predist": "node scripts/prepare-package.cjs",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "44.5.1",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "app.agentnotch.desktop",
+    "productName": "Agent Notch",
+    "files": [
+      "src/**/*",
+      "package.json",
+      "THIRD-PARTY-NOTICES.md"
+    ],
+    "extraResources": [
+      {
+        "from": "native/bin",
+        "to": "native",
+        "filter": [
+          "**/*",
+          "!**/*.pdb"
+        ]
+      },
+      {
+        "from": "tools/agent-browsers",
+        "to": "agent-browsers",
+        "filter": [
+          "chromium-*/**/*",
+          "ffmpeg-*/**/*"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "src/assets/icon.png",
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createStartMenuShortcut": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Agent Notch",
+      "uninstallDisplayName": "Agent Notch",
+      "deleteAppDataOnUninstall": false,
+      "include": "installer/consent.nsh"
+    },
+    "electronLanguages": [
+      "en-US",
+      "en-GB",
+      "hi",
+      "te"
+    ]
+  },
+  "dependencies": {
+    "ical.js": "2.2.1",
+    "playwright-core": "1.64.1"
+  }
+}

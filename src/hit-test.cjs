@@ -1,0 +1,9 @@
+'use strict';
+const{BrowserWindow}=require('electron');const fs=require('node:fs'),path=require('node:path');
+exports.run=async({win,geometry,out})=>{
+  const b=win.getBounds(),probe=new BrowserWindow({...b,frame:true,title:'Agent Notch click-through verification',show:false,autoHideMenuBar:true,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false}});
+  await probe.loadURL('data:text/html,'+encodeURIComponent('<title>Agent Notch click-through verification</title><body style="margin:0;background:#e9edf0;font:15px Segoe UI;height:100vh"><button style="width:100%;height:100%;border:0;background:#e9edf0" onclick="window.clicks=(window.clicks||[]).concat([{x:event.clientX,y:event.clientY,screenX:event.screenX,screenY:event.screenY}]);window.n=(window.n||0)+1;document.title=\'Agent Notch underlay clicks: \'+window.n;document.getElementById(\'count\').textContent=window.n">Click near the LEFT edge to verify click-through.<p id="count">0</p></button></body>'));
+  probe.show();win.showInactive();console.log('HITTEST_READY',JSON.stringify({bounds:b,title:probe.getTitle()}));
+  async function until(count){const start=Date.now();while(Date.now()-start<180000){if(await probe.webContents.executeJavaScript('(window.n||0)')>=count)return;await new Promise(r=>setTimeout(r,150));}throw new Error('Click-through verification did not receive click '+count);}
+  try{await until(1);console.log('HITTEST_DORMANT_PASS');await win.webContents.executeJavaScript("document.getElementById('activationTarget').click();window.dispatchEvent(new Event('island:test-enter'))");await until(2);fs.writeFileSync(path.join(out,'click-through.json'),JSON.stringify({dormant:true,expanded:true,nativeEnvelope:b,layout:geometry.layout,clicks:await probe.webContents.executeJavaScript('window.clicks')},null,2));console.log('HITTEST_EXPANDED_PASS');}finally{probe.destroy();}
+};
