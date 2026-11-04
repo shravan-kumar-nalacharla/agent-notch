@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; media-src 'self' blob:; connect-src 'none'; img-src 'self' data:">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-elem 'self' 'unsafe-inline'; style-src-attr 'none'; media-src 'self' blob:; connect-src 'none'; img-src 'self' data:">
   <title>Agent Notch</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="appearance.css">
@@ -245,6 +245,10 @@
   <script src="widgets-ui.js"></script>
   <script src="workspace-ui.js"></script>
   <script src="syntax-tokens.js"></script>
+  <link rel="stylesheet" href="../node_modules/@xterm/xterm/css/xterm.css">
+  <script src="../node_modules/@xterm/xterm/lib/xterm.js"></script>
+  <script src="../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="terminal-ui.js"></script>
   <script src="productivity-settings.js" defer></script>
   <script src="companion-ui.js"></script>
   <script src="live-playback.js"></script>

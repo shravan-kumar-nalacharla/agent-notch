@@ -50,6 +50,7 @@ internal static partial class Program
         AllowedActions.Add("awake");
         AllowedActions.UnionWith(["capture.sources","capture.desktop","ocr.local"]);
         AllowedActions.Add("hardware");
+        AllowedActions.UnionWith(["terminal.start","terminal.status","terminal.drain","terminal.write","terminal.resize","terminal.close","terminal.capabilities"]);
         Console.InputEncoding=System.Text.Encoding.UTF8;
         Console.OutputEncoding=new System.Text.UTF8Encoding(false);
         Parent = uint.TryParse(Environment.GetEnvironmentVariable("ISLAND_PARENT_PID"), out var p) ? p : 0;
@@ -61,7 +62,7 @@ internal static partial class Program
         Inserter = new TextInserter(new ClipboardService(Poster.Handle));
         using var timer = new System.Windows.Forms.Timer { Interval = 200 };
         timer.Tick += (_,_) => { Tick(); timer.Interval=Capture==null?200:33; }; timer.Start();
-        Application.ApplicationExit += (_,_) => { StopAwake(); StopMicrophone(); ReminderSound?.Dispose(); ReminderAudio?.Dispose(); Wake?.Dispose(); Capture?.Dispose(); MeetingMic?.Dispose(); MeetingSystem?.Dispose(); Hotkeys?.Dispose(); };
+        Application.ApplicationExit += (_,_) => { StopAwake(); StopMicrophone(); ReminderSound?.Dispose(); ReminderAudio?.Dispose(); Wake?.Dispose(); Capture?.Dispose(); MeetingMic?.Dispose(); MeetingSystem?.Dispose(); Hotkeys?.Dispose(); ManualTerminal?.Dispose(); };
         _ = Task.Run(async () => {
             string? line;
             while ((line = await Console.In.ReadLineAsync()) != null)
@@ -155,6 +156,7 @@ internal static partial class Program
             case "media.control": return await MediaControl(S(v,"command"),N(v,"position"),v);
             case "volume": return Volume(v);
             case "awake": return AwakeState(v);
+            case "terminal.start":case "terminal.status":case "terminal.drain":case "terminal.write":case "terminal.resize":case "terminal.close":case "terminal.capabilities":return await TerminalAction(action,v);
             case "hardware": return await Task.Run(HardwareSnapshot);
             case "system": return SystemState();
             case "brightness": return Brightness(v);

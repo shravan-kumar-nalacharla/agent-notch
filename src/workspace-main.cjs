@@ -1,14 +1,16 @@
 'use strict';
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 const {createWorkspaceStore,LANGUAGES}=require('./workspace-store.cjs'),{UNITS,convert,convertCurrency,createCurrencyClient}=require('./converters.cjs'),{findFiles}=require('./commands.cjs');
-function setupWorkspace({app,handle,native,shell,dialog,clipboard,calendar,captures,secrets,getProviderKey}){
+function setupWorkspace({app,handle,native,shell,dialog,clipboard,calendar,captures,secrets,getProviderKey,mainWindow}){
  let store,error;try{store=createWorkspaceStore(app.getPath('userData'));}catch(e){error=e.message;}const currency=store&&createCurrencyClient({store});let catalogue=[],catalogueAt=0;
  const power=require('./power-plans.cjs').createPowerPlans({dialog});let hardwareRequest,hardwareAt=0,hardwareValue;
  const {createGitHub,createBalances}=require('./account-tools.cjs'),github=createGitHub({secrets,shell}),balance=createBalances({secrets,getKey:getProviderKey});
+ const terminal=require('./terminal-main.cjs').createManualTerminal({app,native,dialog,mainWindow,store});
  async function apps(refresh){if(catalogueAt&&Date.now()-catalogueAt<300000&&!refresh)return catalogue;const roots=[path.join(process.env.APPDATA||'','Microsoft/Windows/Start Menu/Programs'),path.join(process.env.ProgramData||'C:/ProgramData','Microsoft/Windows/Start Menu/Programs')],paths=await findFiles(roots,'',{extensions:['.lnk'],maxResults:1000,maxEntries:10000});const next=[];for(const file of paths){try{const canonical=await fs.realpath(file);if(!roots.some(root=>{const relative=path.relative(root,canonical);return relative&&!relative.startsWith('..')&&!path.isAbsolute(relative);}))continue;const link=shell.readShortcutLink(canonical);if(!link.target)continue;next.push({id:crypto.createHash('sha256').update(canonical.toLowerCase()).digest('hex'),name:path.basename(file,'.lnk'),file:canonical});}catch{}}catalogue=next.sort((a,b)=>a.name.localeCompare(b.name));catalogueAt=Date.now();return catalogue;}
  handle('workspace:action',async request=>{
   if(!request||request.version!==1||typeof request.op!=='string')throw new Error('Unsupported workspace request.');const v=request.value||{};
   if(/^(capture:|ocr:)/.test(request.op))return captures.action(request.op,v);
+  if(request.op.startsWith('terminal:'))return terminal.action(request.op,v);
   if(error&&/^(scratch:|currency:|launcher:)/.test(request.op))throw new Error(error);
   switch(request.op){
    case 'github:get':return github.view();

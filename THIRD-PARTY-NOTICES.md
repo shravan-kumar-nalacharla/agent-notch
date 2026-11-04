@@ -37,3 +37,9 @@ Its LICENSE and NOTICE are retained in the bundled playwright-core package.
 The managed Chromium runtime retains its ABOUT file and built-in third-party
 credits (chrome://credits). The accompanying FFmpeg runtime retains its
 COPYING.LGPLv2.1 notice. These files are included with the browser resources.
+
+Xterm.js (@xterm/xterm 6.0.0 and @xterm/addon-fit 0.11.0), MIT.
+Copyright The xterm.js authors, SourceLair and Christopher Jeffrey.
+Their complete LICENSE files are retained in the bundled packages.
+Project: https://github.com/xtermjs/xterm.js
+

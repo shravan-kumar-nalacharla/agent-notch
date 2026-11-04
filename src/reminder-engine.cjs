@@ -1,7 +1,7 @@
 'use strict';
 const{randomUUID,randomBytes}=require('node:crypto');const{nextOccurrence,inWindow,dateKey}=require('./reminder-time.cjs');
 const{DEFAULT_NOTIFICATIONS}=require('./productivity-store.cjs');
-function createReminderEngine({store,deliver,openItem=()=>{},onChange=()=>{},contentForRule=defaultContent}){
+function createReminderEngine({store,deliver,openItem=()=>{},onChange=()=>{},contentForRule=defaultContent,getContext=()=>({})}){
   const{db,now}=store;let ticking=false,lastZone=store.timezone(),lastTickAt=now();
   // A crash after dispatch must not replay a possibly visible toast on restart.
   db.prepare("UPDATE reminder_occurrences SET state='unknown',reason='App restarted during Windows submission; check notification history.' WHERE state='dispatching'").run();
@@ -13,6 +13,7 @@ function createReminderEngine({store,deliver,openItem=()=>{},onChange=()=>{},con
     if(context.meeting)return'Gaming / Meeting Mode is suppressing notices.';if(context.locked)return'Screen is locked.';if(context.suspended)return'Windows is asleep.';
     if(prefs.delivery==='windows'&&context.osEnabled===false)return'Windows notifications are disabled.';
     if(context.fullscreen||context.shellBlocked)return'Windows presentation or notification state is blocking interruptions.';
+    if(context.interactive&&kind!=='notch')return'Waiting until the active Agent Notch view closes.';
     if(prefs.quietEnabled&&inWindow(now(),prefs.quietStart,prefs.quietEnd,store.timezone()))return'Quiet hours are active.';
     if(context.focus&&(row.content.priority||category?.priority)!=='high'&&kind!=='timer'&&!row.content.rest)return'Waiting for the focus session to finish.';
     if(context.activity&&['book','course','workout'].includes(kind)&&!row.content.rest)return'An activity session is already running.';
@@ -22,7 +23,7 @@ function createReminderEngine({store,deliver,openItem=()=>{},onChange=()=>{},con
     const prefs=settings();if(prefs.delivery!=='windows'&&!rule.test&&!rule.rest&&db.prepare("SELECT id FROM reminder_occurrences WHERE state IN ('dispatching','delivered','unknown','snoozed') AND (action_at IS NULL OR state='snoozed') AND json_extract(content,'$.surface')='notch' AND json_extract(content,'$.kind')=? AND COALESCE(json_extract(content,'$.targetId'),'')=? LIMIT 1").get(rule.kind,rule.targetId||'')){state='skipped';reason='A reminder for this item is already pinned or snoozed.';}let content;try{content=contentForRule(rule,store);}catch{content=defaultContent(rule,store);}content={...content,soundId:rule.soundId,priority:rule.priority};const id=randomUUID();
     db.prepare('INSERT OR IGNORE INTO reminder_occurrences(id,reminder_id,occurrence_key,scheduled_for,state,content,reason,not_before) VALUES(?,?,?,?,?,?,?,?)').run(id,rule.id,key,scheduledFor,state,JSON.stringify(content),reason,immediate||prefs.delivery!=='windows'||!prefs.grouping||(rule.priority||prefs.categories[rule.kind]?.priority)==='high'?now():now()+prefs.groupMinutes*60000);
   }
-  function tick(context={}){
+  function tick(context=getContext()){
     if(ticking||context.suspended)return;ticking=true;
     try{
       const zone=store.timezone(),prefs=settings();
@@ -60,7 +61,7 @@ function createReminderEngine({store,deliver,openItem=()=>{},onChange=()=>{},con
         const token=randomBytes(24).toString('hex');store.tx(()=>{for(const row of rows)db.prepare("UPDATE reminder_occurrences SET state='dispatching',reason='',action_at=NULL,action_token=?,attempts=attempts+1 WHERE id=?").run(token,row.id);});
         const ids=rows.map(row=>row.id),content=rows.length===1?rows[0].content:{kind:'general',title:'Agent Notch · Reminders',body:rows.length+' reminders are ready. '+rows.map(row=>row.content.title).slice(0,3).join(' · '),digest:true};
         const report=(state,reason='')=>{for(const id of ids)db.prepare("UPDATE reminder_occurrences SET state=?,reason=?,delivered_at=CASE WHEN ?='delivered' THEN ? ELSE delivered_at END WHERE id=? AND state='dispatching'").run(state,reason,state,now(),id);onChange();};
-        try{deliver({ids,token,content,settings:prefs,context,onShow:()=>report('delivered',prefs.delivery==='windows'?'Submitted to Windows; banner visibility and audibility are not confirmed.':'Displayed at the notch.'),onFailure:reason=>report('failed',String(reason).slice(0,500)),onUnknown:()=>report('unknown','Windows submission outcome is unknown. Check system settings before retrying.')});}catch(error){report('failed',error.message);}
+        try{deliver({ids,token,content,settings:prefs,context,onShow:()=>report('delivered',prefs.delivery==='windows'?'Submitted to Windows; banner visibility and audibility are not confirmed.':'Displayed at the notch.'),onFailure:reason=>report('failed',String(reason).slice(0,500)),onUnknown:()=>report('unknown',prefs.delivery==='windows'?'Windows submission outcome is unknown. Check system settings before retrying.':'Notch display was not confirmed; the reminder stays available.')});}catch(error){report('failed',error.message);}
       }
       onChange();
     }finally{ticking=false;}

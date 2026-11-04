@@ -14,7 +14,7 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
   productivity=require('./productivity-main.cjs').setupProductivity({app,BrowserWindow,Notification,powerMonitor,safeStorage,screen,native,handle,emit,shell,dialog,getState,getLibrary:()=>library.view(),getTimer:()=>legacyLibrary.view().timer,mainWindow,onFunctionalNotification});
   const calendar=require('./secure-calendar.cjs').createSecureCalendar({secrets:productivity.secrets,legacyLibrary,shell});
   const captures=require('./capture-tools.cjs').createCaptureTools({app,native,nativeImage,BrowserWindow,dialog,clipboard,library,screen,canRestore});
-  const workspace=require('./workspace-main.cjs').setupWorkspace({app,handle,native,shell,dialog,clipboard,calendar,captures,secrets:productivity.secrets,getProviderKey});
+  const workspace=require('./workspace-main.cjs').setupWorkspace({app,handle,native,shell,dialog,clipboard,calendar,captures,secrets:productivity.secrets,getProviderKey,mainWindow});
   app.on('before-quit',()=>captures.close());
   function notify(title,body){productivity.engine.recordEvent({kind:'general',id:require('node:crypto').randomUUID(),title,body});}
   handle('library:action',value=>{if(!value||typeof value.op!=='string')throw new Error('Missing action.');const state=library.action(value.op,value.value);if(value.op==='todo:edit'&&value.value?.done)onTransition();emit('library:changed',state);return state;});

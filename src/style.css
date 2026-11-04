@@ -58,6 +58,8 @@ header{height:30px;position:relative;display:flex;align-items:center;justify-con
 #date,#status,.audio-bars,#mic,#collapse{display:none}
 .header-actions{display:none}
 #body{height:0}
+#pendingReminders{min-width:28px;width:auto;padding:0 5px;font-size:11px}
+#pendingReminders[hidden]{display:none!important}
 #voiceHud{display:none}
 
 body:not(.expanded):not(.settings-window):not(.has-voice-hud) #island{opacity:1;transform:none;pointer-events:auto}

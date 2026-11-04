@@ -1,5 +1,9 @@
 # Agent Notch
 
+0.15.0 fixes More Tools jumping back to the top during background updates. It adds a reviewed manual ConPTY terminal, advanced-tool size presets and pending-reminder badges that preserve input focus. See [implementation and verification](docs/crest-parity/PHASE3_CHECKPOINT.md). This is a partial checkpoint of the 64-feature expansion.
+
+0.14.0 adds the labelled notch Mute/Unmute button, core workspace utilities, local screenshots/OCR, encrypted multi-feed calendar, supported provider integrations and window/media reliability improvements. See [core-tools scope and limits](docs/crest-parity/PHASE2_CHECKPOINT.md).
+
 0.13.0 adds persisted microphone mute, manual activation by default, held-key Push-to-Talk, Gaming / Meeting Mode, configurable mute shortcuts and managed browser tasks with verified navigation. Microphone preferences use the main Save changes action. See [privacy, browser architecture and test limits](docs/0.13.0-PRIVACY-AND-BROWSER.md). Installer: `release/0.13.0/Agent Notch Setup 0.13.0.exe` (unsigned).
 
 0.12.0 restores Groq as the default assistant/transcription provider, keeps Gemini Live optional, adds five independent saved-key fields with Show/Hide, simplifies Settings into separate sections with toggle switches, and fixes the dictation gradient gaps. Keys remain encrypted and survive Save/reopening. See [settings, migration and validation](docs/0.12.0-SETTINGS-AND-GROQ.md). Installer: `release/0.12.0/Agent Notch Setup 0.12.0.exe` (unsigned).

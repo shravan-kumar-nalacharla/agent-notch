@@ -1,0 +1,17 @@
+'use strict';
+module.exports=async({app,win,widgets,out,saveSnapshot})=>{
+ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),js=code=>win.webContents.executeJavaScript(code),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+ await js("window.island.productivity('notifications:settings',{enabled:false});window.island.save({appearance:{pinned:true}}).then(()=>window.island.activate({revealOnly:true}))");await sleep(800);await js("document.querySelector('nav [data-tab=tools]').click()");await sleep(400);win.show();win.focus();
+ const box=await js("document.querySelector('#tools .widget-grid').getBoundingClientRect().toJSON()");const x=Math.round(box.x+box.width/2),y=Math.round(box.y+Math.min(box.height/2,70));
+ win.webContents.sendInputEvent({type:'mouseMove',x,y});win.webContents.sendInputEvent({type:'mouseWheel',x,y,deltaX:0,deltaY:-240,canScroll:true});await sleep(120);
+ if(!await js("document.querySelector('#tools .widget-grid').scrollTop>0")){win.webContents.sendInputEvent({type:'mouseWheel',x,y,deltaX:0,deltaY:240,canScroll:true});await sleep(120);}
+ const before=await js("window.__toolsGrid=document.querySelector('#tools .widget-grid');window.__toolsGrid.scrollTop");assert.ok(before>0,'Mouse wheel did not scroll More Tools');
+ for(let i=0;i<20;i++){widgets().emit('library:changed',widgets().library.view());await sleep(50);}
+ const after=await js("({top:document.querySelector('#tools .widget-grid').scrollTop,sameGrid:window.__toolsGrid===document.querySelector('#tools .widget-grid')})");assert.ok(Math.abs(after.top-before)<2,`More Tools jumped from ${before} to ${after.top} during background updates`);assert.equal(after.sameGrid,true,'Background updates replaced the static tools grid');
+ await saveSnapshot(win,path.join(out,'more-tools-scroll.png'));
+ for(let i=0;i<35;i++)widgets().library.action('dictionary:add',{term:'Scroll fixture '+i});widgets().emit('library:changed',widgets().library.view());await js("window.islandOpenTool('dictionary')");await sleep(350);
+ const listBox=await js("document.querySelector('#tools .widget-content').getBoundingClientRect().toJSON()"),listX=Math.round(listBox.x+listBox.width/2),listY=Math.round(listBox.y+Math.min(listBox.height/2,50));win.webContents.sendInputEvent({type:'mouseMove',x:listX,y:listY});win.webContents.sendInputEvent({type:'mouseWheel',x:listX,y:listY,deltaX:0,deltaY:-240,canScroll:true});await sleep(120);
+ const listBefore=await js("document.querySelector('#tools .widget-content').scrollTop");assert.ok(listBefore>0,'Mouse wheel did not scroll dictionary');widgets().library.action('dictionary:add',{term:'Fresh background fixture'});for(let i=0;i<10;i++){widgets().emit('library:changed',widgets().library.view());await sleep(50);}
+ const listAfter=await js("({top:document.querySelector('#tools .widget-content').scrollTop,fresh:document.querySelector('#tools').textContent.includes('Fresh background fixture')})");assert.ok(Math.abs(listAfter.top-listBefore)<2,'Live tool content lost its scroll position');assert.equal(listAfter.fresh,true,'Live tool updates were accidentally disabled');
+ const report={version:app.getVersion(),before,after:after.top,backgroundUpdates:20,sameGrid:after.sameGrid,realMouseWheel:true,liveList:{before:listBefore,after:listAfter.top,contentUpdated:listAfter.fresh}};fs.writeFileSync(path.join(out,'tools-scroll.json'),JSON.stringify(report,null,2));console.log('TOOLS SCROLL PASS',JSON.stringify(report));
+};

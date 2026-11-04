@@ -15,3 +15,6 @@ test('goal changes suppress already queued water',t=>{const f=fixture(t,{groupin
 test('legacy timer events still use the common notification path',t=>{const f=fixture(t);f.engine.recordEvent({kind:'timer',id:'focus-1',title:'Focus complete',body:'Time for a break.'});f.engine.tick();assert.equal(f.sent.length,1);});
 
 test('meeting mode defers notices and restores delivery through the same scheduler',t=>{const f=fixture(t);f.engine.scheduleTest();f.engine.tick({meeting:true});assert.equal(f.sent.length,0);assert.ok(f.engine.history().some(row=>row.state==='deferred'&&/Meeting Mode/.test(row.reason)));f.engine.tick({meeting:false});assert.equal(f.sent.length,1);f.engine.tick();assert.equal(f.sent.length,1);});
+
+
+test('interactive views defer a due reminder and deliver once after closing',t=>{const f=fixture(t);f.once('interactive',1);f.advance(1);f.engine.tick({interactive:true});assert.equal(f.sent.length,0);assert.equal(f.engine.history()[0].state,'deferred');f.engine.tick({interactive:false});f.engine.tick({interactive:false});assert.equal(f.sent.length,1);assert.equal(f.engine.history()[0].state,'delivered');});

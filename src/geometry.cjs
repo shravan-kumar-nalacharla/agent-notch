@@ -1,27 +1,34 @@
 'use strict';
 const DENSITIES={compact:{width:410,height:230},default:{width:470,height:250},roomy:{width:540,height:280}};
+const TOOL_SIZES={compact:{width:410,height:230},standard:{width:470,height:250},spacious:{width:640,height:440}};
 function layoutFor(display,appearance={}){
-  const size=DENSITIES[appearance.density]||DENSITIES.default,area=display.workArea,bounds=display.bounds;
+  const choice=appearance.toolSizes?.[appearance.activeTool],toolSize=Object.hasOwn(TOOL_SIZES,choice)?choice:appearance.activeTool==='terminal'?'spacious':'auto';
+  const size=TOOL_SIZES[toolSize]||DENSITIES[appearance.density]||DENSITIES.default,area=display.workArea,bounds=display.bounds;
   const panelWidth=Math.min(size.width,area.width-48),panelHeight=Math.min(size.height,area.height-40),richHeight=Math.min(315,area.height-40);
   const width=Math.round(panelWidth+48),height=Math.round(Math.max(panelHeight,richHeight)+24),floating=appearance.shape==='pill';
   let center=area.x+area.width/2,y=area.y;
   if(floating){const saved=appearance.float||{};center=area.x+Number(saved.centerXDIP??area.width/2);center=Math.max(area.x+width/2,Math.min(area.x+area.width-width/2,center));y=Math.max(area.y,Math.min(area.y+area.height-height,area.y+Number(saved.yDIP||12)));}
-  return{bounds:{x:Math.round(center-width/2),y:Math.round(y),width,height},panelWidth,panelHeight,richHeight,centerX:center,displayId:String(display.id),scaleFactor:display.scaleFactor};
+  return{bounds:{x:Math.round(center-width/2),y:Math.round(y),width,height},panelWidth,panelHeight,richHeight,centerX:center,displayId:String(display.id),scaleFactor:display.scaleFactor,toolSize:choice||'auto'};
 }
 class IslandGeometry{
   constructor({win,screen,getAppearance,trace=()=>{},now=()=>performance.now()}){Object.assign(this,{win,screen,getAppearance,trace,now});this.expanded=false;this.voice=false;this.ignored=false;this.inside=false;this.userMove=false;this.rect=null;}
   reflow(){
-    const a=this.getAppearance(),all=this.screen.getAllDisplays();
+    const a={...this.getAppearance(),activeTool:this.activeTool||''},all=this.screen.getAllDisplays();
     if(this.displayMode!==a.display){this.displayMode=a.display;this.followDisplay=null;this.followCandidate=null;}
     const currentDisplay=all.find(d=>String(d.id)===this.layout?.displayId);
     let display=all.find(d=>String(d.id)===String(a.shape==='pill'?a.float?.displayId:a.display));
     if(!display&&a.display==='cursor')display=currentDisplay&&(this.expanded||this.voice||this.reminder||this.userMove)?currentDisplay:all.find(d=>String(d.id)===this.followDisplay)||currentDisplay||this.screen.getDisplayNearestPoint(this.screen.getCursorScreenPoint());
     display??=this.screen.getPrimaryDisplay();
-    this.layout=layoutFor(display,a);const current=this.win.getBounds();
-    if(JSON.stringify(current)!==JSON.stringify(this.layout.bounds)){this.programmaticUntil=performance.now()+200;this.win.setBounds(this.layout.bounds);this.trace({event:'setBounds',at:performance.now(),bounds:this.layout.bounds,display:{id:display.id,bounds:display.bounds,workArea:display.workArea,scaleFactor:display.scaleFactor}});}
+    const previous=this.layout;this.layout=layoutFor(display,a);const current=this.win.getBounds();clearTimeout(this.shrinkTimer);
+    if(JSON.stringify(current)!==JSON.stringify(this.layout.bounds)){
+      const target=this.layout.bounds,hold=this.expanded&&a.motion!=='off'&&previous?.displayId===this.layout.displayId&&(previous.bounds.width>target.width||previous.bounds.height>target.height),bounds=hold?{x:Math.round(this.layout.centerX-Math.max(current.width,target.width)/2),y:target.y,width:Math.max(current.width,target.width),height:Math.max(current.height,target.height)}:target;
+      this.programmaticUntil=performance.now()+240;this.win.setBounds(bounds);this.trace({event:'setBounds',at:performance.now(),bounds,display:{id:display.id,bounds:display.bounds,workArea:display.workArea,scaleFactor:display.scaleFactor}});
+      if(hold){const layout=this.layout;this.shrinkTimer=setTimeout(()=>{if(this.layout===layout&&!this.win.isDestroyed?.())this.win.setBounds(target);},220);this.shrinkTimer.unref?.();}
+    }
     this.win.webContents.send('window:layout',this.layout);return this.layout;
   }
   present(expanded,voice=false){this.expanded=expanded;this.voice=voice;return this.layout;}
+  tool(id){if(this.activeTool===id)return this.layout;this.activeTool=id;this.rect=null;return this.reflow();}
   hitbox(rect){if(!rect||!['x','y','width','height'].every(k=>Number.isFinite(rect[k]))||rect.width<0||rect.height<0)return;const b=this.win.getBounds();this.rect={x:Math.max(0,rect.x),y:Math.max(0,rect.y),width:Math.min(b.width,rect.width),height:Math.min(b.height,rect.height)};}
   poll(point){
     const a=this.getAppearance();
@@ -36,4 +43,4 @@ class IslandGeometry{
   }
   userPosition(){if(!this.userMove||performance.now()<(this.programmaticUntil||0)||this.getAppearance().shape!=='pill')return null;const b=this.win.getBounds(),d=this.screen.getDisplayMatching(b);return{displayId:String(d.id),centerXDIP:b.x-d.workArea.x+b.width/2,yDIP:b.y-d.workArea.y};}
 }
-module.exports={IslandGeometry,layoutFor,DENSITIES};
+module.exports={IslandGeometry,layoutFor,DENSITIES,TOOL_SIZES};

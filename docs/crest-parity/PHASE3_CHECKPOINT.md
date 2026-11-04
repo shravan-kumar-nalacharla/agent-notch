@@ -1,0 +1,15 @@
+# Interaction reliability checkpoint — 0.15.0
+
+This checkpoint prioritizes the reported More Tools scroll reset and finishes the pending manual terminal. It is not completion of the 64-feature expansion.
+
+More Tools used to replace its entire grid on every library update. A real Electron mouse-wheel test reproduced a jump from 184.8 DIP to zero. The static grid now keeps its DOM identity across background updates. Live tool content still refreshes and restores its viewport, with focused controls protected from replacement. The regression also scrolls a dictionary list while fresh entries arrive.
+
+Manual terminal: one Windows ConPTY session, local xterm.js, fixed Windows PowerShell / installed PowerShell 7 / CMD choices, native working-folder selection, explicit launch review, reviewed multiline paste, copy selection, font preference, bounded in-memory output and explicit close. Keeping a session when leaving or hiding the island is opt-in. A job terminates child processes on shutdown. AI planners cannot invoke this terminal. UTF-8 is the supported transport; alternate code-page controls are pending. See ADR-002-TERMINAL.md and THIRD-PARTY-NOTICES.md.
+
+Advanced tool panels have persisted compact, standard and spacious presets. Terminal defaults to spacious. Shrinking leaves enough native window space for the short renderer animation, and DPI rounding alone cannot start an extra shrink. The five-screen carousel retains its current compact sizing; its own per-tool selector and zoom remain pending.
+
+Reminders defer full cards during an expanded interactive view. A pending-reminder badge opens the existing Notification Center. Cards and session timers remain in the shared scheduler; mute does not disable them. A hidden window cannot acknowledge an unseen card, and waiting for an active view does not falsely mark it delivered. The complete recording/status priority stack remains pending.
+
+Validation uses fresh isolated profiles. Native and UI terminal checks execute a harmless PowerShell expression through real ConPTY while the microphone remains blocked. Test-only dialogs approve the fixture session; production always uses the native review. Physical Discord calls, Windows 10, multiple physical monitors, new authenticated provider services and alternate terminal code pages are not verified in this checkpoint. Installer and deployment results are appended only after payload verification.
+
+All 241 unit/regression tests pass. Source and self-contained packaged Electron checks pass: mouse-wheel scrolling across background updates, six terminal checks, eleven reminder checks with zero Windows toasts, thirteen privacy checks, six window/media checks, six workspace checks and twenty-three Settings checks. One source shortcut-injection attempt missed its key event; its rerun and the packaged run passed. Evidence is under F:/AgentNotch-builds/0.15.0; no actual provider key is used by these checks.

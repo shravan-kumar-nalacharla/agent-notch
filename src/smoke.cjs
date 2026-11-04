@@ -9,6 +9,8 @@ exports.run=async function({app,win,screen,getSettingsWindow,native,widgets,geom
   await until("!!window.islandOpenTool&&document.getElementById('assistantProvider').options.length>=4");await sleep(400);
   if(process.argv.includes('--crest-check'))return require('./smoke-crest.cjs')({app,win,getSettingsWindow,native,widgets,geometry,state,out,saveSnapshot});
   if(process.argv.includes('--workspace-check'))return require('./smoke-workspace.cjs')({app,win,native,widgets,out,saveSnapshot});
+  if(process.argv.includes('--terminal-check'))return require('./smoke-terminal.cjs')({app,win,native,widgets,geometry,out,saveSnapshot});
+  if(process.argv.includes('--tools-scroll-check'))return require('./smoke-tools-scroll.cjs')({app,win,widgets,out,saveSnapshot});
   if(process.argv.includes('--notch-reminder-check'))return require('./smoke-notch.cjs')({win,widgets,getSettingsWindow,out,saveSnapshot});
   if(process.argv.includes('--privacy-check'))return require('./smoke-privacy.cjs')({app,win,getSettingsWindow,native,state,out,saveSnapshot});
   if(process.argv.includes('--spotify-access-check'))return require('./smoke-spotify-access.cjs')({win,widgets,out,saveSnapshot});
