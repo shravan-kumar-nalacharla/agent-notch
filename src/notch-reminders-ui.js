@@ -32,7 +32,7 @@
     catch(error){const message=document.getElementById('notchReminderError');if(message)message.textContent=error.message;}
     finally{working=false;if(control.isConnected)control.disabled=false;}
   });
-  api.onVoice?.(value=>{const suppress=['connecting','listening','processing','transcribing','thinking'].includes(value.phase);if(suppress!==voiceSuppressed){voiceSuppressed=suppress;if(snapshot)render(snapshot);}});
+  api.onVoice?.(value=>{let suppress=voiceSuppressed;if(['connecting','listening','processing','transcribing','thinking'].includes(value.phase))suppress=true;else if(['idle','answer','done','error','draft','liveStop'].includes(value.phase))suppress=false;if(suppress!==voiceSuppressed){voiceSuppressed=suppress;if(snapshot)render(snapshot);}});
   api.onTask?.(value=>{taskSuppressed=['planning','running','review'].includes(value.phase);if(snapshot)render(snapshot);});
   window.addEventListener('island:expanded',event=>{interactiveSuppressed=event.detail===true;if(snapshot)render(snapshot);});
   api.onVisibility?.(visible=>{if(visible&&snapshot)render(snapshot);});

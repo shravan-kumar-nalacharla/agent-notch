@@ -22,4 +22,5 @@ async function synthesize({text,key,voice='hannah',signal},fetcher=fetch){
   if(Number(response.headers?.get('content-length')||0)>8*1024*1024)throw new Error('Voice response is too large.');
   const audio=Buffer.from(await response.arrayBuffer());if(audio.length>8*1024*1024||audio.toString('ascii',0,4)!=='RIFF'||audio.toString('ascii',8,12)!=='WAVE')throw new Error('Voice service returned invalid WAV audio.');return{audio:audio.toString('base64'),mime:'audio/wav'};
 }
-module.exports={VOICES,MODEL,SETUP_URL,chunks,synthesize};
+function selection(state,value){const input=typeof value==='string'?{text:value}:value;if(!input||typeof input.text!=='string')throw new Error('Enter speech text.');const chosen=state.companion?.chatEngine==='sarvam'?'sarvam':state.companion?.tts,provider=input.provider||chosen;if(!['sarvam','groq'].includes(provider)||provider!==chosen)throw new Error('Save the selected cloud voice in Settings first.');return{text:input.text,provider,language:input.language||'en',voice:provider==='sarvam'?state.companion.sarvamVoice||'priya':state.companion.voice||'hannah'};}
+module.exports={VOICES,MODEL,SETUP_URL,chunks,synthesize,selection};

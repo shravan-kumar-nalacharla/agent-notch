@@ -1,6 +1,6 @@
 'use strict';
 const {transcribe,chat}=require('./providers.cjs');const{clean}=require('./voiceflow.cjs');
-const localization=require('./localization.cjs');const{renderTranscript}=require('./transcript.cjs');
+const localization=require('./localization.cjs');const{renderTranscript,joinSegments}=require('./transcript.cjs');
 const {cleanCommandTranscript}=require('./voice-intents.cjs');
 const {randomUUID}=require('node:crypto');
 const {routeIntent}=require('./intent-router.cjs');
@@ -19,6 +19,7 @@ async function meetingNotes(transcript,config,ask=chat){
   while(summaries.length>1){const next=[];for(let at=0;at<summaries.length;at+=3)next.push(await ask({...config,system:system+' Merge these partial notes without losing decisions or actions.',text:summaries.slice(at,at+3).join('\n\n').slice(0,19000)}));summaries=next;}
   return summaries[0];
 }
+function conversationState(state,kind){const s=structuredClone(state);if(['chat','command','ptt'].includes(kind)&&s.companion?.chatEngine==='sarvam'){s.assistant='sarvam';s.speech='sarvam';s.companion.tts='sarvam';}return s;}
 function setupVoice({native,clipboard,runCommand=async()=>null,runWindowsTask=null,cancelWindowsTask=null,library,getState,getKey,emit,handle,notify,speak=text=>native.request('speak',{text}).catch(()=>{}),providers={transcribe,chat,clean},liveFactory=require('./gemini-live.cjs').createLiveClient,prepareProductivity=null,privacy=null}){
   const {transcribe,chat,clean}=providers;
   const sessions=new Map(),drafts=new Map();let meeting=null,meetingTimer=null,meetingBusy=false,meetingController=new AbortController();
@@ -61,7 +62,7 @@ function setupVoice({native,clipboard,runCommand=async()=>null,runWindowsTask=nu
       try{
         let mode='answer';
         if(session.selected){const edited=await editSelection(raw,session.selected,{provider:s.assistant,key:getKey(s.assistant),model:s.models[s.assistant]?.chat,signal:session.controller.signal},chat);text=edited.text;mode=edited.mode;}
-        else text=await runCommand(raw,{signal:session.controller.signal,source:'voice',utteranceId:event.id})??await chat({provider:s.assistant,key:getKey(s.assistant),model:s.models[s.assistant]?.chat,system:'You are '+(s.companion?.name||'Agent Notch')+', a friendly desktop assistant. Answer clearly and briefly. Never claim actions you did not perform.'+localization.languagePrompt(s.languages,raw),text:raw,signal:session.controller.signal,onDelta:delta=>{if(!session.cancelled)status({phase:'delta',id:event.id,delta,raw});}});
+        else text=(s.companion?.chatEngine==='sarvam'&&routeIntent(raw).intent==='conversation'&&!parseCommand(raw)?null:await runCommand(raw,{signal:session.controller.signal,source:'voice',utteranceId:event.id}))??await chat({provider:s.assistant,key:getKey(s.assistant),model:s.models[s.assistant]?.chat,system:'You are '+(s.companion?.name||'Agent Notch')+', a friendly desktop assistant. Answer clearly and briefly. Never claim actions you did not perform.'+localization.languagePrompt(s.languages,raw),text:raw,signal:session.controller.signal,onDelta:delta=>{if(!session.cancelled)status({phase:'delta',id:event.id,delta,raw});}});
         if(session.cancelled)return;
         let outcome;
         if(mode==='replace'){
@@ -69,7 +70,7 @@ function setupVoice({native,clipboard,runCommand=async()=>null,runWindowsTask=nu
           else {clipboard.writeText(text);outcome='Copied';}
         }
         status({phase:mode==='replace'?'done':'answer',text,raw,outcome,warning});
-        if(mode==='answer'&&s.speak)speak(text);
+        if(mode==='answer'&&s.speak)speak(text,s.companion?.chatEngine==='sarvam'?{provider:'sarvam'}:{});
       }catch(e){if(!session.cancelled)status({phase:'error',error:e.message,text:raw});}
     }else{
       if(s.voice?.cleanup!=='none'&&(!s.languages||localization.outputLanguage(s.languages)==='en')){
@@ -97,7 +98,7 @@ function setupVoice({native,clipboard,runCommand=async()=>null,runWindowsTask=nu
     if(event.type==='voice.finish'&&event.kind==='live'){stopLive();native.request('voice.release',{id:event.id}).catch(()=>{});status({phase:'idle'});return;}
     if(event.type==='voice.cancel')stopLive();
     if(event.type==='error'&&live){stopLive();native.request('voice.cancel').catch(()=>{}).finally(()=>status({phase:'error',error:event.error}));return;}
-    if(event.type==='voice.begin'){if(getState().languages&&!getState().languages.cloudAudioConsent){native.request('voice.cancel').catch(()=>{});status({phase:'error',error:'Cloud audio consent is required.'});return;}for(const[id,draft]of drafts){draft.cancelled=true;native.request('voice.release',{id}).catch(()=>{});}drafts.clear();sessions.set(event.id,{parts:[],cancelled:false,selected:event.selected||'',state:structuredClone(getState()),resolved:[],controller:new AbortController()});status({phase:'listening',id:event.id,kind:event.kind,app:event.app});}
+    if(event.type==='voice.begin'){if(getState().languages&&!getState().languages.cloudAudioConsent){native.request('voice.cancel').catch(()=>{});status({phase:'error',error:'Cloud audio consent is required.'});return;}for(const[id,draft]of drafts){draft.cancelled=true;native.request('voice.release',{id}).catch(()=>{});}drafts.clear();sessions.set(event.id,{parts:[],cancelled:false,selected:event.selected||'',state:conversationState(getState(),event.kind),resolved:[],controller:new AbortController()});status({phase:'listening',id:event.id,kind:event.kind,app:event.app});}
     if(event.type==='voice.selection'){const session=sessions.get(event.id);if(session)session.selected=event.text;}
     if(event.type==='voice.segment'){const session=sessions.get(event.id);if(session&&!session.finishing&&!session.parts[event.index])session.parts[event.index]=transcription(event.audio,event.mime,session.state,session.controller.signal).then(value=>{const result=typeof value==='string'?{text:value}:value;session.resolved[event.index]=result;let prefix=[];for(const part of session.resolved){if(!part?.text)break;prefix.push(part.text);}if(!session.cancelled&&!session.finishing&&prefix.length)status({phase:'partial',id:event.id,text:joinSegments(prefix)});return result;},e=>({error:e.message}));}
     if(event.type==='voice.finish'&&sessions.has(event.id)&&!sessions.get(event.id).finishing)complete(event).catch(e=>status({phase:'error',error:e.message})).finally(()=>{const session=sessions.get(event.id);sessions.delete(event.id);if(!session?.awaitingReview)native.request('voice.release',{id:event.id}).catch(()=>{});});
@@ -121,7 +122,7 @@ function setupVoice({native,clipboard,runCommand=async()=>null,runWindowsTask=nu
     if(value.op==='start'&&value.value?.kind==='chat'&&getState().companion?.chatEngine==='gemini_live')return startLive();
     if(value.op==='cancel')stopLive();
     if(value.op==='start'&&live)throw new Error('Stop Gemini Live before starting dictation.');
-    if(value.op==='start'||(value.op==='configure'&&value.value?.enabled)){const s=getState();if(s.languages&&!s.languages.cloudAudioConsent)throw new Error('Allow cloud audio in Voice & typing before recording.');getKey(s.speech);}
+    if(value.op==='start'||(value.op==='configure'&&value.value?.enabled)){const s=conversationState(getState(),value.value?.kind);if(s.languages&&!s.languages.cloudAudioConsent)throw new Error('Allow cloud audio in Voice & typing before recording.');getKey(s.speech);}
     return native.request(value.op==='devices'?'devices':`voice.${value.op}`,value.value||{});
   });
   async function drainMeeting(stop=false){if(!meeting||meetingBusy)return;const current=meeting;meetingBusy=true;try{const audio=await native.request(stop?'meeting.stop':'meeting.drain');if(!audio)return;for(const [key,speaker]of [['you','You'],['others','Others']])if(audio[key]){try{const result=await transcription(audio[key],'audio/wav',getState(),meetingController.signal);if(meeting!==current)return;meeting.lines.push({at:Date.now(),speaker,text:typeof result==='string'?result:result.text});}catch(e){if(meeting===current)meeting.errors.push(e.message);}}if(meeting===current)emit('meeting:state',meeting);}finally{meetingBusy=false;}}
@@ -135,5 +136,4 @@ function setupVoice({native,clipboard,runCommand=async()=>null,runWindowsTask=nu
   });
   return{stop(){stopLive();meetingController.abort();clearInterval(meetingTimer);meeting=null;emit('meeting:state',null);for(const session of [...sessions.values(),...drafts.values()]){session.cancelled=true;session.controller.abort();}sessions.clear();drafts.clear();status({phase:'idle'});}};
 }
-function joinSegments(parts){let words=[];for(const part of parts){const next=String(part||'').trim().split(/\s+/).filter(Boolean);let overlap=0;for(let n=1;n<=Math.min(12,words.length,next.length);n++)if(words.slice(-n).join(' ').toLowerCase()===next.slice(0,n).join(' ').toLowerCase())overlap=n;words.push(...next.slice(overlap));}return words.join(' ');}
-module.exports={setupVoice,joinSegments,meetingNotes,editSelection};
+module.exports={setupVoice,joinSegments,meetingNotes,editSelection,conversationState};

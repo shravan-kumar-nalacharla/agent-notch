@@ -2,7 +2,7 @@
 (()=>{
  const api=window.island,$=id=>document.getElementById(id),settings=new URLSearchParams(location.search).has('settings');
  const versions=new Map(),baseline=new Map(),removed=new Set();let latest,ready;
- const names={groq:'Groq',gemini:'Gemini',openai:'OpenAI',anthropic:'Anthropic',openrouter:'OpenRouter',deepseek:'DeepSeek',deepgram:'Deepgram'};
+ const names={groq:'Groq',gemini:'Gemini',openai:'OpenAI',anthropic:'Anthropic',openrouter:'OpenRouter',deepseek:'DeepSeek',deepgram:'Deepgram',sarvam:'Sarvam'};
  function status(provider,message){$('key-status-'+provider).textContent=message;}
  function refresh(state){latest=state;for(const provider of Object.keys(names)){if(!$('key-'+provider))continue;status(provider,removed.has(provider)?'Will be removed when you save.':state.keyErrors?.[provider]|| (baseline.has(provider)&&$('key-'+provider).value!==baseline.get(provider)&&$('key-'+provider).value?'Unsaved key':state.configured[provider]?'Saved on this PC':'Optional · no key saved'));}}
  async function loadKeys(revisions){if(!settings)return;const response=await api.savedProviderKeys();if(!response.ok)throw new Error(response.error);for(const provider of Object.keys(names)){const saved=response.value[provider]||'';baseline.set(provider,saved);if((versions.get(provider)||0)===(revisions?.get(provider)||0)){$('key-'+provider).value=saved;removed.delete(provider);}}refresh(latest);}

@@ -1,5 +1,7 @@
 # Agent Notch
 
+0.16.0 adds Sarvam voice questions and replies, a separate encrypted Sarvam key field and a one-step held-key chat preset. Push-to-Talk readiness now explains missing setup instead of silently doing nothing, and Sarvam failures never fall back to the Windows narrator. See [setup, implementation and test limits](docs/0.16.0-SARVAM-PTT.md).
+
 0.15.1 fixes reminders being replaced by the main notch when approaching Refilled or Snooze. Visible reminders keep control until their actions finish; normal hover and pin behavior resume afterward. See [cause, pointer regression and verification](docs/0.15.1-REMINDER-POINTER-FIX.md).
 
 0.15.0 fixes More Tools jumping back to the top during background updates. It adds a reviewed manual ConPTY terminal, advanced-tool size presets and pending-reminder badges that preserve input focus. See [implementation and verification](docs/crest-parity/PHASE3_CHECKPOINT.md). This is a partial checkpoint of the 64-feature expansion.

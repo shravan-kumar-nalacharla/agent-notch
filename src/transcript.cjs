@@ -20,4 +20,5 @@ function renderTranscript(raw,settings,dictionary=[]){
  if(settings.punctuation&&text.trim()&&!/[.!?।]$/u.test(text.trim()))text=text.trim()+(mode==='hi'?'।':'.');
  return{text,mode,recognizedLanguage:native,review,warning:review?'Review the output script before insertion. Transliteration is a draft; original speech is preserved.':''};
 }
-module.exports={renderTranscript,romanWord};
+function joinSegments(parts){let words=[];for(const part of parts){const next=String(part||'').trim().split(/\s+/).filter(Boolean);let overlap=0;for(let n=1;n<=Math.min(12,words.length,next.length);n++)if(words.slice(-n).join(' ').toLowerCase()===next.slice(0,n).join(' ').toLowerCase())overlap=n;words.push(...next.slice(overlap));}return words.join(' ');}
+module.exports={renderTranscript,romanWord,joinSegments};

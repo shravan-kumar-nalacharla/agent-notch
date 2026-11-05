@@ -6,7 +6,8 @@ const PROVIDERS = Object.freeze({
   openrouter:{base:'https://openrouter.ai/api/v1',chat:'openrouter/auto',speech:null,vision:null,capabilities:{chat:true,speech:false,vision:false,streaming:true,reasoning:false,tools:false}},
   openai: { capabilities:{chat:true,speech:true,vision:true,streaming:true,reasoning:true,tools:false}, base: 'https://api.openai.com/v1', chat: 'gpt-6-luna', speech: 'gpt-transcribe',vision:'gpt-6-luna' },
   deepseek: {base:'https://api.deepseek.com',chat:'deepseek-flash',chatModels:['deepseek-flash','deepseek-v4-pro'],speech:null,vision:null,capabilities:{chat:true,speech:false,vision:false,streaming:true,reasoning:true,tools:false}},
-  gemini: { capabilities:{chat:true,speech:true,vision:true,streaming:false,reasoning:false,tools:false}, base: 'https://generativelanguage.googleapis.com/v1beta', chat: 'gemini-3.8-flash', speech: 'gemini-3.8-flash',vision:'gemini-3.8-flash' }
+  gemini: { capabilities:{chat:true,speech:true,vision:true,streaming:false,reasoning:false,tools:false}, base: 'https://generativelanguage.googleapis.com/v1beta', chat: 'gemini-3.8-flash', speech: 'gemini-3.8-flash',vision:'gemini-3.8-flash' },
+  sarvam:{base:'https://api.sarvam.ai/v1',chat:'sarvam-105b-conversations',speech:'saaras:v4',vision:null,capabilities:{chat:true,speech:true,vision:false,streaming:true,reasoning:true,tools:false}}
 });
 function config(provider, key, model, kind) {
   if (!Object.hasOwn(PROVIDERS, provider)) throw new Error('Choose a supported AI provider.');
@@ -27,7 +28,8 @@ async function chat({provider,key,model,text,system='You are a friendly desktop 
   const request=provider==='gemini'?{url:`${c.base}/models/${encodeURIComponent(c.model)}:generateContent`,headers:{'content-type':'application/json','x-goog-api-key':c.key},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:'user',parts:[{text}]}],...(json?{generationConfig:{responseMimeType:'application/json',maxOutputTokens:4096}}:{})})}:{url:`${c.base}/chat/completions`,headers:{'content-type':'application/json',authorization:`Bearer ${c.key}`},body:JSON.stringify({model:c.model,...(provider==='openai'&&c.model==='gpt-6-luna'?{reasoning_effort:'none'}:{}),...(provider==='deepseek'?{thinking:{type:thinking?'enabled':'disabled'},stream:streaming,...(streaming?{stream_options:{include_usage:true}}:{})}:{}),messages,...(json?{response_format:{type:'json_object'}}:{})})};
   let result='';
   if(provider==='anthropic'){request.url=c.base+'/messages';request.headers={'content-type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01'};request.body=JSON.stringify({model:c.model,max_tokens:4096,stream:streaming,system:system+(json?'\nReturn only valid JSON, without Markdown fences.':''),messages:[{role:'user',content:text}]});}
-  else if(streaming&&provider!=='deepseek'){const body=JSON.parse(request.body);body.stream=true;body.stream_options={include_usage:true};request.body=JSON.stringify(body);}
+  else if(streaming&&provider!=='deepseek'){const body=JSON.parse(request.body);body.stream=true;if(provider!=='sarvam')body.stream_options={include_usage:true};request.body=JSON.stringify(body);}
+  if(provider==='sarvam'){request.headers={'content-type':'application/json','api-subscription-key':c.key};const body=JSON.parse(request.body);body.reasoning_effort='none';body.max_tokens=2048;request.body=JSON.stringify(body);}
   if(streaming){
     const res=await fetcher(request.url,{method:'POST',headers:request.headers,body:request.body,signal:signal?AbortSignal.any([signal,AbortSignal.timeout(60000)]):AbortSignal.timeout(60000)});
     if(!res.ok)throw providerError(res.status);
@@ -46,6 +48,7 @@ async function transcribe({ provider, key, model, audio, mime = 'audio/webm', la
   if (!Buffer.isBuffer(audio) || audio.length < 100 || audio.length > 18 * 1024 * 1024) throw new Error('Recording must be between 100 bytes and 18 MB.');
   if (!['audio/webm', 'audio/webm;codecs=opus', 'audio/wav', 'audio/ogg', 'audio/mp4'].includes(mime)) throw new Error('Unsupported audio format.');
   if(language&&!/^[a-z]{2,3}$/.test(language))throw new Error('Use a spoken language code, not an output style.');
+  if(provider==='sarvam')return require('./sarvam.cjs').transcribe({key:c.key,model:c.model,audio,mime,language,allowCodeSwitch,detailed,signal},fetcher);
   if(provider==='deepgram'){
     if(!Array.isArray(hints)||hints.some(h=>!['en','hi','te'].includes(h)))throw new Error('Invalid speech language hints.');
     const url=new URL(c.base+'/listen');url.searchParams.set('model',c.model);url.searchParams.set('punctuate','true');

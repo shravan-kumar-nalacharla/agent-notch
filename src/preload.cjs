@@ -1,7 +1,7 @@
 'use strict';
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 contextBridge.exposeInMainWorld('island', {
-  version: '0.15.1',
+  version: '0.16.0',
   workspace:(op,value={})=>ipcRenderer.invoke('workspace:action',{version:1,op,value}),
   onVisibility:callback=>ipcRenderer.on('window:visibility',(_e,value)=>callback(value)),
   toolSurface:value=>ipcRenderer.invoke('window:tool',value),
@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('island', {
   openVoiceSetup:()=>ipcRenderer.invoke('speech:setup'),
   speechSegments:text=>ipcRenderer.invoke('speech:segments',text),
   synthesize:text=>ipcRenderer.invoke('speech:synthesize',text),
+  cancelSpeech:()=>ipcRenderer.invoke('speech:cancel'),
+  openSarvamSetup:()=>ipcRenderer.invoke('sarvam:setup'),
   wakePause:paused=>ipcRenderer.invoke('companion:pause',paused),
   companionCheck:()=>ipcRenderer.invoke('companion:check'),
   onWake:callback=>ipcRenderer.on('wake:detected',(_e,value)=>callback(value)),

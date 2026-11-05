@@ -277,7 +277,7 @@ $('homeAsk').onclick = () => {
 
 async function startNativeVoice(kind = 'chat') {
   state = await result(window.island.get());
-  const provider=kind==='chat'&&state.companion?.chatEngine==='gemini_live'?'gemini':state.speech;
+  const provider=kind==='chat'&&state.companion?.chatEngine==='gemini_live'?'gemini':state.companion?.chatEngine==='sarvam'?'sarvam':state.speech;
   if (!state.configured[provider]) {
     $('status').textContent = 'API key needed';
     await result(window.island.settings());
@@ -323,10 +323,10 @@ async function toggleChatVoice() {
     error();
     cancelled = false;
     state = await result(window.island.get());
-    if (!state.configured[state.companion?.chatEngine === 'gemini_live' ? 'gemini' : state.speech]) {
+    if (!state.configured[state.companion?.chatEngine === 'gemini_live' ? 'gemini' : state.companion?.chatEngine === 'sarvam' ? 'sarvam' : state.speech]) {
       $('status').textContent = 'API key needed';
       await result(window.island.settings());
-      throw new Error(`Add your ${state.companion?.chatEngine === 'gemini_live' ? 'Gemini' : state.speech} API key in AI & API keys to start voice chat.`);
+      throw new Error(`Add your ${state.companion?.chatEngine === 'gemini_live' ? 'Gemini' : state.companion?.chatEngine === 'sarvam' ? 'Sarvam' : state.speech} API key in AI & API keys to start voice chat.`);
     }
     if(!state.languages.cloudAudioConsent){await result(window.island.settings('voice'));throw new Error('Allow cloud audio in Voice typing, then save.');}
     if (window.island.nativeVoice) {

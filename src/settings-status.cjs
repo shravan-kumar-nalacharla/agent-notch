@@ -1,4 +1,5 @@
 'use strict';
+function pushToTalkStatus(state,hasKey){const provider=state.companion?.chatEngine==='sarvam'?'sarvam':state.speech,base={ready:false,active:false,provider};if(state.microphone?.mode!=='ptt')return{...base,needs:'mode',message:'Push-to-talk is off. Select Push-to-Talk in Listening mode and save.'};if(state.companion?.chatEngine==='gemini_live')return{...base,needs:'engine',message:'For push-to-talk choose Sarvam or Standard conversation. Gemini Live uses manual conversation activation.'};if(!state.languages?.cloudAudioConsent)return{...base,needs:'consent',message:'Allow cloud audio in Voice & typing, then save.'};if(!hasKey(provider))return{...base,needs:'key',message:`Save your ${provider==='sarvam'?'Sarvam':provider} API key in AI & API keys to use push-to-talk.`};return{...base,ready:true,message:`Hold ${state.microphone.pttShortcut} while asking; release to get an answer.`};}
 function voiceStatus(state,hasKey){
  if(!state.voice?.enabled)return{ready:false,active:false,message:'Global voice hotkey is off.'};
  if(!state.languages?.cloudAudioConsent)return{ready:false,active:false,needs:'consent',message:'Hotkey preference saved. Allow cloud audio in Voice typing to activate it.'};
@@ -9,4 +10,4 @@ function voiceStatus(state,hasKey){
 function loginOptions(app){return{path:'"'+process.execPath+'"',args:app.isPackaged?[]:[app.getAppPath()]};}
 function setStartup(app,enabled){const options=loginOptions(app);app.setLoginItemSettings({...options,name:'app.agentnotch.desktop',enabled,openAtLogin:enabled});const status=app.getLoginItemSettings(options);if(enabled&&(!status.openAtLogin||status.executableWillLaunchAtLogin===false))throw new Error('Windows did not confirm startup registration.');return status;}
 function shouldHideFullscreen(appearance,system){return !!appearance.hideFullscreen&&!!system.fullscreen&&!system.captureOverlay;}
-module.exports={voiceStatus,loginOptions,setStartup,shouldHideFullscreen};
+module.exports={voiceStatus,pushToTalkStatus,loginOptions,setStartup,shouldHideFullscreen};
