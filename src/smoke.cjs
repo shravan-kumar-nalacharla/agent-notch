@@ -7,16 +7,17 @@ exports.run=async function({app,win,screen,getSettingsWindow,native,widgets,geom
   async function check(code,label){const value=await js(code);if(!value){await saveSnapshot(win,path.join(out,'failure.png'));throw new Error(label+' '+JSON.stringify(await js("({body:document.body.className,status:document.getElementById('status').textContent,html:document.getElementById('tools').innerHTML.slice(0,300)})")));}evidence.checks.push(label);}
   async function until(code){for(let i=0;i<100;i++){if(await js(code))return;await sleep(100);}throw new Error('Timed out: '+code);}
   await until("!!window.islandOpenTool&&document.getElementById('assistantProvider').options.length>=4");await sleep(400);
+  if(!['--notch-reminder-check','--notch-pointer-check','--background-reminder-check'].some(flag=>process.argv.includes(flag)))await js("window.island.productivity('notifications:settings',{enabled:false})");
   if(process.argv.includes('--crest-check'))return require('./smoke-crest.cjs')({app,win,getSettingsWindow,native,widgets,geometry,state,out,saveSnapshot});
   if(process.argv.includes('--workspace-check'))return require('./smoke-workspace.cjs')({app,win,native,widgets,out,saveSnapshot});
   if(process.argv.includes('--terminal-check'))return require('./smoke-terminal.cjs')({app,win,native,widgets,geometry,out,saveSnapshot});
   if(process.argv.includes('--tools-scroll-check'))return require('./smoke-tools-scroll.cjs')({app,win,widgets,out,saveSnapshot});
   if(process.argv.includes('--notch-reminder-check'))return require('./smoke-notch.cjs')({win,widgets,getSettingsWindow,out,saveSnapshot});
+  if(process.argv.includes('--notch-pointer-check'))return require('./smoke-notch-pointer.cjs')({app,win,screen,widgets,geometry,out,saveSnapshot});
   if(process.argv.includes('--privacy-check'))return require('./smoke-privacy.cjs')({app,win,getSettingsWindow,native,state,out,saveSnapshot});
   if(process.argv.includes('--spotify-access-check'))return require('./smoke-spotify-access.cjs')({win,widgets,out,saveSnapshot});
   if(process.argv.includes('--windows-task-check'))return require('./smoke-windows-task.cjs')({win,native,out,saveSnapshot});
   if(process.argv.includes('--settings-redesign-check'))return require('./smoke-settings-redesign.cjs')({app,win,getSettingsWindow,native,state,out,saveSnapshot});
-  if(!process.argv.includes('--background-reminder-check'))await js("window.island.productivity('notifications:settings',{enabled:false})");
   if(process.argv.includes('--multilingual-only')){await js("window.island.settings()");for(let i=0;i<100&&!getSettingsWindow();i++)await sleep(50);const settings=getSettingsWindow();await new Promise(r=>settings.webContents.isLoading()?settings.webContents.once('did-finish-load',r):r());await sleep(500);await require('./smoke-multilingual.cjs')({win,settings,state,widgets:widgets(),out,saveSnapshot,evidence});console.log('MULTILINGUAL SMOKE PASS',evidence.checks.length);return;}
   if(process.argv.includes('--settings-save-check'))return require('./smoke-settings-save.cjs')({app,win,getSettingsWindow,native,state,out,saveSnapshot});
   if(process.argv.includes('--speech-output-check'))return require('./smoke-speech-output.cjs')({win,state,out});

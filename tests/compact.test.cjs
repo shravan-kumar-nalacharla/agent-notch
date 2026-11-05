@@ -1,5 +1,9 @@
 const{test}=require('node:test'),assert=require('node:assert/strict');
 const{layoutFor}=require('../src/geometry.cjs'),{IslandMotion}=require('../src/island-motion.js'),{pickMoment,validateQuiet}=require('../src/quiet.cjs');
+test('reminder ownership blocks queued hover, direct open and pin until the card ends',()=>{
+ let blocked=false,id=0;const timers=new Map(),events=[],motion=new IslandMotion({open:()=>events.push('open'),close:()=>events.push('close'),canClose:()=>true,canOpen:()=>!blocked,setTimer:fn=>{timers.set(++id,fn);return id;},clearTimer:id=>timers.delete(id)});
+ motion.enter();const key=motion.timers.intent,intent=timers.get(key);timers.delete(key);blocked=true;intent();assert.deepEqual(events,[]);motion.open();motion.pin(true);assert.deepEqual(events,[]);assert.equal(motion.state,'DORMANT_LINE');blocked=false;motion.open();assert.deepEqual(events,['open']);motion.dispose();assert.equal(timers.size,0);
+});
 test('geometry stays on the same monitor center at all sizes and modeled DPI scales',()=>{
   for(const scaleFactor of [1,1.25,1.5,2])for(const x of [0,-1920])for(const density of ['compact','default','roomy']){
     const d={id:1,scaleFactor,bounds:{x,y:0,width:1536,height:864},workArea:{x:x+48,y:32,width:1488,height:800}},layout=layoutFor(d,{density});assert.ok(Math.abs(layout.bounds.x+layout.bounds.width/2-(d.workArea.x+d.workArea.width/2))*scaleFactor<=2);assert.equal(layout.bounds.y,d.workArea.y);assert.ok(layout.panelWidth<=540);assert.ok(layout.panelHeight<=280);

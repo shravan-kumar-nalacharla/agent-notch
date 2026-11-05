@@ -1,7 +1,7 @@
 'use strict';
 (()=>{
   if(new URLSearchParams(location.search).has('settings'))return;
-  const api=window.island;let current,viewKey='',snapshot,working=false,voiceSuppressed=false,taskSuppressed=false,interactiveSuppressed=document.body.classList.contains('expanded');const acknowledged=new Set();
+  const api=window.island;let current,viewKey='',snapshot,working=false,voiceSuppressed=false,taskSuppressed=false,interactiveSuppressed=document.body.classList.contains('expanded'),lastVisible;const acknowledged=new Set();
   const pending=document.createElement('button');pending.id='pendingReminders';pending.hidden=true;pending.type='button';pending.setAttribute('aria-label','Open pending reminders');pending.title='Open pending reminders';const mic=document.getElementById('microphonePrivacy');mic.before(pending);pending.onclick=()=>call('open',{section:'notifications'}).catch(error=>window.islandShowError?.(error.message));
   const panel=document.createElement('section');panel.id='notchReminder';panel.setAttribute('aria-label','Reminder');panel.hidden=true;document.getElementById('island').append(panel);
   const filters=document.createElementNS('http://www.w3.org/2000/svg','svg');filters.setAttribute('width','0');filters.setAttribute('height','0');filters.setAttribute('aria-hidden','true');
@@ -12,7 +12,7 @@
   const button=(action,label,primary=false)=>`<button type="button" data-reminder-action="${action}" ${primary?'class="primary"':''}>${escape(t(label))}</button>`;
   const time=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
   async function call(op,value={}){const result=await api.productivity(op,value);if(!result.ok)throw new Error(result.error);return result.value;}
-  function render(value){snapshot=value;const available=value.cards||[],pendingCount=Math.max(available.length,value.pendingCount||0);pending.hidden=!interactiveSuppressed||pendingCount===0;pending.textContent='♧ '+Math.min(99,pendingCount)+(pendingCount>99?'+':'');const cards=(voiceSuppressed||taskSuppressed||interactiveSuppressed)?[]:available;current=cards.find(c=>c.id===value.selected)||cards[0];const visible=!!current;panel.hidden=!visible;document.body.classList.toggle('has-reminder-hud',visible);api.setReminderHud(visible);window.dispatchEvent(new Event('island:layout-change'));
+  function render(value){snapshot=value;const available=value.cards||[],pendingCount=Math.max(available.length,value.pendingCount||0);pending.hidden=!interactiveSuppressed||pendingCount===0;pending.textContent='♧ '+Math.min(99,pendingCount)+(pendingCount>99?'+':'');const cards=(voiceSuppressed||taskSuppressed||interactiveSuppressed)?[]:available;current=cards.find(c=>c.id===value.selected)||cards[0];const visible=!!current;panel.hidden=!visible;document.body.classList.toggle('has-reminder-hud',visible);if(visible!==lastVisible){lastVisible=visible;api.setReminderHud(visible);}window.dispatchEvent(new Event('island:layout-change'));
     if(!visible){if(viewKey&&!voiceSuppressed&&!taskSuppressed&&!interactiveSuppressed)window.dispatchEvent(new Event('island:reminder-closed'));viewKey='';return;}
     const key=[current.id,current.phase,current.asset].join(':');
     if(key!==viewKey){viewKey=key;const water=current.kind==='water',timed=['book','course','workout'].includes(current.kind)&&!current.rest;

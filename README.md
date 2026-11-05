@@ -1,5 +1,7 @@
 # Agent Notch
 
+0.15.1 fixes reminders being replaced by the main notch when approaching Refilled or Snooze. Visible reminders keep control until their actions finish; normal hover and pin behavior resume afterward. See [cause, pointer regression and verification](docs/0.15.1-REMINDER-POINTER-FIX.md).
+
 0.15.0 fixes More Tools jumping back to the top during background updates. It adds a reviewed manual ConPTY terminal, advanced-tool size presets and pending-reminder badges that preserve input focus. See [implementation and verification](docs/crest-parity/PHASE3_CHECKPOINT.md). This is a partial checkpoint of the 64-feature expansion.
 
 0.14.0 adds the labelled notch Mute/Unmute button, core workspace utilities, local screenshots/OCR, encrypted multi-feed calendar, supported provider integrations and window/media reliability improvements. See [core-tools scope and limits](docs/crest-parity/PHASE2_CHECKPOINT.md).

@@ -3,6 +3,7 @@
 const $ = id => document.getElementById(id);
 const settingsMode = new URLSearchParams(location.search).has('settings');
 const isSmoke = new URLSearchParams(location.search).has('test');
+const hoverEnabled = !isSmoke || new URLSearchParams(location.search).has('pointerTest');
 
 
 let state;
@@ -90,11 +91,11 @@ async function setExpanded(on){
   window.dispatchEvent(new CustomEvent('island:expanded',{detail:on}));
 }
 function canAutoClose(){return !document.body.classList.contains('is-capturing')&&!document.body.classList.contains('has-windows-task')&&!document.body.classList.contains('has-reminder-hud')&&!captureOverlayActive&&!state?.appearance?.pinned&&state?.appearance?.autoClose!==false&&!nativeRecording&&!nativeProcessing&&recorder?.state!=='recording'&&!document.body.classList.contains('is-dragging')&&!(document.hasFocus()&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))&&!(keyboardFocus&&document.hasFocus()&&$('island').contains(document.activeElement));}
-const motion=new IslandMotion({open:()=>setExpanded(true),close:()=>setExpanded(false),canClose:canAutoClose,changed:value=>document.body.dataset.motionState=value});
+const motion=new IslandMotion({open:()=>setExpanded(true),close:()=>setExpanded(false),canOpen:()=>!document.body.classList.contains('has-reminder-hud'),canClose:canAutoClose,changed:value=>document.body.dataset.motionState=value});
 async function expand(on=true){if(settingsMode)return;return on?motion.open():motion.close();}
 window.island.onCaptureOverlay?.(({active})=>{captureOverlayActive=active;if(active){motion.cancel('leave');}else if(!motion.inside&&expanded)motion.leave();});
 window.island.onVisibility?.(visible=>{if(!visible&&expanded)expand(false).catch(showError);});
-window.island.onHover?.(({inside})=>{if(settingsMode||isSmoke||windowPolicy!=='normal')return;inside?motion.enter():motion.leave();});
+window.island.onHover?.(({inside})=>{if(settingsMode||!hoverEnabled||windowPolicy!=='normal')return;inside?motion.enter():motion.leave();});
 let panelResize;
 window.island.onLayout?.(layout=>{
   const panel=$('island'),before=panel.getBoundingClientRect();panelResize?.cancel();
@@ -139,7 +140,7 @@ window.addEventListener('island:navigate', event => {
   tab(event.detail);
   expand(true).catch(showError);
 });
-window.addEventListener('island:reminder-closed',()=>{if(!state?.appearance?.pinned)expand(false).catch(showError);});
+window.addEventListener('island:reminder-closed',()=>expand(!!state?.appearance?.pinned).catch(showError));
 window.addEventListener('island:layout-change',()=>requestAnimationFrame(sendHitbox));
 window.islandSurfaceResize = () => syncSurfaceHeight(true).catch(() => {});
 
@@ -169,8 +170,8 @@ $('pin').onclick = async () => {
   }
 };
 
-$('island').addEventListener('mouseenter',()=>{if(!settingsMode&&!isSmoke&&windowPolicy==='normal')motion.enter();});
-$('island').addEventListener('mouseleave',()=>{if(!settingsMode&&!isSmoke)motion.leave();});
+$('island').addEventListener('mouseenter',()=>{if(!settingsMode&&hoverEnabled&&windowPolicy==='normal')motion.enter();});
+$('island').addEventListener('mouseleave',()=>{if(!settingsMode&&hoverEnabled)motion.leave();});
 function scheduleAutoClose(){motion.leave();}
 window.addEventListener('island:test-leave',()=>motion.leave());
 window.addEventListener('island:test-enter',()=>motion.enter());

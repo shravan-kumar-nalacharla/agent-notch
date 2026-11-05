@@ -63,12 +63,13 @@ const publicState = () => ({ ...state,microphoneStatus:privacy?.view()||{...stat
 function persist() { fs.mkdirSync(path.dirname(file()), { recursive: true }); fs.writeFileSync(file() + '.tmp', JSON.stringify(state)); fs.renameSync(file() + '.tmp', file()); }
 function key(provider) { const value=keyCache.get(provider);if(!value)throw new Error(keyErrors[provider]||`Save your ${provider} API key in Settings.`);return value; }
 function resize(expanded, view='home', contentHeight, voiceHud=false){
+  if(expanded&&geometry?.reminder)expanded=false;
   if(!expanded&&windowOverride&&!voiceHud){windowOverride=false;win?.webContents.send('window:policy',{behavior:windowRule});}
   if(expanded&&!windowOverride&&windowRule!=='normal')expanded=false;
   surfaceExpanded=expanded;voiceHudActive=voiceHud;
   return geometry?.present(expanded,voiceHud||geometry.reminder);
 }
-function activateIsland(value={}){if(!liveContents(win))return;windowOverride=true;userHidden=false;win.webContents.send('window:policy',{behavior:'normal'});win.showInactive();resize(true);win.webContents.send(value?.revealOnly?'window:restore':'window:open');}
+function activateIsland(value={}){if(!liveContents(win))return;userHidden=false;if(geometry?.reminder){if(!win.isVisible())win.showInactive();return;}windowOverride=true;win.webContents.send('window:policy',{behavior:'normal'});win.showInactive();resize(true);win.webContents.send(value?.revealOnly?'window:restore':'window:open');}
 function openSettings(target='') {
   target=['quotes','voice','providers'].includes(target)?target:'';
   if(!liveContents(win))return;win.webContents.send('window:collapse'); resize(false);
@@ -130,7 +131,7 @@ else {
     if(smokeMode)win.webContents.on('console-message',event=>console.log('RENDERER',event.message));
     win.webContents.on('will-navigate', e => e.preventDefault());
     win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-    win.loadFile(path.join(__dirname, 'index.html'), process.argv.includes('--smoke-test') ? {query:{test:'1'}} : {}); resize(false);
+    win.loadFile(path.join(__dirname, 'index.html'), process.argv.includes('--smoke-test') ? {query:{test:'1',...(process.argv.includes('--notch-pointer-check')?{pointerTest:'1'}:{})}} : {}); resize(false);
     win.on('will-move',()=>{geometry.userMove=true;});
     win.on('moved',()=>{const position=geometry.userPosition();if(position){state.appearance.float=position;persist();}setTimeout(()=>geometry.userMove=false,100);});
     for(const event of ['display-added','display-removed','display-metrics-changed'])screen.on(event,()=>{if(!win.isDestroyed())geometry.reflow();});
