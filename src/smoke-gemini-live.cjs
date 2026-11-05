@@ -26,6 +26,7 @@ module.exports=async function({win,getSettingsWindow,widgets,state,out,saveSnaps
   send({phase:'liveAudio',id:'live-fixture',audio:Buffer.alloc(4800).toString('base64'),volume:0,rate:24000});
   send({phase:'liveTurn',id:'live-fixture'});await delay(180);
   await check("nativeRecording&&document.getElementById('mic').classList.contains('recording')&&document.getElementById('agentHeard').textContent==='హలో'",'Transcript and recording state stay active between Live turns');
+  await js("Promise.all(document.getElementById('voiceAssistant').getAnimations().map(a=>a.finished.catch(()=>{})))");
   send({phase:'liveText',id:'live-fixture',turn:1,raw:'How are you?',text:'Ready to help.'});send({phase:'liveInterrupt',id:'live-fixture'});await delay(80);
   await check("document.getElementById('voiceAssistant').textContent.includes('Ready to help.')&&nativeRecording",'Second turn and interruptions preserve continuous chat');
   await check("getComputedStyle(document.getElementById('voiceAssistant')).transform==='none'&&getComputedStyle(document.getElementById('voiceAssistant')).opacity==='1'",'Streaming text does not repeatedly slide or fade the chat page');
