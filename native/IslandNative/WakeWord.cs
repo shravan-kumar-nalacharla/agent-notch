@@ -13,9 +13,10 @@ internal static partial class Program
         var audio=S(value,"audio");var name=S(value,"name","Cutie");if(audio.Length>1400000||name.Length<2||name.Length>30||name.Any(c=>!char.IsLetterOrDigit(c)&&c!=' '))throw new Exception("Invalid wake test input.");
         return await Task.Run<object>(()=>{var info=SpeechRecognitionEngine.InstalledRecognizers().FirstOrDefault(r=>r.Culture.TwoLetterISOLanguageName=="en")??throw new Exception("English Windows recognizer unavailable.");using var engine=new SpeechRecognitionEngine(info);var builder=new GrammarBuilder{Culture=info.Culture};builder.Append("hey "+name);engine.LoadGrammar(new Grammar(builder));using var stream=new MemoryStream();if(audio.Length==0){using var voice=new System.Speech.Synthesis.SpeechSynthesizer();voice.SetOutputToWaveStream(stream);voice.Speak("hey "+name);voice.SetOutputToNull();stream.Position=0;}else{stream.Write(Convert.FromBase64String(audio));stream.Position=0;}engine.SetInputToWaveStream(stream);var result=engine.Recognize(TimeSpan.FromSeconds(5));return new{recognized=result!=null&&result.Confidence>=.60,text=result?.Text,confidence=result?.Confidence,culture=info.Culture.Name,input=audio.Length==0?"Windows-generated synthetic phrase; microphone not used":"provided synthetic test WAV; microphone not used"};});
     }
+    static void StopWake(){var engine=Wake;Wake=null;WakePaused=true;if(engine==null)return;try{engine.RecognizeAsyncCancel();}catch(InvalidOperationException){}engine.Dispose();}
     static object ConfigureWake(JsonElement value)
     {
-        Wake?.Dispose();Wake=null;WakePaused=false;CompanionName=S(value,"name","Cutie").Trim();
+        StopWake();WakePaused=false;CompanionName=S(value,"name","Cutie").Trim();
         if(CompanionName.Length<2||CompanionName.Length>30||CompanionName.Any(c=>!char.IsLetterOrDigit(c)&&c!=' '))throw new Exception("Choose a companion name of 2–30 letters, spaces or numbers.");
         if(PrivacyBlocked||ListeningMode!="always"||!B(value,"enabled"))return new{enabled=false,name=CompanionName};
         var recognizers=SpeechRecognitionEngine.InstalledRecognizers();

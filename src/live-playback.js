@@ -33,14 +33,12 @@ if(typeof window!=='undefined')(()=>{
     if(event.phase==='listening'&&event.kind==='live'){player.stop();active=event.id;turn=-1;}
     if(['liveStop','error','idle'].includes(event.phase)){player.stop();active=null;}
     if(!active||event.id!==active)return;
-    if(event.phase==='liveAudio')player.enqueue(event.audio,event.volume).catch(async error=>{player.stop();await api.nativeVoice('cancel');window.islandShowError(error);});
+    if(event.phase==='liveAudio'){window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'speaking'}}));}if(event.phase==='liveAudio')player.enqueue(event.audio,event.volume).catch(async error=>{player.stop();await api.nativeVoice('cancel');window.islandShowError(error);});
     if(event.phase==='liveInterrupt')player.stop();
     if(event.phase==='liveText'){
       if(turn!==event.turn){turn=event.turn;userNode=null;answerNode=null;}
-      if(event.raw){userNode??=message('','user');userNode.textContent=event.raw;document.getElementById('transcript').value=event.raw;rawTranscript=event.raw;document.getElementById('transcriptBox').hidden=false;}
-      if(event.text){answerNode??=message('','assistant');answerNode.textContent=event.text;document.getElementById('status').textContent='Gemini Live · responding · mic to stop';}
-      const messages=document.getElementById('messages');messages.scrollTop=messages.scrollHeight;
-      if(document.getElementById('assistant').hidden)tab('assistant');
+      if(event.text)document.getElementById('status').textContent='Gemini Live · responding · mic to stop';
+      if(document.getElementById('voiceAssistant').hidden)tab('voiceAssistant');
     }
     if(event.phase==='liveTurn')document.getElementById('status').textContent='Gemini Live · listening · mic to stop';
   });

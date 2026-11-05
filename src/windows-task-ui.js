@@ -10,6 +10,7 @@
  const decide=allow=>{if(!latest?.review)return;const {id,review}=latest;$('taskApprove').disabled=true;$('taskDecline').disabled=true;window.island.confirmTask({id,approval:review.id,allow}).then(report).catch(window.islandShowError);};
  $('taskApprove').onclick=()=>decide(true);$('taskDecline').onclick=()=>decide(false);
  function render(value){if(!value)return;
+  const voice=value.source==='voice'||value.source==='gemini_live'||!value.source&&window.islandVoiceSession;const destination=voice?'voiceAssistant':'assistant',container=document.getElementById(destination);if(container&&panel.parentElement!==container)container.insertBefore(panel,voice?container.querySelector('.voice-exchange'):document.getElementById('messages'));
   latest=value;const active=['planning','running','review','paused','auth','interrupted'].includes(value.phase);
   document.body.classList.toggle('has-windows-task',active);panel.hidden=!active;
   $('taskCurrent').textContent=value.current;$('taskStop').hidden=!active;
@@ -17,7 +18,7 @@
   $('taskDetails').hidden=!(value.plan?.length||value.steps?.length);
   const list=$('taskSteps');list.replaceChildren();for(const text of value.plan?.length?value.plan:(value.steps||[]).map(x=>x.label)){const li=document.createElement('li');li.textContent=text;list.append(li);}
   if(value.review){$('taskTarget').textContent=[value.review.app,value.review.target].filter(Boolean).join(' · ');$('taskDraft').textContent=value.review.text||'Review the selected action before continuing.';}
-  if(active){window.dispatchEvent(new CustomEvent('island:navigate',{detail:'assistant'}));$('status').textContent=value.phase==='review'?'Review action':value.current;}
+  if(active){window.dispatchEvent(new CustomEvent('island:navigate',{detail:destination}));$('status').textContent=value.phase==='review'?'Review action':value.current;}
   if(value.phase==='error'){window.islandShowError?.(value.current);window.dispatchEvent(new CustomEvent('island:task-error',{detail:value.current}));}
   window.dispatchEvent(new Event('island:layout-change'));
  }

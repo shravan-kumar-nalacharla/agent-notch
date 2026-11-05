@@ -38,7 +38,7 @@
         <button id="pin" title="Pin island open" aria-label="Pin island open">
           <svg viewBox="0 0 24 24"><path d="m9 4 6 0 1 5 3 3v2H5v-2l3-3 1-5ZM12 14v7"/></svg>
         </button>
-        <button id="mic" title="Voice chat" aria-label="Start voice chat">
+        <button id="mic" title="Voice assistant" aria-label="Open voice assistant">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
             <rect x="9" y="3" width="6" height="12" rx="3"></rect>
             <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"></path>
@@ -92,8 +92,8 @@
         <section id="assistant" class="page" hidden>
           <div class="page-head">
             <div>
-              <span class="eyebrow">VOICE + CHAT</span>
-              <h1>Ask or say it.</h1>
+              <span class="eyebrow">CHAT</span>
+              <h1>Ask a question.</h1>
             </div>
             <button class="soft-chip" id="openSettings" title="Provider settings">Providers</button>
           </div>
@@ -108,6 +108,7 @@
           </details>
           <form id="chat">
             <input id="question" placeholder="Ask anything..." aria-label="Message" maxlength="20000">
+            <button id="chatVoiceInput" type="button" aria-label="Dictate a chat message" title="Dictate into this message"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"/></svg></button>
             <button id="send" aria-label="Send message" title="Send">
               <svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
             </button>
@@ -251,6 +252,8 @@
   <script src="terminal-ui.js"></script>
   <script src="productivity-settings.js" defer></script>
   <script src="companion-ui.js"></script>
+  <link rel="stylesheet" href="voice-assistant.css">
+  <script src="voice-assistant-ui.js"></script>
   <script src="live-playback.js"></script>
   <script src="microphone-ui.js" defer></script>
   <script src="window-rules-ui.js" defer></script>

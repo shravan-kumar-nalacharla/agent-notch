@@ -10,7 +10,7 @@ const quoteRepository=require('./quotes.cjs');
 const keyCache=new Map(),keyErrors={};
 const {voiceStatus,pushToTalkStatus,loginOptions,setStartup,shouldHideFullscreen}=require('./settings-status.cjs');
 const{windowBehavior,validateWindowRules}=require('./window-policy.cjs');
-let speechController;let voiceRuntime={active:false,message:''},voiceConfiguration=Promise.resolve(),startupError='';
+let dictationRuntime={},pttRuntime={},wakeRuntime={enabled:false};let speechController;let voiceRuntime={active:false,message:''},voiceConfiguration=Promise.resolve(),startupError='';
 let quoteActivity={locked:false,voiceRecording:false,systemKnown:false,osDnd:'unknown'},quoteTransition=0;
 const { clean } = require('./voiceflow.cjs');
 const { guide,revalidate } = require('./screen-guide.cjs');
@@ -31,7 +31,7 @@ if(process.argv.includes('--smoke-test')&&!process.argv.includes('--gpu-smoke'))
 app.setAppUserModelId('app.agentnotch.desktop');
 const {IslandGeometry}=require('./geometry.cjs');
 const smokeMode=process.argv.includes('--smoke-test');
-if(smokeMode&&process.argv.includes('--sarvam-ptt-check'))globalThis.fetch=require('./smoke-sarvam-ptt.cjs').fetcher;
+if(smokeMode&&['--sarvam-ptt-check','--voice-experience-check'].some(flag=>process.argv.includes(flag)))globalThis.fetch=require('./smoke-sarvam-ptt.cjs').fetcher;
 if(smokeMode){const smokeData=fs.mkdtempSync(path.join(process.env.TEMP||process.env.TMP||'.','agent-notch-smoke-'));app.setPath('userData',smokeData);fs.writeFileSync(path.join(smokeData,'settings.json'),JSON.stringify({speak:false,quietMoments:{enabled:false,frequencyMigration:true}}));}
 let win, settingsWindow, tray, state, native, widgets, voiceEngine,agents,cursorTimer,boundsTimer,animatingBounds=false,lastCursorX=null,lastCursorY=null,lastBoundsKey='';
 let shortcutStatus={open:{accelerator:'',ok:false},voice:{accelerator:'',ok:false}};
@@ -60,7 +60,7 @@ function load() {
   const defaults = { microphone:{...MIC_DEFAULTS},groqDefaultsMigration:true, assistant: 'groq', speech: 'groq', models: {}, keys: {}, note: '', focusEnd: 0, speak: false, autostart:true, languages:{...localization.DEFAULTS}, companion:{chatEngine:'standard',name:'Cutie',wakeEnabled:false,tts:'system',readTypedReplies:false,voice:'hannah',systemVoice:''}, profileName:'', shortcuts:{open:'CommandOrControl+Shift+Space',voice:'CommandOrControl+Shift+Alt+Space'}, voice:{enabled:false,hotkey:'ctrlShiftWin',inputDeviceId:'',cleanup:'light',style:'casual',autoInsert:true,whisper:true,language:'',telugu:'',ctrlShiftWinMigration:true},deepseek:{thinking:false,stream:true},quietMoments:{...require('./quiet.cjs').DEFAULTS},appearance:{display:'primary',minimal:false,mascot:true,hideFullscreen:true,autoClose:true,pinned:false,shape:'notch',theme:'system',density:'default',lineWidthDip:100,lineHeightDip:2,lineOpacity:.35,hoverIntentMs:100,mouseleaveGraceMs:1000,motion:'standard',compactMigration:true} };
   try { const original=JSON.parse(fs.readFileSync(file(), 'utf8'));groqMigrationPending=original.groqDefaultsMigration!==true;const saved=groqDefaults(original);const voice={...defaults.voice,...saved.voice};if(!saved.languages&&!fs.existsSync(file()+'.pre-multilingual'))fs.copyFileSync(file(),file()+'.pre-multilingual');if(!saved.appearance?.compactMigration)saved.appearance={...saved.appearance,compactMigration:true,density:'default'};if(!saved.voice?.ctrlShiftWinMigration)voice.hotkey='ctrlShiftWin';return {...defaults,...saved,microphone:validatePrivacy({...MIC_DEFAULTS,...saved.microphone}),profileName:typeof saved.profileName==='string'?saved.profileName.slice(0,50):'',shortcuts:{...defaults.shortcuts,...saved.shortcuts},voice,companion:{...defaults.companion,...saved.companion},deepseek:{...defaults.deepseek,...saved.deepseek},languages:localization.validateLanguages({...defaults.languages,...saved.languages}),quietMoments:require('./quiet.cjs').migrateQuiet(saved.quietMoments),appearance:{...defaults.appearance,...saved.appearance}}; } catch { return defaults; }
 }
-const publicState = () => ({ ...state,microphoneStatus:privacy?.view()||{...state.microphone,blocked:state.microphone.muted}, autostart:state.autostart, startupStatus:app.getLoginItemSettings(loginOptions(app)),startupError,voiceStatus:{...(state.microphone.mode==='ptt'?pushToTalkStatus:voiceStatus)(state,p=>keyCache.has(p)),...voiceRuntime},keyErrors, keys: undefined, shortcutStatus, configured: Object.fromEntries(Object.keys(PROVIDERS).map(p => [p, keyCache.has(p)])), providers: PROVIDERS });
+const publicState = () => ({ ...state,microphoneStatus:privacy?.view()||{...state.microphone,blocked:state.microphone.muted}, autostart:state.autostart, startupStatus:app.getLoginItemSettings(loginOptions(app)),startupError,pushToTalkStatus:{...pushToTalkStatus(state,p=>keyCache.has(p)),...pttRuntime},dictationStatus:{...voiceStatus(state,p=>keyCache.has(p)),...dictationRuntime},wakeStatus:wakeRuntime,voiceStatus:{...(state.microphone.mode==='ptt'?pushToTalkStatus:voiceStatus)(state,p=>keyCache.has(p)),...voiceRuntime},keyErrors, keys: undefined, shortcutStatus, configured: Object.fromEntries(Object.keys(PROVIDERS).map(p => [p, keyCache.has(p)])), providers: PROVIDERS });
 function persist() { fs.mkdirSync(path.dirname(file()), { recursive: true }); fs.writeFileSync(file() + '.tmp', JSON.stringify(state)); fs.renameSync(file() + '.tmp', file()); }
 function key(provider) { const value=keyCache.get(provider);if(!value)throw new Error(keyErrors[provider]||`Save your ${provider} API key in Settings.`);return value; }
 function resize(expanded, view='home', contentHeight, voiceHud=false){
@@ -206,7 +206,12 @@ else {
     if(!process.argv.includes('--smoke-test'))try{native.start();}catch(e){console.log('[native]',e.message);}
     function configureVoice(){
       const pending=voiceConfiguration.then(async()=>{const status=state.microphone.mode==='ptt'?pushToTalkStatus(state,p=>keyCache.has(p)):voiceStatus(state,p=>keyCache.has(p));voiceRuntime=status;
-      try{const response=await native.request('voice.configure',{...state.voice,enabled:status.ready&&!privacy?.view().blocked&&state.microphone.mode!=='ptt'});const ptt=await native.request('privacy.ptt',{enabled:!privacy?.view().blocked&&state.microphone.mode==='ptt'&&shortcutStatus.ptt?.ok===true,shortcut:state.microphone.pttShortcut,ready:status.ready,reason:status.message});await native.request('wake.configure',{name:state.companion.name,enabled:!privacy?.view().blocked&&state.microphone.mode==='always'});voiceRuntime=state.microphone.mode==='ptt'?{...status,active:ptt.enabled===true&&status.ready,message:privacy?.view().blocked?privacy.view().reason:shortcutStatus.ptt?.ok!==true?'Push-to-talk shortcut is unavailable. Choose another shortcut.':status.message}:{...status,active:response.enabled===true,message:response.enabled?'Global voice hotkey is active. Hold the selected key to dictate.':status.message};}
+      try{const blocked=privacy?.view().blocked,dictation=voiceStatus(state,p=>keyCache.has(p)),pttStatus=pushToTalkStatus(state,p=>keyCache.has(p));
+        const response=await native.request('voice.configure',{...state.voice,enabled:dictation.ready&&!blocked});dictationRuntime={...dictation,active:response.enabled===true,message:blocked?privacy.view().reason:response.enabled?'Hold Ctrl + Shift + Windows to type in the focused app.':dictation.message};
+        const ptt=await native.request('privacy.ptt',{enabled:!blocked&&['ptt','always'].includes(state.microphone.mode)&&shortcutStatus.ptt?.ok===true,shortcut:state.microphone.pttShortcut,ready:pttStatus.ready,reason:pttStatus.message});
+        pttRuntime={...pttStatus,active:ptt.enabled===true&&pttStatus.ready,message:blocked?privacy.view().reason:shortcutStatus.ptt?.ok!==true?'Push-to-talk shortcut is unavailable. Choose another shortcut.':pttStatus.message};
+        try{wakeRuntime=await native.request('wake.configure',{name:state.companion.name,enabled:!blocked&&state.microphone.mode==='always'});}catch(e){wakeRuntime={enabled:false,name:state.companion.name,error:e.message};}
+        voiceRuntime=state.microphone.mode==='ptt'?{...status,active:ptt.enabled===true&&pttStatus.ready,message:blocked?privacy.view().reason:shortcutStatus.ptt?.ok!==true?'Push-to-talk shortcut is unavailable. Choose another shortcut.':pttStatus.message}:{...dictationRuntime};}
       catch{voiceRuntime={...status,active:false,message:'Preferences saved, but the Windows voice engine could not start. Run Check voice engine to retry.'};}
       });voiceConfiguration=pending.catch(()=>{});return pending;
     }
@@ -245,7 +250,7 @@ else {
       for(const[provider,text]of changes){if(text)next.keys[provider]=(await safeStorage.encryptStringAsync(text)).toString('base64');else delete next.keys[provider];}
       if(typeof value.autostart==='boolean')next.autostart=value.autostart;
       const shortcutsChanged=JSON.stringify(state.shortcuts)!==JSON.stringify(next.shortcuts);
-      next.microphone=validatePrivacy({...state.microphone,...value.microphone},next.shortcuts);
+      next.microphone=validatePrivacy({...state.microphone,...value.microphone},next.shortcuts);if(value.companion?.wakeEnabled!==undefined&&!value.microphone?.mode)next.microphone.mode=value.companion.wakeEnabled?'always':next.microphone.mode==='always'?'manual':next.microphone.mode;next.companion.wakeEnabled=next.microphone.mode==='always';
       const microphoneChanged=JSON.stringify(next.microphone)!==JSON.stringify(state.microphone);
       const microphoneShortcutsChanged=next.microphone.muteShortcut!==state.microphone.muteShortcut||next.microphone.pttShortcut!==state.microphone.pttShortcut;
       const previous=state;state=next;try{persist();}catch(error){state=previous;throw error;}

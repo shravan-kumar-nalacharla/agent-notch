@@ -18,7 +18,7 @@ function config(provider, key, model, kind) {
 }
 async function response(request, fetcher, signal) {
   const res = await fetcher(request.url, { method: 'POST', headers: request.headers, body: request.body, signal: signal?AbortSignal.any([signal,AbortSignal.timeout(60000)]):AbortSignal.timeout(60000) });
-  if (!res.ok) throw providerError(res.status);
+  if (!res.ok) throw await responseError(res,request);
   return res.json();
 }
 function geminiText(data) { return data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim() || ''; }
@@ -29,10 +29,10 @@ async function chat({provider,key,model,text,system='You are a friendly desktop 
   let result='';
   if(provider==='anthropic'){request.url=c.base+'/messages';request.headers={'content-type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01'};request.body=JSON.stringify({model:c.model,max_tokens:4096,stream:streaming,system:system+(json?'\nReturn only valid JSON, without Markdown fences.':''),messages:[{role:'user',content:text}]});}
   else if(streaming&&provider!=='deepseek'){const body=JSON.parse(request.body);body.stream=true;if(provider!=='sarvam')body.stream_options={include_usage:true};request.body=JSON.stringify(body);}
-  if(provider==='sarvam'){request.headers={'content-type':'application/json','api-subscription-key':c.key};const body=JSON.parse(request.body);body.reasoning_effort='none';body.max_tokens=2048;request.body=JSON.stringify(body);}
+  if(provider==='sarvam'){request.headers={'content-type':'application/json','api-subscription-key':c.key};const body=JSON.parse(request.body);body.reasoning_effort='low';body.max_tokens=2048;request.body=JSON.stringify(body);}
   if(streaming){
     const res=await fetcher(request.url,{method:'POST',headers:request.headers,body:request.body,signal:signal?AbortSignal.any([signal,AbortSignal.timeout(60000)]):AbortSignal.timeout(60000)});
-    if(!res.ok)throw providerError(res.status);
+    if(!res.ok)throw await responseError(res,request);
     if(!res.body)throw new Error('The provider returned no response stream.');
     const decoder=new TextDecoder();let buffer='',done=false,anthropicUsage={};
     for await(const chunk of res.body){if(signal?.aborted)throw new DOMException('Request cancelled.','AbortError');buffer+=decoder.decode(chunk,{stream:true});if(buffer.length>2*1024*1024)throw new Error('Provider stream exceeded its limit.');let at;while((at=buffer.indexOf('\n'))>=0){const line=buffer.slice(0,at).trim();buffer=buffer.slice(at+1);if(!line.startsWith('data:'))continue;const value=line.slice(5).trim();if(value==='[DONE]'){done=true;break;}let data;try{data=JSON.parse(value);}catch{throw new Error('The provider returned an invalid stream event.');}if(data.error)throw new Error('The provider could not complete the response.');if(provider==='anthropic'){if(data.type==='message_stop')done=true;if(data.type==='message_start')anthropicUsage.prompt_tokens=data.message?.usage?.input_tokens;if(data.type==='message_delta'&&Number.isFinite(data.usage?.output_tokens)){anthropicUsage.completion_tokens=data.usage.output_tokens;anthropicUsage.total_tokens=(anthropicUsage.prompt_tokens||0)+anthropicUsage.completion_tokens;onUsage?.(safeUsage(anthropicUsage));}}const delta=provider==='anthropic'?(data.type==='content_block_delta'&&data.delta?.type==='text_delta'?data.delta.text:undefined):data.choices?.[0]?.delta?.content;if(typeof delta==='string'){result+=delta;if(result.length>100000)throw new Error('Provider response is too long.');onDelta(delta);}if(data.usage&&provider!=='anthropic')onUsage?.(safeUsage(data.usage));}if(done)break;}
@@ -42,6 +42,7 @@ async function chat({provider,key,model,text,system='You are a friendly desktop 
   if(!result?.trim())throw new Error('The provider returned no text. Try another model.');return result.trim();
 }
 function safeUsage(value){return Object.fromEntries(['prompt_tokens','completion_tokens','total_tokens'].filter(k=>Number.isFinite(value[k])&&value[k]>=0).map(k=>[k,value[k]]));}
+async function responseError(res,request){return request.headers['api-subscription-key']?require('./sarvam.cjs').responseError(res,request.headers['api-subscription-key']):providerError(res.status);}
 function providerError(status){return new Error(status===401||status===403?'The provider rejected this API key or model access.':status===429?'Provider limit reached. Try again shortly.':`Provider request failed (HTTP ${status}).`);}
 async function transcribe({ provider, key, model, audio, mime = 'audio/webm', language = '', hints = [], allowCodeSwitch = false, detailed = false, signal }, fetcher = fetch) {
   const c = config(provider, key, model, 'speech');

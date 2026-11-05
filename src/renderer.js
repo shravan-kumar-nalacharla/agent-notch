@@ -18,7 +18,7 @@ let busy = false;
 let noteTimer;
 let activeView = 'home';
 let leaveTimer;
-let nativeRecording = false;
+let nativeRecording = false;let currentVoiceKind='';
 let nativeProcessing = false;
 let lastHeight = 0;
 let errorTimer;
@@ -67,7 +67,7 @@ async function result(promise) {
 }
 
 function syncViewClass(name) {
-  for (const item of ['home', 'assistant', 'notes', 'focus', 'tools', 'agents']) {
+  for (const item of ['home', 'assistant', 'voiceAssistant', 'notes', 'focus', 'tools', 'agents']) {
     document.body.classList.toggle(`view-${item}`, item === name);
   }
 }
@@ -233,7 +233,7 @@ function message(text, role) {
 }
 
 let activeAskId='',streamMessage;
-window.addEventListener('island:task-error',event=>{if(!activeAskId){message(event.detail,'assistant');tab('assistant');}});
+window.addEventListener('island:task-error',event=>{if(!activeAskId){if(window.islandVoiceSession){$('agentAnswer').textContent=event.detail;tab('voiceAssistant');}else{message(event.detail,'assistant');tab('assistant');}}});
 window.island.onAssistantDelta?.(({id,delta})=>{if(id!==activeAskId||!streamMessage)return;streamMessage.textContent+=delta;$('messages').scrollTop=$('messages').scrollHeight;});
 async function ask(text) {
   if (busy || !text.trim()) return;
@@ -277,7 +277,7 @@ $('homeAsk').onclick = () => {
 
 async function startNativeVoice(kind = 'chat') {
   state = await result(window.island.get());
-  const provider=kind==='chat'&&state.companion?.chatEngine==='gemini_live'?'gemini':state.companion?.chatEngine==='sarvam'?'sarvam':state.speech;
+  const conversation=['chat','command','ptt'].includes(kind),provider=conversation&&state.companion?.chatEngine==='gemini_live'?'gemini':conversation&&state.companion?.chatEngine==='sarvam'?'sarvam':state.speech;
   if (!state.configured[provider]) {
     $('status').textContent = 'API key needed';
     await result(window.island.settings());
@@ -287,14 +287,7 @@ async function startNativeVoice(kind = 'chat') {
   await result(window.island.nativeVoice('start', { kind }));
 }
 
-$('homeVoice').onclick = async () => {
-  try {
-    tab('assistant');
-    await startNativeVoice('chat');
-  } catch (caught) {
-    showError(caught);
-  }
-};
+$('homeVoice').onclick=()=>window.islandOpenVoiceAssistant({start:true}).catch(showError);
 
 $('homeScreen').onclick = () => {
   tab('assistant');
@@ -346,8 +339,8 @@ async function toggleChatVoice() {
       clearTimeout(recordingTimer);
       stream.getTracks().forEach(track => track.stop());
       $('mic').classList.remove('recording');
-      $('mic').title = 'Voice chat';
-      $('mic').setAttribute('aria-label', 'Start voice chat');
+      $('mic').title = 'Voice assistant';
+      $('mic').setAttribute('aria-label', 'Open voice assistant');
       if (cancelled) {
         chunks = [];
         $('status').textContent = 'Recording cancelled';
@@ -385,8 +378,8 @@ async function toggleChatVoice() {
 }
 
 $('insertDraft').onclick=async()=>{try{await result(window.island.nativeVoice('insertDraft',{id:pendingDraftId,text:$('transcript').value}));$('insertDraft').hidden=true;}catch(e){showError(e);}};
-$('mic').onclick = toggleChatVoice;
-window.island.onToggle(toggleChatVoice);
+$('mic').onclick=async()=>{try{if(nativeRecording)await result(window.island.nativeVoice('finish'));else await window.islandOpenVoiceAssistant({start:true});}catch(e){showError(e);}};
+window.island.onToggle(()=>window.islandOpenVoiceAssistant({start:true}).catch(showError));
 window.island.onOpen(() => {
   tab('assistant');
   expand(true).catch(showError);
@@ -422,8 +415,9 @@ document.addEventListener('keydown', event => {
 });
 
 window.island.onVoice?.(event => {
-  if(event.phase==='partial'&&!settingsMode){$('transcript').value=event.text;rawTranscript=event.text;$('transcriptBox').hidden=false;return;}
-  if(event.phase==='delta'&&!settingsMode){if(!voiceStreamMessage){voiceStreamUser=event.raw?message(event.raw,'user'):null;voiceStreamMessage=message('','assistant');}voiceStreamMessage.textContent+=event.delta;tab('assistant');return;}
+  if(event.phase==='listening'){currentVoiceKind=event.kind;window.islandVoiceSession=['chat','command','ptt','live'].includes(event.kind);}
+  if(event.phase==='partial'&&!settingsMode){if(currentVoiceKind==='chat_input')$('question').value=event.text;else if(currentVoiceKind==='dictation'){$('transcript').value=event.text;rawTranscript=event.text;$('transcriptBox').hidden=false;}return;}
+  if(event.phase==='delta'&&!settingsMode)return;
   if (event.phase === 'connecting' && !settingsMode) {nativeProcessing=true;busy=true;motion.lock(true);$('status').textContent='Connecting to Gemini Live…';return;}
   if (event.phase === 'processing') nativeProcessing = true;
   if (['done', 'answer', 'error', 'idle', 'listening','draft'].includes(event.phase)) nativeProcessing = false;
@@ -456,18 +450,17 @@ window.island.onVoice?.(event => {
     nativeRecording = false;
     busy = false;
     $('mic').classList.remove('recording');
-    $('mic').title = 'Voice chat';
-    $('mic').setAttribute('aria-label', 'Start voice chat');
+    $('mic').title = 'Voice assistant';
+    $('mic').setAttribute('aria-label', 'Open voice assistant');
     $('mic').style.opacity = '';
     document.querySelectorAll('.voice-wave i').forEach(bar => bar.style.transform = 'scaleY(.18)');
     document.querySelectorAll('.audio-bars i').forEach(bar => bar.style.transform = 'scaleY(.18)');
     document.body.classList.remove('has-voice-hud');
     window.island.setVoiceHud?.(false);
     if(event.phase==='draft'){pendingDraftId=event.id;$('insertDraft').hidden=false;$('transcriptBox').open=true;tab('assistant');expand(true);}else{pendingDraftId='';$('insertDraft').hidden=true;}
-    if (event.phase === 'answer') {
-      if(voiceStreamMessage)voiceStreamMessage.textContent=event.text;else{if(event.raw)message(event.raw,'user');message(event.text,'assistant');}
-      voiceStreamMessage=null;voiceStreamUser=null;
-      tab('assistant');
+    if(event.phase==='done'&&event.kind==='chat_input'){$('question').value=event.text||'';tab('assistant');$('question').focus();}
+    else if(event.phase==='answer'){
+      window.islandVoiceSession=false;
     } else if (event.text) {
       $('transcript').value = event.text;
       rawTranscript = event.raw || event.text;
@@ -479,6 +472,7 @@ window.island.onVoice?.(event => {
         ? 'Dictation ready'
         : state?.profileName ? `Ready, ${state.profileName}` : 'Ready';
     showError(event.error || event.warning || '');
+    if(['error','idle','done'].includes(event.phase))window.islandVoiceSession=false;
     if(['error','idle'].includes(event.phase)){voiceStreamMessage?.remove();voiceStreamUser?.remove();voiceStreamMessage=null;voiceStreamUser=null;}
     if (event.error) setMascot('error');
     else if (event.phase === 'done' || event.phase === 'answer') {
@@ -555,19 +549,7 @@ screenButton.textContent = 'Screen guidance';
 screenButton.title = 'Uses a screenshot for grounded instructions.';
 $('assistant').insertBefore(screenButton, $('screenGuide') || null);
 
-const assistantMic = document.createElement('button');
-assistantMic.className = 'screen-guide';
-assistantMic.textContent = 'Voice assistant';
-assistantMic.title = 'Speak a command or question. Shift + the voice hotkey also starts assistant mode.';
-$('assistant').insertBefore(assistantMic, screenButton);
-assistantMic.onclick = async () => {
-  try {
-    if (nativeRecording) await result(window.island.nativeVoice('finish'));
-    else await result(window.island.nativeVoice('start', { kind: 'chat' }));
-  } catch (caught) {
-    showError(caught);
-  }
-};
+$('chatVoiceInput').onclick=async()=>{try{if(nativeRecording)await result(window.island.nativeVoice('finish'));else{tab('assistant');await startNativeVoice('chat_input');}}catch(e){showError(e);}};
 
 let lastScreenQuestion = '';
 const guideBox = document.createElement('div');

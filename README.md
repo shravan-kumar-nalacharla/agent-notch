@@ -1,5 +1,7 @@
 # Agent Notch
 
+0.16.1 separates Voice assistant from Chat, removes the general menu from Focus Time, restores voice typing alongside assistant Push-to-Talk, makes name activation visible and fixes Sarvam's live HTTP 400. See [behavior, service verification and remaining manual checks](docs/0.16.1-VOICE-AND-FOCUS.md).
+
 0.16.0 adds Sarvam voice questions and replies, a separate encrypted Sarvam key field and a one-step held-key chat preset. Push-to-Talk readiness now explains missing setup instead of silently doing nothing, and Sarvam failures never fall back to the Windows narrator. See [setup, implementation and test limits](docs/0.16.0-SARVAM-PTT.md).
 
 0.15.1 fixes reminders being replaced by the main notch when approaching Refilled or Snooze. Visible reminders keep control until their actions finish; normal hover and pin behavior resume afterward. See [cause, pointer regression and verification](docs/0.15.1-REMINDER-POINTER-FIX.md).

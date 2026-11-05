@@ -5,7 +5,7 @@
   const $=id=>document.getElementById(id);let lib,selected='',media,mediaAt=0,lyrics=[],mediaTimer,meetingState=null,prompterRunning=false,prompterFrame=0,prompterLast=0,todoDay='',editor=null,waterSettings=false;
   let clockReceiptAt=performance.now(),clockReceiptWall=Date.now();const uiNow=()=>clockReceiptWall+performance.now()-clockReceiptAt;
   let timerMode='focus',mediaLoading=false,lyricsPlain='',lyricsStatus='',lyricIndex=-2,volumeLevel=50,prompterOffset=0;
-  const carouselPages=['media','timer','water','shelf','todo'];
+  const carouselPages=['media','water','shelf','todo'];
   const pages=[['media','♫','Media & lyrics'],['timer','◷','Focus Time'],['water','◉','Water reminder'],['shelf','▣','Shelf'],['todo','☑','Todo list'],['reminders','♧','Reminders'],['clips','▤','Clipboard'],['dictionary','Aa','Dictionary'],['snippets','≡','Snippets'],['history','↶','History & insights'],['meetings','◌','Meeting notes'],['projects','⌂','Projects'],['weather','☀','Weather'],['calendar','▦','Calendar'],['mirror','▧','Mirror'],['prompter','▷','Teleprompter']];
   const coreTools=new Map();let disposeCore;
   window.islandRegisterTool=tool=>{if(coreTools.has(tool.id))throw new Error('Duplicate tool');coreTools.set(tool.id,tool);if(!pages.some(p=>p[0]===tool.id))pages.push([tool.id,tool.icon,tool.title]);};
@@ -52,6 +52,7 @@
     return `<div class="carousel-head">${btn('carouselPrev',icons.previous,'class="carousel-arrow" aria-label="Previous tool"')}<b class="carousel-title">${esc(title)}</b><span class="carousel-state"><i class="live-bolt"></i><span class="carousel-date">${now.date}</span><b class="carousel-time">${now.time}</b></span>${btn('carouselNext',icons.next,'class="carousel-arrow" aria-label="Next tool"')}</div>`;
   }
   function carouselFrame(title,body){
+    if(selected==='timer')return `<div class="focus-heading"><b>Focus Time</b></div><div class="carousel-body focus-body">${body}</div>`;
     const index=Math.max(0,carouselPages.indexOf(selected));
     return moduleHeader(title)+`<div class="carousel-body">${body}</div><div class="carousel-foot"><div class="carousel-dots">${carouselPages.map((page,i)=>`<button type="button" data-do="carouselGo" data-page="${page}" class="${i===index?'active':''}" aria-label="${esc(pages.find(x=>x[0]===page)?.[2]||page)}"></button>`).join('')}</div>${btn('showAll',icons.grid,'class="all-tools" aria-label="All tools" title="All tools"')}</div>`;
   }
@@ -136,7 +137,7 @@
     document.querySelectorAll('nav [data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===selected));
     if(!root.hidden){button.classList.toggle('active',selected!=='timer');document.querySelector('nav [data-tab=focus]').classList.toggle('active',selected==='timer');}
     if(!selected){root.innerHTML=`<div class="utility-nav"><button type="button" data-do="mainTab" data-page="assistant">Assistant</button><button type="button" data-do="mainTab" data-page="notes">Notes</button><button type="button" data-do="mainTab" data-page="agents">Agents</button><button type="button" data-do="mainTab" data-page="settings">Settings</button></div><div class="widget-grid"><button type="button" data-do="carouselGo" data-page="media"><i>◉</i><span>Carousel</span></button>${pages.filter(([id])=>id!=='timer').map(([id,icon,name])=>btn('page',`<i>${icon}</i><span>${name}</span>`,`data-page="${id}"`)).join('')}</div>`;return;}
-    if(carouselPages.includes(selected)){renderPrimary();return;}
+    if(selected==='timer'||carouselPages.includes(selected)){renderPrimary();return;}
     if(coreTools.has(selected)){root.innerHTML=heading()+'<div class="widget-content core-tool"></div>';disposeCore=coreTools.get(selected).mount(root.querySelector('.core-tool'));return;}
     let html='';const idAttr=id=>`data-id="${esc(id)}"`;
     if(['book','course','workout','spotify','notifications'].includes(selected)){const summary=lib.productivity||{},items=summary[selected]||[],current=items.find(item=>!item.archived)||items[0];html=`<div class="widget-row"><div><span>${esc(current?.title||(selected==='notifications'?String(summary.pending||0)+' pending reminders':selected==='spotify'?'Spotify Connect':'Build a routine at your own pace'))}</span><small>${esc(current?.summary||(selected==='spotify'?'Control an authorized active Spotify device.':'Details open only when you click.'))}</small></div></div>${btn('productivityOpen','Open details',`data-section="${selected}"`)}`;}

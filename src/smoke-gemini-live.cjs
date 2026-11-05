@@ -25,10 +25,10 @@ module.exports=async function({win,getSettingsWindow,widgets,state,out,saveSnaps
   send({phase:'liveText',id:'live-fixture',turn:0,raw:'హలో',text:'నమస్కారం'});
   send({phase:'liveAudio',id:'live-fixture',audio:Buffer.alloc(4800).toString('base64'),volume:0,rate:24000});
   send({phase:'liveTurn',id:'live-fixture'});await delay(180);
-  await check("nativeRecording&&document.getElementById('mic').classList.contains('recording')&&document.getElementById('transcript').value==='హలో'",'Transcript and recording state stay active between Live turns');
+  await check("nativeRecording&&document.getElementById('mic').classList.contains('recording')&&document.getElementById('agentHeard').textContent==='హలో'",'Transcript and recording state stay active between Live turns');
   send({phase:'liveText',id:'live-fixture',turn:1,raw:'How are you?',text:'Ready to help.'});send({phase:'liveInterrupt',id:'live-fixture'});await delay(80);
-  await check("document.getElementById('assistant').textContent.includes('Ready to help.')&&nativeRecording",'Second turn and interruptions preserve continuous chat');
-  await check("getComputedStyle(document.getElementById('assistant')).transform==='none'&&getComputedStyle(document.getElementById('assistant')).opacity==='1'",'Streaming text does not repeatedly slide or fade the chat page');
+  await check("document.getElementById('voiceAssistant').textContent.includes('Ready to help.')&&nativeRecording",'Second turn and interruptions preserve continuous chat');
+  await check("getComputedStyle(document.getElementById('voiceAssistant')).transform==='none'&&getComputedStyle(document.getElementById('voiceAssistant')).opacity==='1'",'Streaming text does not repeatedly slide or fade the chat page');
   await saveSnapshot(win,path.join(out,'gemini-live-chat.png'));
   await js("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}))");await delay(200);
   await check("!nativeRecording&&!nativeProcessing&&!document.getElementById('mic').classList.contains('recording')",'Escape returns the Live UI to idle and cancels native capture');

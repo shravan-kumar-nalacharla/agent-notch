@@ -58,7 +58,8 @@ function setupVoice({native,clipboard,runCommand=async()=>null,runWindowsTask=nu
   }
   async function transcription(audio,mime='audio/wav',snapshot=getState(),signal){privacy?.assertAllowed();const s=snapshot;if(s.languages&&!s.languages.cloudAudioConsent)throw new Error('Allow cloud audio in Voice & typing before recording.');return transcribe({provider:s.speech,key:getKey(s.speech),model:s.models[s.speech]?.speech,audio:Buffer.from(audio,'base64'),mime,...(s.languages?localization.speechOptions(s.languages):{language:s.voice?.language||''}),detailed:true,signal});}
   async function complete(event){const session=sessions.get(event.id);if(!session||session.finishing)return;session.finishing=true;status({phase:'processing',id:event.id});const results=await Promise.all(Array.from({length:event.count??session.parts.length},(_,i)=>session.parts[i]||Promise.resolve({error:'An audio segment is missing.'})));if(session.cancelled)return;const failed=results.filter(x=>x.error),heard=joinSegments(results.filter(x=>x.text).map(x=>x.text)),raw=event.kind==='chat'||event.kind==='command'||event.kind==='ptt'?cleanCommandTranscript(heard):heard;if(!raw){status({phase:'error',error:failed[0]?.error||'No speech heard.'});sessions.delete(event.id);return;}let text=raw;const s=session.state;let warning=failed.length?'Some audio segments failed; the available transcript is preserved.':'';
-    if(event.kind==='command'||event.kind==='chat'||event.kind==='ptt'){
+    if(event.kind==='chat_input'){status({phase:'done',kind:'chat_input',text:raw,raw,warning});}
+    else if(event.kind==='command'||event.kind==='chat'||event.kind==='ptt'){
       try{
         let mode='answer';
         if(session.selected){const edited=await editSelection(raw,session.selected,{provider:s.assistant,key:getKey(s.assistant),model:s.models[s.assistant]?.chat,signal:session.controller.signal},chat);text=edited.text;mode=edited.mode;}
@@ -110,7 +111,7 @@ function setupVoice({native,clipboard,runCommand=async()=>null,runWindowsTask=nu
   });
   native.on('stopped',()=>{if(live){stopLive();status({phase:'error',error:'The Windows microphone engine stopped. Press the microphone to reconnect.'});}});
   handle('native:voice',async value=>{
-    if(['start','insertDraft'].includes(value?.op))privacy?.assertAllowed({capture:value.op==='start'});
+    if(['start','insertDraft'].includes(value?.op))privacy?.assertAllowed({capture:value.op==='start',dictation:['dictation','chat_input'].includes(value.value?.kind)});
     if(value?.op==='configure'&&privacy)throw new Error('Save voice preferences in Settings.');
     if(value?.op==='insertDraft'){
       const draft=drafts.get(value.value?.id);if(!draft||draft.cancelled)throw new Error('This draft has expired.');
