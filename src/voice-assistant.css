@@ -4,3 +4,5 @@
 .voice-assistant{overflow:auto;overscroll-behavior:contain}.voice-actions button{border-radius:16px;border:1px solid #ffffff20;background:#ffffff0c;color:inherit;cursor:pointer}.voice-actions #agentStart{background:#d9f8f1;color:#122f2c}.voice-actions button:disabled{opacity:.5;cursor:default}.voice-assistant #windowsTask{margin:5px 0}
 
 #chatVoiceInput{width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:50%;background:#ffffff12;color:inherit;border:1px solid #ffffff20;padding:0}
+
+.voice-reading-context{font-size:10px;color:var(--muted,#aaa);margin:4px 0;overflow-wrap:anywhere}.voice-reading-context:empty{display:none}

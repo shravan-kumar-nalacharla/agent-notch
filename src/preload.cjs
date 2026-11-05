@@ -1,11 +1,12 @@
 'use strict';
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 contextBridge.exposeInMainWorld('island', {
-  version: '0.16.1',
+  version: '0.16.2',
   workspace:(op,value={})=>ipcRenderer.invoke('workspace:action',{version:1,op,value}),
   onVisibility:callback=>ipcRenderer.on('window:visibility',(_e,value)=>callback(value)),
   toolSurface:value=>ipcRenderer.invoke('window:tool',value),
   microphone:value=>ipcRenderer.invoke('microphone:set',value),
+  resetVoiceConversation:()=>ipcRenderer.invoke('voice:reset'),
   microphoneState:()=>ipcRenderer.invoke('microphone:get'),
   onMicrophone:callback=>ipcRenderer.on('microphone:state',(_e,value)=>callback(value)),
   onCaptureOverlay:callback=>ipcRenderer.on('window:capture-overlay',(_e,value)=>callback(value)),

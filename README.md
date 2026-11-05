@@ -1,5 +1,7 @@
 # Agent Notch
 
+0.16.2 adds a saved book/topic, bounded recent voice context, stable explanations of common archaic English, reading vocabulary hints and a visible provider label. It preserves the working Sarvam voice/wake/typing setup. See [reading improvements, privacy and limits](docs/0.16.2-READING-CONTEXT.md).
+
 0.16.1 separates Voice assistant from Chat, removes the general menu from Focus Time, restores voice typing alongside assistant Push-to-Talk, makes name activation visible and fixes Sarvam's live HTTP 400. See [behavior, service verification and remaining manual checks](docs/0.16.1-VOICE-AND-FOCUS.md).
 
 0.16.0 adds Sarvam voice questions and replies, a separate encrypted Sarvam key field and a one-step held-key chat preset. Push-to-Talk readiness now explains missing setup instead of silently doing nothing, and Sarvam failures never fall back to the Windows narrator. See [setup, implementation and test limits](docs/0.16.0-SARVAM-PTT.md).

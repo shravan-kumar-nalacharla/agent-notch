@@ -7,12 +7,12 @@
   function controls(title,ids,description=''){
    const card=document.createElement('div');card.className='settings-card';const heading=document.createElement('h4');heading.textContent=title;card.append(heading);
    if(description){const p=document.createElement('p');p.textContent=description;card.append(p);}
-   for(const id of ids){const element=$(id);if(element)card.append(element.matches('input,select')?element.closest('label'):element);}
+   for(const id of ids){const element=$(id);if(element)card.append(element.matches('input,select,textarea')?element.closest('label'):element);}
    return card;
   }
   const intro=document.createElement('div');intro.className='group-heading';intro.innerHTML='<h3>Voice & typing</h3><p>Groq is the default for transcription and replies. Gemini Live is available when you choose it.</p>';
   const typing=controls('Dictation',['voiceEnabled','cloudAudioConsent','voiceReadiness','voiceHotkey','voiceDevice','voiceInsert','testMic','stopMicTest','micMeter','micTestStatus'],'Hold Ctrl + Shift + Windows to type into your focused app. Escape cancels.');
-  const conversation=controls('Voice conversation',['chatEngine']);
+  const conversation=controls('Voice conversation',['chatEngine','readingContext'],'The saved book/topic is sent to your voice provider. Recent voice questions stay in memory for 30 minutes; New conversation clears them.');
   const engineHint=document.createElement('p');engineHint.id='conversationHint';conversation.append(engineHint);
   const gemini=controls('Gemini Live setup',['geminiLiveStatus','geminiKeySetup','geminiKeySettings','checkGeminiLive','geminiLiveCheckStatus']);gemini.id='geminiOptions';conversation.append(gemini);
   const sarvam=controls('Sarvam voice setup',['sarvamVoice','sarvamStatus','sarvamActions']);sarvam.id='sarvamOptions';conversation.append(sarvam);

@@ -22,12 +22,13 @@ async function response(request, fetcher, signal) {
   return res.json();
 }
 function geminiText(data) { return data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('').trim() || ''; }
-async function chat({provider,key,model,text,system='You are a friendly desktop companion. Answer clearly and briefly. Never claim to have performed desktop actions.',signal,onDelta,onUsage,thinking=false,json=false},fetcher=fetch){
+async function chat({provider,key,model,text,system='You are a friendly desktop companion. Answer clearly and briefly. Never claim to have performed desktop actions.',signal,onDelta,onUsage,thinking=false,json=false,history=[]},fetcher=fetch){
   const c=config(provider,key,model,'chat');if(typeof text!=='string'||!text.trim()||text.length>20000)throw new Error('Enter a message of up to 20,000 characters.');
-  const streaming=c.capabilities.streaming&&typeof onDelta==='function',messages=[{role:'system',content:system},{role:'user',content:text}];
-  const request=provider==='gemini'?{url:`${c.base}/models/${encodeURIComponent(c.model)}:generateContent`,headers:{'content-type':'application/json','x-goog-api-key':c.key},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:'user',parts:[{text}]}],...(json?{generationConfig:{responseMimeType:'application/json',maxOutputTokens:4096}}:{})})}:{url:`${c.base}/chat/completions`,headers:{'content-type':'application/json',authorization:`Bearer ${c.key}`},body:JSON.stringify({model:c.model,...(provider==='openai'&&c.model==='gpt-6-luna'?{reasoning_effort:'none'}:{}),...(provider==='deepseek'?{thinking:{type:thinking?'enabled':'disabled'},stream:streaming,...(streaming?{stream_options:{include_usage:true}}:{})}:{}),messages,...(json?{response_format:{type:'json_object'}}:{})})};
+  if(!Array.isArray(history)||history.length>12||history.some(m=>!m||!['user','assistant'].includes(m.role)||typeof m.content!=='string'||m.content.length>3000)||history.reduce((n,m)=>n+m.content.length,0)>12000)throw new Error('Invalid conversation history.');
+  const prior=history.map(m=>({role:m.role,content:m.content})),streaming=c.capabilities.streaming&&typeof onDelta==='function',messages=[{role:'system',content:system},...prior,{role:'user',content:text}];
+  const request=provider==='gemini'?{url:`${c.base}/models/${encodeURIComponent(c.model)}:generateContent`,headers:{'content-type':'application/json','x-goog-api-key':c.key},body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[...prior.map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]})),{role:'user',parts:[{text}]}],...(json?{generationConfig:{responseMimeType:'application/json',maxOutputTokens:4096}}:{})})}:{url:`${c.base}/chat/completions`,headers:{'content-type':'application/json',authorization:`Bearer ${c.key}`},body:JSON.stringify({model:c.model,...(provider==='openai'&&c.model==='gpt-6-luna'?{reasoning_effort:'none'}:{}),...(provider==='deepseek'?{thinking:{type:thinking?'enabled':'disabled'},stream:streaming,...(streaming?{stream_options:{include_usage:true}}:{})}:{}),messages,...(json?{response_format:{type:'json_object'}}:{})})};
   let result='';
-  if(provider==='anthropic'){request.url=c.base+'/messages';request.headers={'content-type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01'};request.body=JSON.stringify({model:c.model,max_tokens:4096,stream:streaming,system:system+(json?'\nReturn only valid JSON, without Markdown fences.':''),messages:[{role:'user',content:text}]});}
+  if(provider==='anthropic'){request.url=c.base+'/messages';request.headers={'content-type':'application/json','x-api-key':c.key,'anthropic-version':'2023-06-01'};request.body=JSON.stringify({model:c.model,max_tokens:4096,stream:streaming,system:system+(json?'\nReturn only valid JSON, without Markdown fences.':''),messages:[...prior,{role:'user',content:text}]});}
   else if(streaming&&provider!=='deepseek'){const body=JSON.parse(request.body);body.stream=true;if(provider!=='sarvam')body.stream_options={include_usage:true};request.body=JSON.stringify(body);}
   if(provider==='sarvam'){request.headers={'content-type':'application/json','api-subscription-key':c.key};const body=JSON.parse(request.body);body.reasoning_effort='low';body.max_tokens=2048;request.body=JSON.stringify(body);}
   if(streaming){
@@ -44,12 +45,12 @@ async function chat({provider,key,model,text,system='You are a friendly desktop 
 function safeUsage(value){return Object.fromEntries(['prompt_tokens','completion_tokens','total_tokens'].filter(k=>Number.isFinite(value[k])&&value[k]>=0).map(k=>[k,value[k]]));}
 async function responseError(res,request){return request.headers['api-subscription-key']?require('./sarvam.cjs').responseError(res,request.headers['api-subscription-key']):providerError(res.status);}
 function providerError(status){return new Error(status===401||status===403?'The provider rejected this API key or model access.':status===429?'Provider limit reached. Try again shortly.':`Provider request failed (HTTP ${status}).`);}
-async function transcribe({ provider, key, model, audio, mime = 'audio/webm', language = '', hints = [], allowCodeSwitch = false, detailed = false, signal }, fetcher = fetch) {
+async function transcribe({ provider, key, model, audio, mime = 'audio/webm', language = '', hints = [], allowCodeSwitch = false, detailed = false, signal, keyterms=[] }, fetcher = fetch) {
   const c = config(provider, key, model, 'speech');
   if (!Buffer.isBuffer(audio) || audio.length < 100 || audio.length > 18 * 1024 * 1024) throw new Error('Recording must be between 100 bytes and 18 MB.');
   if (!['audio/webm', 'audio/webm;codecs=opus', 'audio/wav', 'audio/ogg', 'audio/mp4'].includes(mime)) throw new Error('Unsupported audio format.');
   if(language&&!/^[a-z]{2,3}$/.test(language))throw new Error('Use a spoken language code, not an output style.');
-  if(provider==='sarvam')return require('./sarvam.cjs').transcribe({key:c.key,model:c.model,audio,mime,language,allowCodeSwitch,detailed,signal},fetcher);
+  if(provider==='sarvam')return require('./sarvam.cjs').transcribe({key:c.key,model:c.model,audio,mime,language,allowCodeSwitch,detailed,signal,keyterms},fetcher);
   if(provider==='deepgram'){
     if(!Array.isArray(hints)||hints.some(h=>!['en','hi','te'].includes(h)))throw new Error('Invalid speech language hints.');
     const url=new URL(c.base+'/listen');url.searchParams.set('model',c.model);url.searchParams.set('punctuate','true');
