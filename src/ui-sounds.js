@@ -5,7 +5,7 @@
  const context=()=>({recording,speaking,meeting:state.microphone?.gaming||state.microphoneStatus?.callActive,dnd:state.quietMoments?.dnd});
  function stop(){if(active){active.pause();active.src='';active=null;}}
  async function play(name,volume=1){if(!names.has(name)||!policy.allowed(config,context(),name))return false;const time=performance.now();if(time-lastAt<(name==='hover'?180:55))return false;lastAt=time;stop();const sound=new Audio(new URL('assets/sounds/'+name+'.mp3',location.href).href);active=sound;sound.volume=Math.max(0,Math.min(.65,config.volume*volume*(name==='hover'?.22:1)));sound.onended=()=>{if(active===sound)active=null;};try{await sound.play();return true;}catch{if(active===sound)active=null;return false;}}
- function render(value){state=value;config=policy.validate(value.uiSounds||{});if(!config.enabled||config.volume===0)stop();}
+ function render(value){state=value;if(previousMute===undefined)previousMute=value.microphoneStatus?.muted??value.microphone?.muted;config=policy.validate(value.uiSounds||{});if(!config.enabled||config.volume===0)stop();}
  api.get().then(r=>{if(r.ok)render(r.value);});api.onSettings(render);
  api.onVoice?.(e=>{if(['connecting','listening','processing'].includes(e.phase)){recording=true;stop();}else if(['answer','done','error','idle','draft','liveStop'].includes(e.phase))recording=false;});
  window.addEventListener('island:speech',e=>{speaking=['queued','processing','speaking'].includes(e.detail.phase);if(speaking)stop();});
