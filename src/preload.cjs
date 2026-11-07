@@ -4,7 +4,7 @@ const { contextBridge, ipcRenderer, webUtils } = require('electron');
 const eventPools=new Map();
 function listen(channel,callback){let pool=eventPools.get(channel);if(!pool){pool=new Set();eventPools.set(channel,pool);ipcRenderer.on(channel,(_event,value)=>{for(const cb of [...pool])try{const pending=cb(value);pending?.catch?.(e=>console.error('UI event handler:',e.message));}catch(e){console.error('UI event handler:',e.message);}});}const entry=value=>callback(value);pool.add(entry);return()=>pool.delete(entry);}
 contextBridge.exposeInMainWorld('island', {
-  version: '0.17.0',
+  version: '0.17.1',
   workspace:(op,value={})=>ipcRenderer.invoke('workspace:action',{version:1,op,value}),
   onVisibility:callback=>listen('window:visibility',callback),
   toolSurface:value=>ipcRenderer.invoke('window:tool',value),
@@ -23,6 +23,8 @@ contextBridge.exposeInMainWorld('island', {
   wakePause:paused=>ipcRenderer.invoke('companion:pause',paused),
   companionCheck:()=>ipcRenderer.invoke('companion:check'),
   onWake:callback=>listen('wake:detected',callback),
+  interruption:enabled=>ipcRenderer.invoke('speech:interruption',enabled),
+  onInterruption:callback=>listen('voice:interrupt',callback),
   onUiSound:callback=>listen('ui:sound',callback),
   onSpeech:callback=>listen('speech:request',callback),
 
@@ -96,5 +98,5 @@ contextBridge.exposeInMainWorld('island', {
   onCommand: callback => listen('command:ui',callback),
   onCursor: callback => listen('cursor:state',callback),
   onCollapse: callback => ipcRenderer.on('window:collapse', () => callback()),
-  onRestore: callback => ipcRenderer.on('window:restore', () => callback())
+  onRestore: callback => listen('window:restore',callback)
 });

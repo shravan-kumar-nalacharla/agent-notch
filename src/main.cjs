@@ -70,14 +70,15 @@ function resize(expanded, view='home', contentHeight, voiceHud=false){
   surfaceExpanded=expanded;voiceHudActive=voiceHud;
   return geometry?.present(expanded,voiceHud||geometry.reminder||geometry.quote);
 }
-function activateIsland(value={}){if(!liveContents(win))return;userHidden=false;if(geometry?.reminder){if(!win.isVisible())win.showInactive();return;}windowOverride=true;win.webContents.send('window:policy',{behavior:'normal'});win.showInactive();resize(true);win.webContents.send(value?.revealOnly?'window:restore':'window:open');}
+function activateIsland(value={}){if(!liveContents(win))return;userHidden=false;if(geometry?.reminder){if(!win.isVisible())win.showInactive();return;}windowOverride=true;win.webContents.send('window:policy',{behavior:'normal'});win.showInactive();resize(true);win.webContents.send(value?.revealOnly?'window:restore':'window:open',{explicit:true});}
 function openSettings(target='') {
   target=['quotes','voice','providers'].includes(target)?target:'';
   if(!liveContents(win))return;win.webContents.send('window:collapse'); resize(false);
   if (settingsWindow && !settingsWindow.isDestroyed()) { settingsWindow.show(); settingsWindow.focus();settingsWindow.webContents.send('settings:section',target); return; }
-  settingsWindow = new BrowserWindow({ width: 760, height: Math.min(760,screen.getPrimaryDisplay().workArea.height-32), minWidth: 620, minHeight: 580, title: 'Agent Notch Settings', icon:path.join(__dirname,'assets','icon-256.png'), backgroundColor: '#0c0d10', autoHideMenuBar: true, webPreferences: { backgroundThrottling:false, preload: path.join(__dirname, 'preload.cjs'), sandbox: true, contextIsolation: true, nodeIntegration: false } });
+  settingsWindow = new BrowserWindow({ parent:win,show:false,width: 760, height: Math.min(760,screen.getPrimaryDisplay().workArea.height-32), minWidth: 620, minHeight: 580, title: 'Agent Notch Settings', icon:path.join(__dirname,'assets','icon-256.png'), backgroundColor: '#0c0d10', autoHideMenuBar: true, webPreferences: { backgroundThrottling:false, preload: path.join(__dirname, 'preload.cjs'), sandbox: true, contextIsolation: true, nodeIntegration: false } });
   settingsWindow.webContents.on('will-navigate', e => e.preventDefault());
   settingsWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  const opening=settingsWindow;opening.once('ready-to-show',()=>{if(!opening.isDestroyed()){opening.show();opening.moveTop();opening.focus();}});
   settingsWindow.loadFile(path.join(__dirname, 'index.html'), { query: { settings: '1',pane:target } });
   settingsWindow.on('closed', () => { settingsWindow = null; if(state?.appearance?.pinned&&!win.isDestroyed()){win.show();resize(true);win.webContents.send('window:restore');} });
 }
@@ -275,6 +276,8 @@ else {
     handle('gemini:check',async()=>{const client=require('./gemini-live.cjs').createLiveClient({key:key('gemini'),instruction:'Connection check. Do not speak.',onContent:()=>{},onError:()=>{}});try{await client.connect();return 'Gemini Live connected. Microphone was not opened.';}finally{client.close();}});
     handle('sarvam:setup',()=>shell.openExternal('https://dashboard.sarvam.ai/'));
     handle('speech:segments',value=>{const speech=require('./speech.cjs'),selected=speech.selection(state,value);return speech.chunks(selected.text,selected.provider==='sarvam'?1000:200);});
+    handle('speech:interruption',enabled=>{if(enabled===true)privacy.assertAllowed();return native.request('wake.interruption',{enabled:enabled===true&&state.microphone.mode==='always'});});
+    native.on('event',event=>{if(event.type!=='voice.interrupt'||privacy.view().blocked)return;voiceEngine?.interrupt();if(taskCoordinator?.voiceActive)taskCoordinator.cancel();speechController?.abort();widgets.emit('voice:interrupt',{command:event.command==='hide'?'hide':'stop'});});
     handle('speech:cancel',()=>{speechController?.abort();return true;});
     handle('speech:synthesize',async value=>{privacy.assertAllowed();const selected=require('./speech.cjs').selection(state,value),controller=new AbortController();speechController?.abort();speechController=controller;privacy.uploads.add(controller);try{return await require(selected.provider==='sarvam'?'./sarvam.cjs':'./speech.cjs').synthesize({...selected,key:key(selected.provider),signal:controller.signal});}finally{privacy.uploads.delete(controller);if(speechController===controller)speechController=null;}});
     handle('companion:pause',paused=>native.request('wake.pause',{paused:paused===true}));

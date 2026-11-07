@@ -37,7 +37,7 @@ function setMascot(mode) {
 setMascot('closed');
 
 window.island.onCollapse(() => expand(false));
-window.island.onRestore?.(() => expand(true).catch(showError));
+window.island.onRestore?.(value=>{if(value?.explicit)window.islandVoiceDismissed=false;expand(true).catch(showError);});
 
 function error(message = '') {
   const settingsError = $('error');
@@ -91,7 +91,7 @@ async function setExpanded(on){
   window.dispatchEvent(new CustomEvent('island:expanded',{detail:on}));
 }
 function canAutoClose(){return !window.islandVoiceHold?.()&&!document.body.classList.contains('is-capturing')&&!document.body.classList.contains('has-windows-task')&&!document.body.classList.contains('has-reminder-hud')&&!captureOverlayActive&&!state?.appearance?.pinned&&state?.appearance?.autoClose!==false&&!nativeRecording&&!nativeProcessing&&recorder?.state!=='recording'&&!document.body.classList.contains('is-dragging')&&!(document.hasFocus()&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))&&!(keyboardFocus&&document.hasFocus()&&$('island').contains(document.activeElement));}
-const motion=new IslandMotion({open:()=>setExpanded(true),close:()=>setExpanded(false),canOpen:()=>!document.body.classList.contains('has-reminder-hud')&&!document.body.classList.contains('has-quote-hud'),canClose:canAutoClose,changed:value=>document.body.dataset.motionState=value});
+const motion=new IslandMotion({open:()=>setExpanded(true),close:()=>setExpanded(false),canOpen:()=>!window.islandVoiceDismissed&&!document.body.classList.contains('has-reminder-hud')&&!document.body.classList.contains('has-quote-hud'),canClose:canAutoClose,changed:value=>document.body.dataset.motionState=value});
 window.addEventListener('island:control-drag',e=>motion.lock(e.detail===true||nativeRecording||nativeProcessing||!!window.islandVoiceHold?.()));
 window.addEventListener('island:voice-hold',e=>motion.lock(nativeRecording||nativeProcessing||e.detail===true));
 async function expand(on=true){if(settingsMode)return;return on?motion.open():motion.close();}
@@ -109,7 +109,7 @@ window.island.onLayout?.(layout=>{
   requestAnimationFrame(sendHitbox);
 });
 window.island.layout?.().then(r=>{if(r.ok){document.body.style.setProperty('--island-width',r.value.panelWidth+'px');document.body.style.setProperty('--compact-height',r.value.panelHeight+'px');document.body.style.setProperty('--rich-height',r.value.richHeight+'px');requestAnimationFrame(sendHitbox);}});
-$('activationTarget').onclick=()=>window.island.activate?window.island.activate({revealOnly:true}).then(result).catch(showError):expand(true);
+$('activationTarget').onclick=()=>{window.islandVoiceDismissed=false;return window.island.activate?window.island.activate({revealOnly:true}).then(result).catch(showError):expand(true);};
 function tab(name) {
   if (name === 'focus') { window.islandOpenTool?.('timer'); return; }
   if (name === 'settings' && !settingsMode) {
@@ -392,6 +392,7 @@ $('insertDraft').onclick=async()=>{try{await result(window.island.nativeVoice('i
 $('mic').onclick=async()=>{try{if(nativeRecording)await result(window.island.nativeVoice('finish'));else await window.islandOpenVoiceAssistant({start:true});}catch(e){showError(e);}};
 window.island.onToggle(()=>window.islandOpenVoiceAssistant({start:true}).catch(showError));
 window.island.onOpen(() => {
+  window.islandVoiceDismissed=false;
   tab('assistant');
   expand(true).catch(showError);
   $('question').focus();
@@ -525,7 +526,7 @@ function applyState(value) {
   $('homeTitle').textContent = value.profileName ? `Hi, ${value.profileName}.` : "Hey, I'm here.";
   window.islandUpdateDock?.(appearance.favorites || []);
   if (!busy && !nativeRecording) $('status').textContent = value.profileName ? `Ready, ${value.profileName}` : 'Ready';
-  if (appearance.pinned && !expanded && !settingsMode) expand(true).catch(showError);
+  if (appearance.pinned && !window.islandVoiceDismissed && !expanded && !settingsMode) expand(true).catch(showError);
   else if (!appearance.pinned && expanded && !settingsMode && !motion.inside) scheduleAutoClose();
 }
 

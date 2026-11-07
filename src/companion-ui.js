@@ -8,7 +8,7 @@
     await new Promise((resolve,reject)=>{const utterance=new SpeechSynthesisUtterance(text),matching=speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().startsWith(language));utterance.voice=matching.find(v=>v.voiceURI===companion.systemVoice)||matching[0]||null;if(!utterance.voice){reject(new Error('No installed '+language+' voice is available. The reply remains as text.'));return;}utterance.onstart=()=>window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'speaking'}}));utterance.lang=utterance.voice.lang;utterance.rate=companion.rate||1;utterance.volume=companion.volume??1;utterance.onend=resolve;utterance.onerror=e=>reject(new Error(e.error));release=resolve;speechSynthesis.speak(utterance);});
   }
   const stop=document.createElement('button');stop.id='stopSpeech';stop.textContent='■';stop.title='Stop speaking';stop.setAttribute('aria-label','Stop speaking');stop.hidden=true;document.querySelector('.header-actions').prepend(stop);
-  function cancel(resume=true){turn++;api.cancelSpeech?.().catch(()=>{});audio?.pause();audio=null;release?.();release=null;if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=null;speechSynthesis.cancel();window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'ready'}}));stop.hidden=true;if(resume)api.wakePause(false);}
+  function cancel(resume=true){turn++;api.interruption?.(false).catch(()=>{});api.cancelSpeech?.().catch(()=>{});audio?.pause();audio=null;release?.();release=null;if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=null;speechSynthesis.cancel();window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'ready'}}));stop.hidden=true;if(resume)api.wakePause(false);}
   stop.onclick=()=>{waking=false;cancel();};window.islandStopSpeech=cancel;
   async function playCloud(value,companion){
     const bytes=Uint8Array.from(atob(value.audio),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:value.mime})),playing=new Audio(url);objectUrl=url;audio=playing;playing.playbackRate=companion.rate||1;playing.volume=companion.volume??1;
@@ -21,7 +21,7 @@
     if(own!==turn||config.value.microphoneStatus?.blocked)return false;
     if(!preview&&!config.value.speak)return true;
     if(preview)cloudUnavailable=false;
-    await api.wakePause(true);stop.hidden=false;window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'processing',message:'Preparing voice'}}));
+    await api.wakePause(true);if(!preview)await api.interruption?.(true);stop.hidden=false;window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'processing',message:'Preparing voice'}}));
       const prefs=config.value.languages||{},input=prefs.dictationMode==='follow_ui'?prefs.uiLanguage:prefs.dictationMode,mode=prefs.voiceResponseLanguage==='follow_ui'?prefs.uiLanguage:prefs.voiceResponseLanguage==='follow_input'?input:prefs.voiceResponseLanguage,language=prefs.spokenLanguage&&prefs.spokenLanguage!=='follow_response'?prefs.spokenLanguage:/[\u0c00-\u0c7f]/u.test(text)?'te':/[\u0900-\u097f]/u.test(text)?'hi':['te','tenglish'].includes(mode)?'te':['hi','hinglish'].includes(mode)?'hi':'en';
       const provider=requestedProvider||(companion.chatEngine==='sarvam'?'sarvam':companion.tts);
       if(provider==='sarvam'){
@@ -32,13 +32,13 @@
       async function cloudSpeech(provider){
         try{
           const parts=await api.speechSegments({text,provider});if(!parts.ok)throw new Error(parts.error);
-          for(const part of parts.value){if(own!==turn)return false;const reply=await api.synthesize({text:part,provider,language});if(!reply.ok)throw new Error(reply.error);if(own!==turn)return false;await playCloud(reply.value,companion);}
+          let pending=parts.value.length?api.synthesize({text:parts.value[0],provider,language}):null;for(let i=0;i<parts.value.length;i++){if(own!==turn)return false;const reply=await pending;if(!reply.ok)throw new Error(reply.error);if(own!==turn)return false;pending=i+1<parts.value.length?api.synthesize({text:parts.value[i+1],provider,language}):null;await playCloud(reply.value,companion);}
           speechNotice('');
         }catch(e){if(own!==turn)return false;if(preview)throw e;if(provider==='sarvam'){speechNotice(e.message+' Your answer remains visible as text.');return false;}cloudUnavailable=true;speechNotice(e.message+' Cloud read-aloud is paused; using Windows voice. Use Save & hear voice in Settings to retry.');try{await systemSpeech(text,language,companion);}catch{speechNotice(e.message+' Spoken audio is unavailable; your text reply is unchanged.');}}
       }
 
       return own===turn;
-    }catch(error){if(own===turn)speechNotice(error.message);throw error;}finally{if(own===turn){stop.hidden=true;if(notice.hidden)window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'ready'}}));await api.wakePause(false);}}
+    }catch(error){if(own===turn)speechNotice(error.message);throw error;}finally{if(own===turn){stop.hidden=true;if(notice.hidden)window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'ready'}}));await api.interruption?.(false).catch(()=>{});await api.wakePause(false);}}
   }
   window.islandSpeak=speak;
   api.onSpeech?.(({text,provider})=>{if(!settingsMode)speak(text,{provider}).catch(window.islandShowError);});

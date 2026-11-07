@@ -3,7 +3,7 @@
   const api=window.island,settingsMode=new URLSearchParams(location.search).has('settings');
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const $=id=>document.getElementById(id);let lib,selected='',media,mediaAt=0,lyrics=[],mediaTimer,meetingState=null,prompterRunning=false,prompterFrame=0,prompterLast=0,todoDay='',editor=null,waterSettings=false;
-  let mediaSurface=null,lyricsWanted=false,mediaLevelTimer=null,levelPending=false,mediaLevelAt=0;
+  let lyricsGeneration=0;let mediaSurface=null,lyricsWanted=false,mediaLevelTimer=null,levelPending=false,mediaLevelAt=0;
   let clockReceiptAt=performance.now(),clockReceiptWall=Date.now();const uiNow=()=>clockReceiptWall+performance.now()-clockReceiptAt;
   let timerMode='focus',mediaLoading=false,lyricsPlain='',lyricsStatus='',lyricIndex=-2,volumeLevel=50,prompterOffset=0;
   const carouselPages=['media','water','shelf','todo'];
@@ -62,7 +62,7 @@
   function mediaSources(){if(!media?.sources)return'';return `<label class="media-source-picker">Player <select id="mediaSource" aria-label="Media player"><option value="">Automatic</option>${media.sources.map(source=>`<option value="${esc(source.appId)}" ${media.pinnedAppId===source.appId?'selected':''}>${esc(source.appId)}</option>`).join('')}${media.pinnedAppId&&!media.sources.some(source=>source.appId===media.pinnedAppId)?`<option selected value="${esc(media.pinnedAppId)}">Pinned player unavailable</option>`:''}</select></label>`;}
   function renderMediaCarousel(){return carouselFrame('Music','<div id="elevenMediaSurface"></div>');}
   function mediaView(){return{media,receivedAt:mediaAt,peakAt:mediaLevelAt,volume:volumeLevel,lyrics,lyricsPlain,lyricsStatus};}
-  function mountMedia(){const element=$('elevenMediaSurface');if(!element||!window.ElevenUI)return;mediaSurface?.dispose();mediaSurface=window.ElevenUI.mountMedia(element,{control:async(command,value)=>{await desktop('media.control',{command,...value});await refreshCarouselMedia();},select:async value=>{media=await desktop('media:select',value);mediaAt=Date.now();lyrics=[];lyricsPlain='';lyricsStatus='';updateMediaControls();},volume:async level=>{await desktop('volume',{level});volumeLevel=level;},lyrics:async(open=true)=>{lyricsWanted=open;if(open)await loadLyrics();else await desktop('lyrics:cancel');}},mediaView());desktop('volume').then(v=>{volumeLevel=v.level;updateMediaControls();}).catch(error);}
+  function mountMedia(){const element=$('elevenMediaSurface');if(!element||!window.ElevenUI)return;mediaSurface?.dispose();mediaSurface=window.ElevenUI.mountMedia(element,{control:async(command,value)=>{await desktop('media.control',{command,...value});await refreshCarouselMedia();},select:async value=>{media=await desktop('media:select',value);mediaAt=Date.now();lyrics=[];lyricsPlain='';lyricsStatus='';updateMediaControls();},volume:async level=>{await desktop('volume',{level});volumeLevel=level;},lyrics:async(open=true)=>{lyricsWanted=open;if(open)await loadLyrics();else{lyricsGeneration++;await desktop('lyrics:cancel');}}},mediaView());desktop('volume').then(v=>{volumeLevel=v.level;updateMediaControls();}).catch(error);}
 
   function stopwatchText(){const t=lib?.stopwatch,n=Math.floor(((t?.elapsed||0)+(t?.running?uiNow()-t.started:0))/1000);return n<3600?secondsLabel(n):`${Math.floor(n/3600)}:${secondsLabel(n%3600)}`;}
   function renderTimerCarousel(){
@@ -123,7 +123,7 @@
     if(selected!=='media'||root.hidden||!document.body.classList.contains('expanded')||mediaLoading||$('mediaSource')?.getAttribute('data-state')==='open')return;mediaLoading=true;
     try{
       const next=await desktop('media');if(selected!=='media'||root.hidden||!document.body.classList.contains('expanded'))return;
-      const changed=media?.app!==next.app||media?.pinnedAppId!==next.pinnedAppId||JSON.stringify(media?.sources)!==JSON.stringify(next.sources)||media?.title!==next.title||media?.artist!==next.artist||media?.available!==next.available;
+      const changed=media?.app!==next.app||media?.pinnedAppId!==next.pinnedAppId||media?.sessionId!==next.sessionId||media?.title!==next.title||media?.artist!==next.artist||media?.available!==next.available;
       media=next;mediaAt=Date.now();
       if(changed){desktop('lyrics:cancel').catch(()=>{});lyrics=[];lyricsPlain='';lyricsStatus='';lyricIndex=-2;if(lyricsWanted)setTimeout(loadLyrics,0);}
       if(!mediaSurface){mountMedia();const v=await desktop('volume');volumeLevel=v.level;}
@@ -179,8 +179,8 @@
   async function loadCalendar(){try{const events=await desktop('calendar');if($('calendarResult'))$('calendarResult').innerHTML=events.map(e=>row(e.title,'',`${new Date(e.start).toLocaleString()}${e.allDay?' · All day':''}`)).join('')||'<small>No upcoming events.</small>';}catch(e){error(e);}}
   async function loadLyrics(){
     document.body.classList.add('rich-media');window.dispatchEvent(new Event('island:layout-change'));
-    const key=media?.title+'|'+media?.artist;lyricsStatus='Looking for lyrics…';if($('lyricsRows'))$('lyricsRows').textContent=lyricsStatus;
-    try{const r=await desktop('lyrics');if(selected!=='media'||key!==media?.title+'|'+media?.artist)return;lyrics=r.lines||[];lyricsPlain=r.plain||'';lyricsStatus=r.message||'No matching lyrics found.';lyricIndex=-2;const offset=$('lyricsOffset')?.closest('label');if(offset)offset.hidden=!lyrics.length;paintLyrics();}catch(e){lyricsStatus='Lyrics lookup could not start. See Settings → Lyrics diagnostics.';if($('lyricsRows'))$('lyricsRows').textContent=lyricsStatus;error(e);}
+    const generation=++lyricsGeneration,key=media?.sessionId+'|'+media?.title+'|'+media?.artist;lyricsStatus='Looking for lyrics…';if($('lyricsRows'))$('lyricsRows').textContent=lyricsStatus;
+    try{const r=await desktop('lyrics');if(generation!==lyricsGeneration||!lyricsWanted||selected!=='media'||key!==media?.sessionId+'|'+media?.title+'|'+media?.artist)return;lyrics=r.lines||[];lyricsPlain=r.plain||'';lyricsStatus=r.message||'No matching lyrics found.';lyricIndex=-2;const offset=$('lyricsOffset')?.closest('label');if(offset)offset.hidden=!lyrics.length;paintLyrics();}catch(e){if(generation!==lyricsGeneration||!lyricsWanted)return;lyricsStatus='Lyrics lookup could not start. See Settings → Lyrics diagnostics.';if($('lyricsRows'))$('lyricsRows').textContent=lyricsStatus;error(e);}
   }
   function paintLyrics(){
     if(mediaSurface){mediaSurface.update(mediaView());return;}

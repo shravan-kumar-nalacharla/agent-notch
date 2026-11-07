@@ -39,7 +39,7 @@ internal static partial class Program
     static Process? ParentProcess;
     static TypingContext Target = TypingContext.None;
     static readonly Dictionary<string, TypingContext> Targets = new();
-    static readonly HashSet<string> AllowedActions = ["privacy.configure","privacy.status","privacy.calls","privacy.ptt","ping","system","media","media.level","media.control","volume","brightness","devices","voice.start","voice.finish","voice.cancel","voice.release","voice.configure","voice.diagnostics","voice.insert","voice.copySelection","voice.pasteLast","meeting.start","meeting.stop","meeting.drain","capture","target","clipboard.safe","click","shortcut","type","speak","wake.configure","wake.status","wake.test","wake.pause","screen.observe","screen.probe","agent.observe","agent.focus","agent.act","notification.status","notification.sound","shutdown"];
+    static readonly HashSet<string> AllowedActions = ["privacy.configure","privacy.status","privacy.calls","privacy.ptt","ping","system","media","media.level","media.control","volume","brightness","devices","voice.start","voice.finish","voice.cancel","voice.release","voice.configure","voice.diagnostics","voice.insert","voice.copySelection","voice.pasteLast","meeting.start","meeting.stop","meeting.drain","capture","target","clipboard.safe","click","shortcut","type","speak","wake.configure","wake.interruption","wake.status","wake.test","wake.pause","screen.observe","screen.probe","agent.observe","agent.focus","agent.act","notification.status","notification.sound","shutdown"];
     static string LastText = "";
     static string SelectedText = "";
     static Task SelectionTask=Task.CompletedTask;
@@ -126,6 +126,7 @@ internal static partial class Program
             case "wake.test": return await TestWakeAudio(v);
             case "wake.status": return new{enabled=Wake!=null,paused=WakePaused,name=CompanionName,recognizers=System.Speech.Recognition.SpeechRecognitionEngine.InstalledRecognizers().Select(r=>r.Culture.Name).ToArray()};
             case "wake.configure": return ConfigureWake(v);
+            case "wake.interruption": InterruptEnabled=!PrivacyBlocked&&ListeningMode=="always"&&Wake!=null&&B(v,"enabled");return new{enabled=InterruptEnabled};
             case "wake.pause": WakePaused=B(v,"paused");return true;
             case "agent.observe": return await AgentObserve();
             case "agent.focus": return await AgentFocus(v);
