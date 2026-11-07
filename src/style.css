@@ -211,10 +211,10 @@ body.shape-pill #island::before,body.shape-pill #island::after{display:none}
 body.shape-pill:not(.expanded):not(.settings-window) #island{margin-top:6px}
 body.shape-pill.expanded #greeting{-webkit-app-region:drag;cursor:grab}
 body.shape-pill.expanded .header-actions,body.shape-pill.expanded #face{-webkit-app-region:no-drag}
-body.shape-line:not(.expanded):not(.settings-window):not(.has-voice-hud) #island{width:150px;min-height:4px;height:4px;border-radius:2px;background:rgba(255,255,255,.35);transform:none}
-body.shape-line:not(.expanded):not(.settings-window):not(.has-voice-hud) header{height:4px}
-body.shape-line:not(.expanded):not(.settings-window):not(.has-voice-hud) .eye,
-body.shape-line:not(.expanded):not(.settings-window):not(.has-voice-hud) .face-light{visibility:hidden}
+body.shape-line:not(.expanded):not(.settings-window):not(.has-voice-hud):not(.has-quote-hud) #island{width:150px;min-height:4px;height:4px;border-radius:2px;background:rgba(255,255,255,.35);transform:none}
+body.shape-line:not(.expanded):not(.settings-window):not(.has-voice-hud):not(.has-quote-hud) header{height:4px}
+body.shape-line:not(.expanded):not(.settings-window):not(.has-voice-hud):not(.has-quote-hud) .eye,
+body.shape-line:not(.expanded):not(.settings-window):not(.has-voice-hud):not(.has-quote-hud) .face-light{visibility:hidden}
 .waving{animation:helloWave .75s var(--spring)}
 
 body.theme-light{--void:#f6f7f9;--panel:#ffffff;--panel-2:#eceef2;--line:rgba(9,12,18,.12);--text:#111318;--muted:#626873;--faint:#8d939d}

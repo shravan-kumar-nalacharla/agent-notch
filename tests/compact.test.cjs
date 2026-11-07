@@ -17,6 +17,6 @@ test('motion debounce, exact grace, reentry, pin and voice lock cancel stale tim
 });
 const config={enabled:true,dnd:false,morningStart:6,morningEnd:11,eveningStart:17,eveningEnd:22,dailyCap:3,cooldownMinutes:25,category:'mixed'};
 test('offline thoughts require deliberate expansion and support overnight windows',()=>{
- const {DEFAULTS,inWindow}=require('../src/quiet.cjs'),config={...DEFAULTS,allDay:false,dailyCap:3},activity={expanded:true,intentional:true,osDnd:false,systemKnown:true};
+ const {DEFAULTS,inWindow}=require('../src/quiet.cjs'),config={...DEFAULTS,onHover:true,allDay:false,dailyCap:3},activity={expanded:true,intentional:true,osDnd:false,systemKnown:true};
  const now=new Date(2026,10,1,8).getTime(),pick=(history={},at=now)=>pickMoment(config,history,at,()=>0,activity),q=pick();assert.ok(q);assert.equal(pickMoment(config,{},now,()=>0),null);assert.equal(pick({day:q.day,count:3}),null);assert.equal(pick({lastAt:now-1000}),null);assert.equal(pick({},new Date(2026,10,1,13).getTime()),null);assert.notEqual(pick({recent:[q.id]}).id,q.id);assert.equal(validateQuiet(config).dailyCap,3);assert.ok(inWindow(23,22,6));assert.ok(inWindow(2,22,6));assert.ok(!inWindow(12,22,6));
 });

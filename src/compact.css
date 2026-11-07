@@ -148,3 +148,10 @@ body.settings-window{height:100vh;overflow:hidden}
 #voiceReadiness{font-size:12px;line-height:1.6;color:var(--warning)}#voiceReadiness[data-ready=true]{color:var(--green)}
 
 .speech-notice{flex:none;margin:2px 0;max-height:30px;overflow:auto;font-size:10px;line-height:1.4;color:var(--muted)}
+
+/* Scheduled thoughts own the compact surface briefly, without opening Home. */
+body.has-quote-hud:not(.expanded):not(.settings-window) #island{width:var(--thought-width,330px);height:var(--thought-height,92px);border-radius:0 0 24px 24px}
+body.has-quote-hud #quietMoment[data-mode=automatic]{font-size:14px;line-height:1.5;padding:16px 30px 16px 20px;animation:none}
+body.has-quote-hud #quietMoment[data-mode=automatic] #quietText{display:block;-webkit-line-clamp:unset;overflow:hidden;color:#eef5ff;font-weight:500;line-height:1.5;max-height:164px;overflow-wrap:anywhere}
+#quietMoment[data-mode=automatic] button:not(#quietDismiss){display:none}
+body.has-quote-hud:not(.expanded) #island>#body{display:none}

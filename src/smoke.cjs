@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),{spawn}=require('node:child_process');
-exports.run=async function({app,win,screen,getSettingsWindow,native,widgets,geometry,geometryTrace,saveSnapshot,state}){
+exports.run=async function({app,win,screen,getSettingsWindow,native,widgets,geometry,geometryTrace,saveSnapshot,state,quotePopups,quoteActivity}){
   const out=process.env.NOTCH_SMOKE_OUTPUT|| (app.isPackaged?path.join(app.getPath('temp'),`agent-notch-${app.getVersion()}-smoke`):path.resolve(__dirname,'../artifacts',app.getVersion()));fs.mkdirSync(out,{recursive:true});
   const js=code=>win.webContents.executeJavaScript(code),sleep=ms=>new Promise(r=>setTimeout(r,ms));
   const evidence={platform:process.platform,windows:require('node:os').release(),display:screen.getPrimaryDisplay(),checks:[]};
@@ -8,6 +8,7 @@ exports.run=async function({app,win,screen,getSettingsWindow,native,widgets,geom
   async function until(code){for(let i=0;i<100;i++){if(await js(code))return;await sleep(100);}throw new Error('Timed out: '+code);}
   await until("!!window.islandOpenTool&&document.getElementById('assistantProvider').options.length>=4");await sleep(400);
   if(!['--notch-reminder-check','--notch-pointer-check','--background-reminder-check'].some(flag=>process.argv.includes(flag)))await js("window.island.productivity('notifications:settings',{enabled:false})");
+  if(process.argv.includes('--quote-popup-check'))return require('./smoke-quote-popups.cjs')({app,win,native,widgets,state,out,saveSnapshot,quotePopups,quoteActivity});
   if(process.argv.includes('--reading-check'))return require('./smoke-reading.cjs')({app,win,getSettingsWindow,widgets,state,out,saveSnapshot});
   if(process.argv.includes('--voice-experience-check'))return require('./smoke-voice-experience.cjs')({app,win,getSettingsWindow,native,widgets,state,out,saveSnapshot});
   if(process.argv.includes('--sarvam-ptt-check'))return require('./smoke-sarvam-ptt.cjs')({app,win,getSettingsWindow,native,widgets,state,out,saveSnapshot});

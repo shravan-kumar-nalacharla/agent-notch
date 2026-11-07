@@ -1,7 +1,7 @@
 'use strict';
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 contextBridge.exposeInMainWorld('island', {
-  version: '0.16.2',
+  version: '0.16.3',
   workspace:(op,value={})=>ipcRenderer.invoke('workspace:action',{version:1,op,value}),
   onVisibility:callback=>ipcRenderer.on('window:visibility',(_e,value)=>callback(value)),
   toolSurface:value=>ipcRenderer.invoke('window:tool',value),
@@ -58,6 +58,8 @@ contextBridge.exposeInMainWorld('island', {
   hitbox:rect=>ipcRenderer.send('window:hitbox',rect),
   layout:()=>ipcRenderer.invoke('window:layout'),
   geometryDiagnostics:()=>ipcRenderer.invoke('window:geometry-diagnostics'),
+  onThoughtPopup:callback=>ipcRenderer.on('quiet:popup',(_e,value)=>callback(value)),
+  setQuoteHud:value=>ipcRenderer.invoke('window:quote-hud',value),
   onQuietSuppress:callback=>ipcRenderer.on('quiet:suppress',(_e,value)=>callback(value)),
   quiet:(op,value={})=>ipcRenderer.invoke('quiet:action',{op,...value}),
   onHover:callback=>ipcRenderer.on('window:hover',(_e,value)=>callback(value)),

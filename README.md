@@ -1,5 +1,7 @@
 # Agent Notch
 
+0.16.3 adds automatic curved thought popups with a five-second upward fade, startup/unlock delivery and an eight-per-day randomized schedule. It removes the Home Thought button and includes the reading-context improvements from 0.16.2. See [behavior, timing and verification limits](docs/0.16.3-AUTOMATIC-THOUGHTS.md).
+
 0.16.2 adds a saved book/topic, bounded recent voice context, stable explanations of common archaic English, reading vocabulary hints and a visible provider label. It preserves the working Sarvam voice/wake/typing setup. See [reading improvements, privacy and limits](docs/0.16.2-READING-CONTEXT.md).
 
 0.16.1 separates Voice assistant from Chat, removes the general menu from Focus Time, restores voice typing alongside assistant Push-to-Talk, makes name activation visible and fixes Sarvam's live HTTP 400. See [behavior, service verification and remaining manual checks](docs/0.16.1-VOICE-AND-FOCUS.md).

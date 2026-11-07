@@ -1,12 +1,13 @@
 'use strict';
 const{test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
-const{catalog,byId,localized,validateCatalog,validatePatches}=require('../src/quotes.cjs'),{DEFAULTS:languages,LANGUAGES,validateLanguages,speechOptions,languagePrompt}=require('../src/localization.cjs'),{DEFAULTS:quotes,pickMoment,quietHours,daypart,migrateQuiet}=require('../src/quiet.cjs'),{renderTranscript}=require('../src/transcript.cjs'),{createLibrary}=require('../src/library.cjs');
+const{catalog,byId,localized,validateCatalog,validatePatches}=require('../src/quotes.cjs'),{DEFAULTS:languages,LANGUAGES,validateLanguages,speechOptions,languagePrompt}=require('../src/localization.cjs'),{DEFAULTS:quoteDefaults,pickMoment,quietHours,daypart,migrateQuiet}=require('../src/quiet.cjs'),{renderTranscript}=require('../src/transcript.cjs'),{createLibrary}=require('../src/library.cjs');
+const quotes={...quoteDefaults,onHover:true};
 const now=new Date(2026,10,2,10).getTime(),activity={expanded:true,intentional:true,osDnd:false,systemKnown:true};
-test('the actual settings loader retains v2 preferences and provider ciphertext across restart',()=>{
+test('the actual settings loader retains v3 preferences and provider ciphertext across restart',()=>{
  const main=path.resolve(__dirname,'../src/main.cjs'),source=fs.readFileSync(main,'utf8'),loadSource=source.slice(source.indexOf('function load()'),source.indexOf('const publicState'));
  const folder=fs.mkdtempSync(path.join(os.tmpdir(),'notch-settings-restart-')),file=path.join(folder,'settings.json');
  try{const load=require('node:vm').runInNewContext(loadSource+';load',{fs,MIC_DEFAULTS:require('../src/microphone-privacy.cjs').DEFAULTS,validatePrivacy:require('../src/microphone-privacy.cjs').validatePrivacy,groqDefaults:require('../src/provider-settings.cjs').groqDefaults,groqMigrationPending:false,localization:require('../src/localization.cjs'),require:require('node:module').createRequire(main),file:()=>file});
-  for(const lang of LANGUAGES){fs.writeFileSync(file,JSON.stringify({profileName:'Saved profile',keys:{groq:'opaque-ciphertext'},languages:{...languages,uiLanguage:lang,quoteLanguage:'tenglish'},quietMoments:{...quotes,quietStart:'23:00',quietEnd:'05:00'}}));const loaded=load();assert.equal(loaded.profileName,'Saved profile');assert.equal(loaded.languages.uiLanguage,lang);assert.equal(loaded.languages.quoteLanguage,'tenglish');assert.equal(loaded.quietMoments.cooldownMinutes,240);assert.equal(loaded.quietMoments.quietStart,'23:00');assert.equal(loaded.keys.groq,'opaque-ciphertext');}
+  for(const lang of LANGUAGES){fs.writeFileSync(file,JSON.stringify({profileName:'Saved profile',keys:{groq:'opaque-ciphertext'},languages:{...languages,uiLanguage:lang,quoteLanguage:'tenglish'},quietMoments:{...quotes,quietStart:'23:00',quietEnd:'05:00'}}));const loaded=load();assert.equal(loaded.profileName,'Saved profile');assert.equal(loaded.languages.uiLanguage,lang);assert.equal(loaded.languages.quoteLanguage,'tenglish');assert.equal(loaded.quietMoments.cooldownMinutes,60);assert.equal(loaded.quietMoments.quietStart,'23:00');assert.equal(loaded.keys.groq,'opaque-ciphertext');}
  }finally{fs.rmSync(folder,{recursive:true,force:true});}
 });
 test('129 stable IDs carry all 645 editorial texts, native scripts and original provenance',()=>{
@@ -32,8 +33,8 @@ test('night shifts, midnight quiet hours and local calendar days use user schedu
  assert.ok(quietHours({...quotes,quietStart:'22:00',quietEnd:'06:00'},new Date(2026,10,3,1)));assert.equal(pickMoment(config,{},new Date(2026,10,3,10).getTime(),()=>0,activity),null);
  const midnight=new Date(2026,10,3,0,1).getTime();assert.ok(pickMoment(quotes,{day:'2026-10-2',count:2,lastAt:midnight-5*3600000},midnight,()=>0,activity));
 });
-test('migration preserves disabled state and legacy settings without restoring frequent startup popups',()=>{
- const migrated=migrateQuiet({enabled:false,dailyCap:48,cooldownMinutes:5});assert.equal(migrated.enabled,false);assert.equal(migrated.dailyCap,2);assert.equal(migrated.cooldownMinutes,240);assert.equal(migrated.legacyPreferences.dailyCap,48);
+test('migration preserves disabled state and legacy settings while adopting scheduled thought defaults',()=>{
+ const migrated=migrateQuiet({enabled:false,dailyCap:48,cooldownMinutes:5});assert.equal(migrated.enabled,false);assert.equal(migrated.dailyCap,8);assert.equal(migrated.cooldownMinutes,60);assert.equal(migrated.legacyPreferences.dailyCap,48);
  assert.throws(()=>validateLanguages({speechInput:'tenglish'}));assert.throws(()=>validateLanguages({cloudAudioConsent:'yes'}));
 });
 test('preferences persist independently and correction imports cannot change IDs or sources',()=>{

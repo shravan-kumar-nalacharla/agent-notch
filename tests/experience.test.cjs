@@ -8,9 +8,9 @@ test('Bloom spring trajectories grow through intermediate sizes, overshoot gentl
   const f=frames({width:174,height:26,y:-32,scale:.94,opacity:0,radius:14},{width:470,height:250,y:0,scale:1,opacity:1,radius:25});
   assert.equal(spring(0,PRESETS.height),0);assert.equal(f.length,61);assert.ok(f.filter(x=>parseFloat(x.width)>200&&parseFloat(x.width)<450).length>4);assert.ok(Math.max(...f.map(x=>parseFloat(x.height)))>250);assert.ok(Math.max(...f.map(x=>parseFloat(x.height)))<265);assert.equal(f.at(-1).width,'470px');assert.equal(f.at(-1).height,'250px');
 });
-test('curated thoughts respect conservative frequency and never revive startup popups',()=>{
- const config={...require('../src/quiet.cjs').DEFAULTS,category:'philosophy'},now=new Date(2026,10,2,13).getTime(),activity={expanded:true,intentional:true,osDnd:false,systemKnown:true};assert.equal(validateQuiet(config).cooldownMinutes,240);
- const q=pickMoment(config,{},now,()=>.99,activity);assert.ok(q);assert.equal(pickMoment(config,{lastAt:now-60000},now,()=>0,activity),null);assert.equal(pickMoment({...config,dnd:true},{},now,()=>0,activity),null);assert.equal(pickMoment(config,{day:q.day,count:2},now,()=>0,activity),null);assert.equal(pickMoment(config,{},now,()=>0,{...activity,expanded:false}),null);
+test('optional hover thoughts respect the configured frequency and deliberate-opening gate',()=>{
+ const config={...require('../src/quiet.cjs').DEFAULTS,onHover:true,category:'philosophy'},now=new Date(2026,10,2,13).getTime(),activity={expanded:true,intentional:true,osDnd:false,systemKnown:true};assert.equal(validateQuiet(config).cooldownMinutes,60);
+ const q=pickMoment(config,{},now,()=>.99,activity);assert.ok(q);assert.equal(pickMoment(config,{lastAt:now-60000},now,()=>0,activity),null);assert.equal(pickMoment({...config,dnd:true},{},now,()=>0,activity),null);assert.equal(pickMoment(config,{day:q.day,count:config.dailyCap},now,()=>0,activity),null);assert.equal(pickMoment(config,{},now,()=>0,{...activity,expanded:false}),null);
 });
 test('natural voice splits long replies within the provider limit',()=>{const pieces=chunks('A sentence. '.repeat(100));assert.ok(pieces.length>1);assert.ok(pieces.every(x=>x.length<=200));assert.equal(pieces.join(' '),'A sentence. '.repeat(100).trim());assert.throws(()=>chunks(''));assert.ok(chunks('🙂'.repeat(250)).every(x=>x.length<=200&&!x.endsWith('\ud83d')));});
 test('Orpheus uses the official endpoint and validates audio and authentication failures',async()=>{

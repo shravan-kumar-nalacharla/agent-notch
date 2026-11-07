@@ -75,7 +75,7 @@ function createLibrary(folder, now = Date.now, monotonic = now===Date.now?()=>pe
       case 'meeting:save': { const item={id:value.id||randomUUID(),at:now(),title:text(value.title||'Meeting',200),transcript:String(value.transcript||'').slice(0,400000),notes:String(value.notes||'').slice(0,100000)}; data.meetings=[item,...data.meetings.filter(x=>x.id!==item.id)].slice(0,100); break; }
       case 'meeting:remove': data.meetings=data.meetings.filter(x=>x.id!==value.id); break;
       case 'teleprompter:save': if(typeof value.text==='string')data.teleprompter.text=value.text.slice(0,100000); if(Number.isFinite(value.speed))data.teleprompter.speed=Math.max(5,Math.min(150,value.speed)); if(Number.isFinite(value.fontSize))data.teleprompter.fontSize=Math.max(16,Math.min(72,value.fontSize)); if(typeof value.mirror==='boolean')data.teleprompter.mirror=value.mirror; break;
-      case 'quiet:shown': {const q=data.quiet;const item=require('./quiet.cjs').LINES.find(x=>x.id===value.id);if(!item)throw new Error('Unknown thought.');const day=value.day;if(!value.manual){q.count=q.day===day?q.count+1:1;q.day=day;q.lastAt=now();}q.shown[item.id]=now();q.lastTheme=item.theme;q.recent=[...q.recent,item.id].slice(-129);break;}
+      case 'quiet:shown': {const q=data.quiet;const item=require('./quiet.cjs').LINES.find(x=>x.id===value.id);if(!item)throw new Error('Unknown thought.');const day=value.day;if(!value.manual){q.count=q.day===day?q.count+1:1;q.day=day;q.lastAt=now();if(Number.isFinite(value.nextAt)&&value.nextAt>=now())q.nextAt=value.nextAt;}q.shown[item.id]=now();q.lastTheme=item.theme;q.recent=[...q.recent,item.id].slice(-129);break;}
       case 'quiet:favorite': {if(!require('./quiet.cjs').LINES.some(x=>x.id===value.id))throw new Error('Unknown thought.');data.quiet.favorites=data.quiet.favorites.includes(value.id)?data.quiet.favorites.filter(id=>id!==value.id):[...data.quiet.favorites,value.id];break;}
       case 'quiet:mute': {if(!require('./quotes.cjs').byId.has(value.id))throw new Error('Unknown thought.');data.quiet.muted=[...new Set([...data.quiet.muted,value.id])];break;}
       case 'quiet:unmute': data.quiet.muted=data.quiet.muted.filter(id=>id!==value.id);break;
@@ -103,7 +103,7 @@ function createLibrary(folder, now = Date.now, monotonic = now===Date.now?()=>pe
     for(const item of [...data.snippets].sort((a,b)=>b.trigger.length-a.trigger.length))output=output.replace(new RegExp(`(?<![\\p{L}\\p{N}_])${esc(item.trigger)}(?![\\p{L}\\p{N}_])`,'giu'),()=>item.expansion);
     return output;
   }
-  return {view,action,tick,transform,save};
+  return {view,action,tick,transform,save,quoteState:()=>structuredClone({quiet:data.quiet,focus:!!(data.timer&&!data.timer.paused||data.stopwatch?.running)})};
 }
 function stats(history) {
   const dict=history.filter(x=>x.kind==='dictation');const words=dict.reduce((n,x)=>n+(x.text.trim()?x.text.trim().split(/\s+/).length:0),0);const seconds=dict.reduce((n,x)=>n+x.seconds,0);
