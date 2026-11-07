@@ -90,8 +90,9 @@ async function setExpanded(on){
   animation.then(()=>{if(surfaceSerial===serial&&expanded===on){document.body.classList.remove('surface-animating');if(!on)$('body').hidden=true;sendHitbox();}});
   window.dispatchEvent(new CustomEvent('island:expanded',{detail:on}));
 }
-function canAutoClose(){return !document.body.classList.contains('is-capturing')&&!document.body.classList.contains('has-windows-task')&&!document.body.classList.contains('has-reminder-hud')&&!captureOverlayActive&&!state?.appearance?.pinned&&state?.appearance?.autoClose!==false&&!nativeRecording&&!nativeProcessing&&recorder?.state!=='recording'&&!document.body.classList.contains('is-dragging')&&!(document.hasFocus()&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))&&!(keyboardFocus&&document.hasFocus()&&$('island').contains(document.activeElement));}
+function canAutoClose(){return !window.islandVoiceHold?.()&&!document.body.classList.contains('is-capturing')&&!document.body.classList.contains('has-windows-task')&&!document.body.classList.contains('has-reminder-hud')&&!captureOverlayActive&&!state?.appearance?.pinned&&state?.appearance?.autoClose!==false&&!nativeRecording&&!nativeProcessing&&recorder?.state!=='recording'&&!document.body.classList.contains('is-dragging')&&!(document.hasFocus()&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))&&!(keyboardFocus&&document.hasFocus()&&$('island').contains(document.activeElement));}
 const motion=new IslandMotion({open:()=>setExpanded(true),close:()=>setExpanded(false),canOpen:()=>!document.body.classList.contains('has-reminder-hud')&&!document.body.classList.contains('has-quote-hud'),canClose:canAutoClose,changed:value=>document.body.dataset.motionState=value});
+window.addEventListener('island:voice-hold',e=>motion.lock(nativeRecording||nativeProcessing||e.detail===true));
 async function expand(on=true){if(settingsMode)return;return on?motion.open():motion.close();}
 window.island.onCaptureOverlay?.(({active})=>{captureOverlayActive=active;if(active){motion.cancel('leave');}else if(!motion.inside&&expanded)motion.leave();});
 window.island.onVisibility?.(visible=>{if(!visible&&expanded)expand(false).catch(showError);});
@@ -117,7 +118,7 @@ function tab(name) {
   const page = $(name);
   if (!page) return;
   activeView = name;
-  if(name!=='tools')window.island.toolSurface?.({id:''}).catch(showError);
+  if(name!=='tools'){document.body.classList.toggle('rich-media',name==='voiceAssistant');window.island.toolSurface?.({id:''}).catch(showError);}
   if(name!=='home')hideQuietMoment();
   syncViewClass(name);
   document.querySelectorAll('.page').forEach(element => {
@@ -132,6 +133,7 @@ function tab(name) {
 }
 
 function showError(value) {
+  if(value)window.dispatchEvent(new Event('island:ui-error'));
   error(value?.message || String(value || ''));
 }
 window.islandShowError = showError;
@@ -453,7 +455,7 @@ window.island.onVoice?.(event => {
     if (document.body.classList.contains('has-voice-hud')) $('voiceHudText').textContent = 'Transcribing...';
   }
   if (['done', 'answer', 'error', 'idle','draft'].includes(event.phase)) {
-    motion.lock(false);
+    motion.lock(!!window.islandVoiceHold?.());
     nativeRecording = false;
     busy = false;
     $('mic').classList.remove('recording');

@@ -43,3 +43,9 @@ Copyright The xterm.js authors, SourceLair and Christopher Jeffrey.
 Their complete LICENSE files are retained in the bundled packages.
 Project: https://github.com/xtermjs/xterm.js
 
+
+## ElevenLabs UI
+
+Voice orb fragment shader adapted from [elevenlabs/ui](https://github.com/elevenlabs/ui/tree/3a28ebab197f8cfa599934f52db12ad1396e54f4), `apps/www/registry/elevenlabs-ui/ui/orb.tsx`. Copyright (c) 2025 Eleven Labs Inc., MIT. Full license: `src/vendor/elevenlabs-ui-LICENSE.txt`. Adaptation uses the original shader with a native WebGL2 renderer and local generated noise. Voice controls, transcript/response surfaces and shimmer follow the inspected component patterns, implemented for this application's DOM and native capture lifecycle; the React registry is not imported wholesale. No ElevenLabs account, SDK, audio service or additional microphone stream is used.
+
+Short UI sound excerpts were provided by the application owner from their local editing pack. Redistribution rights for that pack must be confirmed by the owner before public distribution.

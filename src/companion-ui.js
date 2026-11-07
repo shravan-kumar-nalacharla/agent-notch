@@ -12,15 +12,16 @@
   stop.onclick=()=>{waking=false;cancel();};window.islandStopSpeech=cancel;
   async function playCloud(value,companion){
     const bytes=Uint8Array.from(atob(value.audio),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:value.mime})),playing=new Audio(url);objectUrl=url;audio=playing;playing.playbackRate=companion.rate||1;playing.volume=companion.volume??1;
-    try{await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Voice playback timed out.')),60000);release=()=>{clearTimeout(timer);resolve();};playing.onended=release;playing.onerror=()=>{clearTimeout(timer);reject(new Error('Voice audio could not play.'));};playing.onplaying=()=>window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'speaking'}}));playing.play().catch(e=>{clearTimeout(timer);reject(e);});});}finally{playing.pause();URL.revokeObjectURL(url);if(audio===playing){audio=null;objectUrl=null;release=null;}}
+    let meterContext,meterFrame;
+    try{meterContext=new AudioContext();await meterContext.resume();const source=meterContext.createMediaElementSource(playing),analyser=meterContext.createAnalyser();analyser.fftSize=256;source.connect(analyser);analyser.connect(meterContext.destination);const samples=new Uint8Array(analyser.fftSize);const measure=()=>{analyser.getByteTimeDomainData(samples);let sum=0;for(const x of samples)sum+=((x-128)/128)**2;window.dispatchEvent(new CustomEvent('island:output-level',{detail:Math.min(1,Math.sqrt(sum/samples.length)*4)}));meterFrame=requestAnimationFrame(measure);};measure();}catch{meterContext?.close().catch(()=>{});meterContext=null;}
+    try{await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Voice playback timed out.')),60000);release=()=>{clearTimeout(timer);resolve();};playing.onended=release;playing.onerror=()=>{clearTimeout(timer);reject(new Error('Voice audio could not play.'));};playing.onplaying=()=>window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'speaking'}}));playing.play().catch(e=>{clearTimeout(timer);reject(e);});});}finally{cancelAnimationFrame(meterFrame);meterContext?.close().catch(()=>{});window.dispatchEvent(new CustomEvent('island:output-level',{detail:0}));playing.pause();URL.revokeObjectURL(url);if(audio===playing){audio=null;objectUrl=null;release=null;}}
   }
   async function speak(text,{preview=false,provider:requestedProvider}={}){
-    cancel(false);const own=turn,config=await api.get();if(!config.ok)throw new Error(config.error);const companion=config.value.companion||{};
+    cancel(false);const own=turn;window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'queued'}}));try{const config=await api.get();if(!config.ok)throw new Error(config.error);const companion=config.value.companion||{};
     if(own!==turn||config.value.microphoneStatus?.blocked)return false;
     if(!preview&&!config.value.speak)return true;
     if(preview)cloudUnavailable=false;
     await api.wakePause(true);stop.hidden=false;window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'processing',message:'Preparing voice'}}));
-    try{
       const prefs=config.value.languages||{},input=prefs.dictationMode==='follow_ui'?prefs.uiLanguage:prefs.dictationMode,mode=prefs.voiceResponseLanguage==='follow_ui'?prefs.uiLanguage:prefs.voiceResponseLanguage==='follow_input'?input:prefs.voiceResponseLanguage,language=prefs.spokenLanguage&&prefs.spokenLanguage!=='follow_response'?prefs.spokenLanguage:/[\u0c00-\u0c7f]/u.test(text)?'te':/[\u0900-\u097f]/u.test(text)?'hi':['te','tenglish'].includes(mode)?'te':['hi','hinglish'].includes(mode)?'hi':'en';
       const provider=requestedProvider||(companion.chatEngine==='sarvam'?'sarvam':companion.tts);
       if(provider==='sarvam'){
@@ -37,7 +38,7 @@
       }
 
       return own===turn;
-    }finally{if(own===turn){stop.hidden=true;if(notice.hidden)window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'ready'}}));await api.wakePause(false);}}
+    }catch(error){if(own===turn)speechNotice(error.message);throw error;}finally{if(own===turn){stop.hidden=true;if(notice.hidden)window.dispatchEvent(new CustomEvent('island:speech',{detail:{phase:'ready'}}));await api.wakePause(false);}}
   }
   window.islandSpeak=speak;
   api.onSpeech?.(({text,provider})=>{if(!settingsMode)speak(text,{provider}).catch(window.islandShowError);});

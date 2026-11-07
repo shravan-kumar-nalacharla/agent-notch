@@ -88,3 +88,5 @@ See [changes and validation](docs/0.4.0-CHANGES.md) for the fixed-size centered 
 ## Research dependencies
 
 `research/voiceflow-main` is the supplied MIT Voice Flow source. `research/Klyro` is a pinned source checkout. `research/nook` is official source tag v0.2.1. REA reports for each supplied product are retained in research/evidence; TwoCode source analysis reached its deadline and contains partial evidence. Klyro's screen guide uses native/klyro_worker.py over its real OCR/UIA/grounding modules. It deliberately excludes the original router, which can automatically switch into execution. Version 0.6.0 ports the screen workflow to the native Windows engine and no longer bundles or needs Python. The legacy worker stays in research/source for reference. Screen context goes only to the selected provider. Research binaries/artwork are excluded from release artifacts.
+
+Voice UI 0.16.4: [implementation and verification](docs/0.16.4-VOICE-UI.md).

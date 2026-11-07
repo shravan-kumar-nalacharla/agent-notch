@@ -23,3 +23,7 @@ test('an interactive view defers notch acknowledgement without falsely reporting
  interactive=false;fire();assert.equal(f.engine.history()[0].state,'unknown');assert.match(f.engine.history()[0].reason,/Notch display/);
  f.notch.shown([id]);assert.equal(f.engine.history()[0].state,'delivered');assert.equal(timers.size,0);
 });
+
+test('notch sound is emitted once after display acknowledgement and respects sound/media preferences',t=>{const f=fixture(t);const card=f.once();assert.equal(f.events.filter(e=>e.name==='ui:sound').length,1);f.notch.shown([card.id]);assert.equal(f.events.filter(e=>e.name==='ui:sound').length,1);f.notch.action({id:card.id,action:'drink'});f.store.setSetting('notifications',{...f.engine.settings(),sounds:false});f.advance(3600);f.once();assert.equal(f.events.filter(e=>e.name==='ui:sound').length,1);});
+
+test('media playback and silent category suppress notch cues without suppressing the reminder card',t=>{const f=fixture(t,{getContext:()=>({mediaPlaying:true})});f.store.setSetting('notifications',{...f.engine.settings(),muteDuringMedia:true});assert.ok(f.once());assert.equal(f.events.filter(e=>e.name==='ui:sound').length,0);const g=fixture(t);g.store.setSetting('notifications',{...g.engine.settings(),categories:{...g.engine.settings().categories,water:{...g.engine.settings().categories.water,sound:'silent'}}});assert.ok(g.once());assert.equal(g.events.filter(e=>e.name==='ui:sound').length,0);});
