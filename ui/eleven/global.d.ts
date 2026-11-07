@@ -1,0 +1,1 @@
+export {};declare global{interface Window{island:any;islandShowError:(e:any)=>void;ElevenOrb:(c:HTMLCanvasElement)=>any;ElevenUI:any;NotchSounds:any;NOTCH_ELEVEN_REACT:boolean;islandElevenUIReady:boolean;}}

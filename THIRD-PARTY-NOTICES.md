@@ -46,6 +46,17 @@ Project: https://github.com/xtermjs/xterm.js
 
 ## ElevenLabs UI
 
-Voice orb fragment shader adapted from [elevenlabs/ui](https://github.com/elevenlabs/ui/tree/3a28ebab197f8cfa599934f52db12ad1396e54f4), `apps/www/registry/elevenlabs-ui/ui/orb.tsx`. Copyright (c) 2025 Eleven Labs Inc., MIT. Full license: `src/vendor/elevenlabs-ui-LICENSE.txt`. Adaptation uses the original shader with a native WebGL2 renderer and local generated noise. Voice controls, transcript/response surfaces and shimmer follow the inspected component patterns, implemented for this application's DOM and native capture lifecycle; the React registry is not imported wholesale. No ElevenLabs account, SDK, audio service or additional microphone stream is used.
+The 17 requested ElevenLabs UI components and supporting primitives are adapted from
+[elevenlabs/ui](https://github.com/elevenlabs/ui/tree/3a28ebab197f8cfa599934f52db12ad1396e54f4),
+Copyright (c) 2025 Eleven Labs Inc., MIT. Full license:
+`src/vendor/elevenlabs-ui-LICENSE.txt`. Source provenance and hashes:
+`ui/eleven/SOURCES.json`. The React registry components now drive chat, music,
+voice selection, visualization and dictation surfaces. The original orb shader
+uses the existing native WebGL2 adapter. Windows media transport and native
+microphone privacy retain control of playback and recording. Response uses
+react-markdown instead of Streamdown. No ElevenLabs account or cloud voice
+service is required. React, Motion, Radix, Lucide, react-markdown, remark-gfm,
+use-stick-to-bottom and utility dependencies retain their upstream licenses;
+bundler license notices are included in `src/vendor/eleven-components.js.LEGAL.txt`.
 
 Short UI sound excerpts were provided by the application owner from their local editing pack. Redistribution rights for that pack must be confirmed by the owner before public distribution.

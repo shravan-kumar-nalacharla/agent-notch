@@ -1,0 +1,139 @@
+{
+  "repository": "https://github.com/elevenlabs/ui",
+  "revision": "3a28ebab197f8cfa599934f52db12ad1396e54f4",
+  "license": "MIT",
+  "components": {
+    "audio-player.tsx": {
+      "originalSHA256": "b93aeedf0b5f749d210b64a9d964e84f12bbf875b18d61bcbc3017c6f8966c49",
+      "adaptedSHA256": "7700996d1e3895ca6f4d53b2a398c32575ae7e6eedbff4015c2da7a6fc213955"
+    },
+    "avatar.tsx": {
+      "originalSHA256": "e8672934f1c315f36cdae39380454ba8c2da62aca420dfb827d96693091419c4",
+      "adaptedSHA256": "12579c0743c1f0e23a303f668ff6a55d312e8fde723bde59b9ceffe557513319"
+    },
+    "bar-visualizer.tsx": {
+      "originalSHA256": "6244d6f95996385c359dbf12968f5980ecabe5155eaea694a753217b86c3f685",
+      "adaptedSHA256": "92e8ae11aa0ad6750c3df76af2cf7c22c41d736d1a18bfd0dd26a64421bd859d"
+    },
+    "button.tsx": {
+      "originalSHA256": "7b260b5eeb59e4756fc3907e54852f06d58e8003ff0e030c1d97cff194d87f00",
+      "adaptedSHA256": "e6b31707d277dfa3639be3f2bfe2869359ccec68b05e57da52bf19e7671f820b"
+    },
+    "card.tsx": {
+      "originalSHA256": "78cdb63dff3ec7ef074ada630ff20a5d8004768b6cbe24ed134a8bfba12bafbb",
+      "adaptedSHA256": "843efab2fa15828d11a2bb014fa1b27774cf9abeb5863bb9c1be682154657a8b"
+    },
+    "command.tsx": {
+      "originalSHA256": "e6e6ff24d24a1fce9e9f6ab423152f4803001f00c2a91194058ff3dbd8da848d",
+      "adaptedSHA256": "a9d151cd043609bf241a0c0f2635ce752e41cf7a967443649f34d586571c8013"
+    },
+    "conversation-bar.tsx": {
+      "originalSHA256": "c4fdb932330751911ec442185dcf1d1b4d2323eb04048d23079058919c91a28b",
+      "adaptedSHA256": "b705772d8924d3b20d05f905ee43a05ffaaa808ebfc827a981fb34f0361d6e4b"
+    },
+    "conversation.tsx": {
+      "originalSHA256": "34009c4515b2b3c0cc8454c75c993e40509bf06f9ba5afd11eb1d15005b3d54d",
+      "adaptedSHA256": "d34978cda49c6957ad925e17c62ef089f1c59ce51155b30118ef8db545339fa9"
+    },
+    "dialog.tsx": {
+      "originalSHA256": "491a87bfae8f28773624d353bf56b9288d0852413e814d508e0d086dc7b06edb",
+      "adaptedSHA256": "f03bf7dd52aab03107b479cc3cf26b7f763dc21dc6578060b6ed8a085099ed43"
+    },
+    "dropdown-menu.tsx": {
+      "originalSHA256": "9b346378821ba06f9501e4571fd7678cd8819d6833f833daff72bec699565c06",
+      "adaptedSHA256": "64625c94190bb69714a9394ef9afe0aac642768c51364ff0eafdcddeb713ec92"
+    },
+    "input.tsx": {
+      "originalSHA256": "56b7fd30208addbcc2468cfda4f5bc0a55342211deaab61ee35b1c352b1622f1",
+      "adaptedSHA256": "02a6eb4643f3dc9ea6f29a45057fae838826936b9d04d1e5f82cce2a7a6356ad"
+    },
+    "label.tsx": {
+      "originalSHA256": "9ec42c8a57e82311118b794318409ee02b2cebfa49ba6cce8457cff6448cd471",
+      "adaptedSHA256": "6fffb2fbf0ead92fbd9657b9f8a759d0859b5072a4ed85c2d2e45d4ee72877ae"
+    },
+    "live-waveform.tsx": {
+      "originalSHA256": "ca011f6594bb105afe56362eef5f9032c008623b507b16320216121951939170",
+      "adaptedSHA256": "e322b3bfe706568b48c13dda2700be8d74f89b339710702f357eb0b64484e1c6"
+    },
+    "matrix.tsx": {
+      "originalSHA256": "f074f26d5d9060b53c794893993c2ab8b7c13d6de0c1a4135cad069d0ecf0141",
+      "adaptedSHA256": "5c8f7b201d2d8bed0940995b3fdc14d1d2f33d067fbc120c3e6bb39a80e12fed"
+    },
+    "message.tsx": {
+      "originalSHA256": "bf8a16fb7b9a1a8046caa062f591a41a5d9921622e24575c8a4281d19731fdaf",
+      "adaptedSHA256": "2a033a636ed168987615bfaa1bd5bbdd7611e7200d389898e7972684b58921b9"
+    },
+    "mic-selector.tsx": {
+      "originalSHA256": "ed606c8003fe54f470a7e192570ee8ce529188e5e7caefd573f5c04e0e589538",
+      "adaptedSHA256": "a67a0cb7fe7751101623492a38d7cfc64b1f16b7800224bd403473642ac2b460"
+    },
+    "popover.tsx": {
+      "originalSHA256": "29a217781737bbf5c430859b3de46097a44ada81c4143c2d05543d2167de0ee1",
+      "adaptedSHA256": "a95ed067911e7644c75a8e3694b143653d91aeb6f09ccf302ccc4c5407ac24e1"
+    },
+    "progress.tsx": {
+      "originalSHA256": "e7a89220fb49e18d6613956781cfd5eb38d5da36379e93f5fc90ccec127dc871",
+      "adaptedSHA256": "adc2f54704714b0f485a935b5ad9ebff1c76941688a1063de0f219a1a3a0bddc"
+    },
+    "response.tsx": {
+      "originalSHA256": "129a7e7acd1344af1ee0406e555d378c3c2c85b626ac52b350dad0fb3698a09b",
+      "adaptedSHA256": "22ebed54acfa1ead5cd68f002ee3f03a1d1a15aba5718f17338569bf16ace0f9"
+    },
+    "scroll-area.tsx": {
+      "originalSHA256": "1c5d0b242d0513848f4bfa9b57ba7f438d9b1120617029941bfaa137196ecead",
+      "adaptedSHA256": "29c256a71bb16f33ab8ecccd3257923060d02204510d090448d772ced7144f62"
+    },
+    "scrub-bar.tsx": {
+      "originalSHA256": "aa2f0dbcbf94ef0010efe7ef0bc8a10697b3018aa94630154eb902ce9b161816",
+      "adaptedSHA256": "86b3c4e0fd29809d51262453295195265f02b2e54637c4621dc44351d027ba06"
+    },
+    "select.tsx": {
+      "originalSHA256": "8795c9fac7c48d565ff6c47cbf4cca8bfefe25d8cb3d7e7aeba36855739a76ab",
+      "adaptedSHA256": "4c647f776756cfc52f3d8e59c2c1bed8179cb41cc7b1fe7ca158752ea1fcb56d"
+    },
+    "separator.tsx": {
+      "originalSHA256": "e9dddbd8dbbc0eccd683306481b0f0bbc8e2b60ea97817416ebb9fe7fbbbdca8",
+      "adaptedSHA256": "be327adfc0c962ed697026614bba3f3fdd322df7f574673d80240b1fc06deb10"
+    },
+    "shimmering-text.tsx": {
+      "originalSHA256": "c746b3a1d29d9c666bd01681d512b88aeb4a3ff6f589e4055870580ced4eea5b",
+      "adaptedSHA256": "02b62343e594c38b5ebc923ff5bea546f7fdf9b017aff64c44c0d6584fc96685"
+    },
+    "skeleton.tsx": {
+      "originalSHA256": "f2aea81d8baf2b621945382aabac150e3db40f20d19ac1abea7aff805f1dc33c",
+      "adaptedSHA256": "494805547358f2f1131f4afaa79577ea86e9276f8fa5af5870a42ad5238b0d50"
+    },
+    "slider.tsx": {
+      "originalSHA256": "55140ef92c201c82d530dede076603611fbfb2cdc899e4d8459b58f6cbb2b235",
+      "adaptedSHA256": "800b48ae93a9a90bb7299dbd42e22a039112e7e6d6d4484d3b6dbe696e13f443"
+    },
+    "speech-input.tsx": {
+      "originalSHA256": "98ba18ad3c6258623cbac2ada8caca6676fad153d40300fb0aacbc2575360d95",
+      "adaptedSHA256": "405275ecfbd9472e1ac787fd413043deda1dbe1b721c31ca393c7bfb0222a45c"
+    },
+    "textarea.tsx": {
+      "originalSHA256": "de4e9fb0fd8e8ed10ea2e475ffe202a922ffe77e3f3edb2c517b0781447ad1b4",
+      "adaptedSHA256": "dfa2ac5d8c6b6ec0346372a472de29f25cb2dd84edb8d77a5ffe0895080145a7"
+    },
+    "tooltip.tsx": {
+      "originalSHA256": "cbc12f4086448f8a307ed5fbb160f79467c84a44c48ca0dbd2c62e39a2db6f5d",
+      "adaptedSHA256": "31c5a79dd15199fe84619dfe39f378bc14dc24b7371400e6c351814456001080"
+    },
+    "transcript-viewer.tsx": {
+      "originalSHA256": "8e9079ada047846a075839a1e7af011260493c97e6b7853c594522c6d31cff38",
+      "adaptedSHA256": "2b918546bd0514c7e99db69d18eee938cd4128f2d6e0feee1cd437925b3a0b03"
+    },
+    "voice-button.tsx": {
+      "originalSHA256": "6e6f366d15235131efe062518bd551dca7158b07727402dc93c78e07e441269e",
+      "adaptedSHA256": "227a41d854c49617a3b919606cd791b5ed12607f3ce1e9108d57b9178b078ca9"
+    },
+    "voice-picker.tsx": {
+      "originalSHA256": "a42f5fe785986295885d099194e2ea23658911189f39e43b8c448bf6c4f9ca7d",
+      "adaptedSHA256": "8afb73709ac82bdd9dfe60a9b5e82989f2ef893da4a0df96f2a916e3fdd1de77"
+    },
+    "waveform.tsx": {
+      "originalSHA256": "e5e0c314a66d545f851e012420a9f87474aef8673cbeedae46d021389fd847f8",
+      "adaptedSHA256": "7c35e942897ae37d47658127a3a47841e15e5533855a8e97e966b924a35f887c"
+    }
+  }
+}

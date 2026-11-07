@@ -11,8 +11,9 @@
  window.addEventListener('island:speech',e=>{speaking=['queued','processing','speaking'].includes(e.detail.phase);if(speaking)stop();});
  api.onMicrophone?.(v=>{state={...state,microphoneStatus:v};if(previousMute!==undefined&&v.muted!==previousMute)play('mute');previousMute=v.muted;if(v.blocked)recording=false;});
  api.onUiSound?.(v=>play(v.name,v.volume??1));window.addEventListener('island:ui-error',()=>play('error'));
- document.addEventListener('click',e=>{const b=e.target.closest('button,[role=switch]');if(e.isTrusted&&b&&!b.disabled&&!b.closest('#microphonePrivacy')&&!b.closest('#agentStart'))play(b.dataset.tab==='tools'?'open':'click');},true);
+ document.addEventListener('click',e=>{const b=e.target.closest('button,[role=switch]');if(e.isTrusted&&b&&!b.disabled&&!b.closest('#microphonePrivacy')&&!b.closest('#agentStart,[data-starts-capture],[data-microphone-toggle]'))play(b.dataset.tab==='tools'?'open':'click');},true);
  document.addEventListener('keydown',e=>{if(!e.isTrusted||e.key!=='Enter'||e.repeat||e.isComposing||e.shiftKey||e.ctrlKey||e.altKey||e.metaKey)return;const input=e.target;if(input.matches('input:not([type=checkbox]):not([type=range]):not([type=file]):not([type=button]):not([type=submit])')&&input.form&&!input.disabled)play('enter');});
+ document.addEventListener('pointerdown',e=>{if(e.isTrusted&&e.target.closest('[role=option],[role=menuitem]'))play('click');});
  document.addEventListener('change',e=>{if(e.isTrusted&&e.target.matches('select')&&!e.target.disabled)play('click');});
  document.addEventListener('pointerover',e=>{if(e.pointerType==='touch')return;const b=e.target.closest('button');if(e.isTrusted&&b&&!b.disabled&&!b.contains(e.relatedTarget)&&performance.now()-lastHover>350){lastHover=performance.now();play('hover');}});
  window.addEventListener('pagehide',stop);window.NotchSounds={play,stop};

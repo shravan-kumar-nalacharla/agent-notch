@@ -1,0 +1,2 @@
+import React from 'react';import Markdown from 'react-markdown';import remarkGfm from 'remark-gfm';
+export function Streamdown({children,className,...props}:any){return <div className={className}><Markdown remarkPlugins={[remarkGfm]} skipHtml components={{img:({alt})=><span>{alt||'Image'}</span>,a:({href,children})=><a href={href} onClick={e=>{e.preventDefault();if(href)window.island.openExternalLink(href).then((r:any)=>{if(!r.ok)window.islandShowError(r.error)})}}>{children}</a>}}>{String(children??'')}</Markdown></div>}

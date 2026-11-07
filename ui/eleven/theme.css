@@ -1,0 +1,18 @@
+
+
+@import "tailwindcss/theme.css";
+
+@import "tailwindcss/utilities.css";
+
+@source "./components";
+
+@source "./entry.tsx";
+
+@theme inline {--color-background:var(--el-background);--color-foreground:var(--el-foreground);--color-primary:var(--el-primary);--color-primary-foreground:#122d29;--color-secondary:var(--panel-2);--color-secondary-foreground:var(--text);--color-muted:var(--panel-2);--color-muted-foreground:var(--muted);--color-border:var(--line);--color-input:var(--line);--color-ring:#7cd3c5;--color-popover:var(--panel);--color-popover-foreground:var(--text);--color-accent:#ffffff16;--color-accent-foreground:var(--text);--color-destructive:var(--danger);--radius-lg:14px;--radius-md:10px;--radius-sm:7px;}
+
+:root{--el-background:var(--panel,#101114);--el-foreground:var(--text,#eef3f7);--el-primary:#ccefe7}
+
+
+
+:root{--foreground:var(--text,#eef3f7);--background:var(--panel,#101114);--primary:#ccefe7;--muted-foreground:var(--muted);--border:var(--line)}
+

@@ -92,6 +92,7 @@ async function setExpanded(on){
 }
 function canAutoClose(){return !window.islandVoiceHold?.()&&!document.body.classList.contains('is-capturing')&&!document.body.classList.contains('has-windows-task')&&!document.body.classList.contains('has-reminder-hud')&&!captureOverlayActive&&!state?.appearance?.pinned&&state?.appearance?.autoClose!==false&&!nativeRecording&&!nativeProcessing&&recorder?.state!=='recording'&&!document.body.classList.contains('is-dragging')&&!(document.hasFocus()&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))&&!(keyboardFocus&&document.hasFocus()&&$('island').contains(document.activeElement));}
 const motion=new IslandMotion({open:()=>setExpanded(true),close:()=>setExpanded(false),canOpen:()=>!document.body.classList.contains('has-reminder-hud')&&!document.body.classList.contains('has-quote-hud'),canClose:canAutoClose,changed:value=>document.body.dataset.motionState=value});
+window.addEventListener('island:control-drag',e=>motion.lock(e.detail===true||nativeRecording||nativeProcessing||!!window.islandVoiceHold?.()));
 window.addEventListener('island:voice-hold',e=>motion.lock(nativeRecording||nativeProcessing||e.detail===true));
 async function expand(on=true){if(settingsMode)return;return on?motion.open():motion.close();}
 window.island.onCaptureOverlay?.(({active})=>{captureOverlayActive=active;if(active){motion.cancel('leave');}else if(!motion.inside&&expanded)motion.leave();});
@@ -118,7 +119,7 @@ function tab(name) {
   const page = $(name);
   if (!page) return;
   activeView = name;
-  if(name!=='tools'){document.body.classList.toggle('rich-media',name==='voiceAssistant');window.island.toolSurface?.({id:''}).catch(showError);}
+  if(name!=='tools'){document.body.classList.toggle('rich-media',name==='voiceAssistant'||name==='assistant');window.island.toolSurface?.({id:''}).catch(showError);}
   if(name!=='home')hideQuietMoment();
   syncViewClass(name);
   document.querySelectorAll('.page').forEach(element => {
@@ -233,6 +234,7 @@ window.islandAnotherQuote=()=>maybeQuietMoment(true);
 window.addEventListener('pagehide',()=>{disposed=true;motion.dispose();stopBlink();clearTimeout(quietTimer);});
 
 function message(text, role) {
+  if(window.ElevenUI?.message)return window.ElevenUI.message(text,role);
   const element = document.createElement('div');
   element.className = `message ${role}`;
   element.textContent = text;
@@ -248,7 +250,7 @@ async function ask(text) {
   if (busy || !text.trim()) return;
   busy = true;
   error();
-  activeAskId=crypto.randomUUID();$('send').title='Stop response';$('send').setAttribute('aria-label','Stop response');
+  activeAskId=crypto.randomUUID();window.dispatchEvent(new CustomEvent('island:chat-busy',{detail:true}));$('send').title='Stop response';$('send').setAttribute('aria-label','Stop response');
   $('status').textContent = 'Thinking...';
   tab('assistant');
   message(text, 'user');
@@ -263,7 +265,7 @@ async function ask(text) {
     if(streamMessage)streamMessage.textContent=caught.message||String(caught);
     showError(caught);
   } finally {
-    activeAskId='';streamMessage=null;busy = false;
+    activeAskId='';streamMessage=null;busy = false;window.dispatchEvent(new CustomEvent('island:chat-busy',{detail:false}));
     $('send').title='Send';$('send').setAttribute('aria-label','Send message');
     $('send').disabled = false;
     $('status').textContent = 'Ready';

@@ -39,7 +39,7 @@ internal static partial class Program
     static Process? ParentProcess;
     static TypingContext Target = TypingContext.None;
     static readonly Dictionary<string, TypingContext> Targets = new();
-    static readonly HashSet<string> AllowedActions = ["privacy.configure","privacy.status","privacy.calls","privacy.ptt","ping","system","media","media.control","volume","brightness","devices","voice.start","voice.finish","voice.cancel","voice.release","voice.configure","voice.diagnostics","voice.insert","voice.copySelection","voice.pasteLast","meeting.start","meeting.stop","meeting.drain","capture","target","clipboard.safe","click","shortcut","type","speak","wake.configure","wake.status","wake.test","wake.pause","screen.observe","screen.probe","agent.observe","agent.focus","agent.act","notification.status","notification.sound","shutdown"];
+    static readonly HashSet<string> AllowedActions = ["privacy.configure","privacy.status","privacy.calls","privacy.ptt","ping","system","media","media.level","media.control","volume","brightness","devices","voice.start","voice.finish","voice.cancel","voice.release","voice.configure","voice.diagnostics","voice.insert","voice.copySelection","voice.pasteLast","meeting.start","meeting.stop","meeting.drain","capture","target","clipboard.safe","click","shortcut","type","speak","wake.configure","wake.status","wake.test","wake.pause","screen.observe","screen.probe","agent.observe","agent.focus","agent.act","notification.status","notification.sound","shutdown"];
     static string LastText = "";
     static string SelectedText = "";
     static Task SelectionTask=Task.CompletedTask;
@@ -158,6 +158,7 @@ internal static partial class Program
             case "awake": return AwakeState(v);
             case "terminal.start":case "terminal.status":case "terminal.drain":case "terminal.write":case "terminal.resize":case "terminal.close":case "terminal.capabilities":return await TerminalAction(action,v);
             case "hardware": return await Task.Run(HardwareSnapshot);
+            case "media.level": return new{peak=OutputPeak()};
             case "system": return SystemState();
             case "brightness": return Brightness(v);
             case "capture.sources": return CaptureSources();

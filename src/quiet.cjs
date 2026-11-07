@@ -21,7 +21,7 @@ function daypart(config,date){const minute=date.getHours()*60+date.getMinutes();
 function momentBlockReason(config,history={},now=Date.now(),activity={}){
  const c={...DEFAULTS,...config},date=new Date(now),manual=activity.context==='manual',automatic=activity.context==='automatic'&&c.automatic;
  if(!c.enabled)return'Thoughts are off';if(c.dnd)return'Do not disturb is on';
- for(const[key,label]of [['locked','Windows is locked'],['busy','The notch or Settings is in use'],['hidden','The notch is hidden'],['voiceRecording','Voice is active'],['pomodoro','A focus or activity session is running'],['meeting','A meeting is recording'],['fullscreen','A fullscreen application is active'],['typing','You are typing']])if(activity[key])return label;
+ for(const[key,label]of [['locked','Windows is locked'],['busy','The notch or Settings is in use'],['hidden','The notch is hidden'],['voiceRecording','Voice is active'],['pomodoro','A focus or activity session is running'],['meeting','Meeting or Gaming Mode is active'],['fullscreen','A fullscreen application is active'],['typing','You are typing']])if(activity[key])return label;
  if(c.snoozedUntil>now)return'Thoughts are snoozed';
  if(automatic&&activity.osDnd===true)return'Windows is suppressing notifications';if(quietHours(c,date)&&!manual)return'Quiet hours are active';
  if(automatic&&activity.foregroundChangedAt&&now-activity.foregroundChangedAt<5000)return'Waiting briefly after switching applications';

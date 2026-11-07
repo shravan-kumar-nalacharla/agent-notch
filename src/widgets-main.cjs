@@ -21,8 +21,9 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
   handle('library:get',()=>library.view());
   handle('widgets:desktop',async value=>{
     const op=value?.op,v=value?.value||{};
+    if(op==='media.level')return native.request('media.level');
     if(op==='media'){return native.request('media',{appId:library.view().mediaAppId||''});}
-    if(op==='media:select'){if(typeof v.appId!=='string')throw new Error('Choose a media player.');const current=await native.request('media');if(v.appId&&!current.sources?.some(source=>source.appId===v.appId))throw new Error('That media player is no longer available. Refresh the list.');library.action('config',{mediaAppId:v.appId});return native.request('media',{appId:v.appId});}
+    if(op==='media:select'){if(typeof v.appId!=='string')throw new Error('Choose a media player.');const current=await native.request('media');if(v.sessionId!==undefined&&(typeof v.sessionId!=='string'||v.sessionId&&!current.sources?.some(source=>source.sessionId===v.sessionId&&source.appId===v.appId)))throw new Error('That media session is no longer available. Refresh the list.');if(v.appId&&!current.sources?.some(source=>source.appId===v.appId))throw new Error('That media player is no longer available. Refresh the list.');library.action('config',{mediaAppId:v.appId});return native.request('media',{appId:v.appId,...(v.sessionId!==undefined?{sessionId:v.sessionId}:{})});}
     if(['media.control','volume','brightness','devices','system'].includes(op)){const response=await native.request(op,v);if(op==='media.control'&&response===false)throw new Error('This media player does not support that control.');return response;}
     if(op==='shelf:choose'){const r=await dialog.showOpenDialog({properties:['openFile','multiSelections']});return r.canceled?library.view():library.action('shelf:add',{paths:r.filePaths});}
     if(op==='shelf:open'){if(!library.view().shelf.includes(v.path))throw new Error('File is not in the shelf.');const error=await shell.openPath(v.path);if(error)throw new Error(error);return true;}

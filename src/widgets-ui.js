@@ -3,6 +3,7 @@
   const api=window.island,settingsMode=new URLSearchParams(location.search).has('settings');
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const $=id=>document.getElementById(id);let lib,selected='',media,mediaAt=0,lyrics=[],mediaTimer,meetingState=null,prompterRunning=false,prompterFrame=0,prompterLast=0,todoDay='',editor=null,waterSettings=false;
+  let mediaSurface=null,lyricsWanted=false,mediaLevelTimer=null,levelPending=false,mediaLevelAt=0;
   let clockReceiptAt=performance.now(),clockReceiptWall=Date.now();const uiNow=()=>clockReceiptWall+performance.now()-clockReceiptAt;
   let timerMode='focus',mediaLoading=false,lyricsPlain='',lyricsStatus='',lyricIndex=-2,volumeLevel=50,prompterOffset=0;
   const carouselPages=['media','water','shelf','todo'];
@@ -23,7 +24,7 @@
   async function result(promise){const r=await promise;if(!r.ok)throw new Error(r.error);return r.value;}
   function error(e){const message=e?.message||String(e||'');if(window.islandShowError)window.islandShowError(message);else $('error').textContent=message;}
   async function act(op,value={}){lib=await result(api.library(op,value));clockReceiptAt=performance.now();clockReceiptWall=Date.now();if(op==='todo:add'||op==='todo:edit')editor=null;window.islandLibrary=lib;if(selected==='timer'&&/^(timer:|stopwatch:|focus:)/.test(op))updateTimer();else render();return lib;}
-  async function desktop(op,value={}){if(op==='media.control'||op==='lyrics')value={expectedApp:media?.app,expectedTitle:media?.title,...value};return result(api.desktop(op,value));}
+  async function desktop(op,value={}){if(op==='media.control'||op==='lyrics')value={expectedApp:media?.app,expectedTitle:media?.title,expectedSession:media?.sessionId,...value};return result(api.desktop(op,value));}
   function form(id,content,label='Add'){return`<form data-form="${id}" class="widget-form">${content}<button>${label}</button></form>`;}
   function input(name,placeholder,type='text',value=''){return`<input name="${name}" type="${type}" placeholder="${esc(placeholder)}" aria-label="${esc(placeholder)}" value="${esc(value)}" ${type==='text'?'maxlength="2000"':''}>`;}
   function btn(action,label,data=''){return`<button type="button" data-do="${action}" ${data}>${label}</button>`;}
@@ -59,10 +60,10 @@
   function paintCarouselClock(){const now=nowLabel();document.querySelectorAll('.carousel-date').forEach(el=>el.textContent=now.date);document.querySelectorAll('.carousel-time').forEach(el=>el.textContent=now.time);}
   function secondsLabel(value){const seconds=Math.max(0,Math.round(Number(value)||0));return`${Math.floor(seconds/60).toString().padStart(2,'0')}:${(seconds%60).toString().padStart(2,'0')}`;}
   function mediaSources(){if(!media?.sources)return'';return `<label class="media-source-picker">Player <select id="mediaSource" aria-label="Media player"><option value="">Automatic</option>${media.sources.map(source=>`<option value="${esc(source.appId)}" ${media.pinnedAppId===source.appId?'selected':''}>${esc(source.appId)}</option>`).join('')}${media.pinnedAppId&&!media.sources.some(source=>source.appId===media.pinnedAppId)?`<option selected value="${esc(media.pinnedAppId)}">Pinned player unavailable</option>`:''}</select></label>`;}
-  function renderMediaCarousel(){
-    const body=media?.available?`<div class="media-layout"><div class="media-art ${media.cover?'has-cover':''}" id="mediaArt">${media.cover?`<img alt="" src="${esc(media.cover)}">`:icons.music}</div><div class="media-copy"><span class="module-kicker">${esc(media.app||'Windows media')}</span><h2 id="mediaTitle" title="${esc(media.title)}">${esc(media.title)}</h2><p id="mediaArtist">${esc(media.artist||media.album||'')}</p><div class="media-progress"><span id="mediaPosition">${secondsLabel(media.position/1000)}</span><input id="mediaSeek" aria-label="Track position" type="range" min="0" max="${Math.max(1,media.duration)}" value="${media.position}"><span id="mediaDuration">-${secondsLabel((media.duration-media.position)/1000)}</span></div><div class="media-controls">${btn('mediaControl',icons.previous,'data-command="previous" aria-label="Previous track"')}${btn('mediaControl',media.playing?icons.pause:icons.play,`data-command="toggle" aria-label="${media.playing?'Pause':'Play'}"`)}${btn('mediaControl',icons.next,'data-command="next" aria-label="Next track"')}<button type="button" data-do="lyrics" title="Lyrics">Lyrics</button></div><label class="volume-row">Volume<input id="mediaVolume" type="range" min="0" max="100" value="${volumeLevel}"></label><div id="lyricsRows"></div><label class="lyrics-offset" hidden>Lyrics offset (ms, + later)<input id="lyricsOffset" type="number" min="-10000" max="10000" step="100" value="${lib?.lyricsOffsetMs||0}"></label></div></div>`:`<div class="media-layout"><div class="media-art">${icons.music}</div><div class="media-copy empty-media"><span class="module-kicker">Windows media</span><h2>No media</h2><p>Play something and it will appear here.</p><div class="media-controls muted">${btn('mediaControl',icons.previous,'disabled')}${btn('mediaControl',icons.play,'disabled')}${btn('mediaControl',icons.next,'disabled')}</div></div></div>`;
-    return carouselFrame('Media',mediaSources()+body);
-  }
+  function renderMediaCarousel(){return carouselFrame('Music','<div id="elevenMediaSurface"></div>');}
+  function mediaView(){return{media,receivedAt:mediaAt,peakAt:mediaLevelAt,volume:volumeLevel,lyrics,lyricsPlain,lyricsStatus};}
+  function mountMedia(){const element=$('elevenMediaSurface');if(!element||!window.ElevenUI)return;mediaSurface?.dispose();mediaSurface=window.ElevenUI.mountMedia(element,{control:async(command,value)=>{await desktop('media.control',{command,...value});await refreshCarouselMedia();},select:async value=>{media=await desktop('media:select',value);mediaAt=Date.now();lyrics=[];lyricsPlain='';lyricsStatus='';updateMediaControls();},volume:async level=>{await desktop('volume',{level});volumeLevel=level;},lyrics:async(open=true)=>{lyricsWanted=open;if(open)await loadLyrics();else await desktop('lyrics:cancel');}},mediaView());desktop('volume').then(v=>{volumeLevel=v.level;updateMediaControls();}).catch(error);}
+
   function stopwatchText(){const t=lib?.stopwatch,n=Math.floor(((t?.elapsed||0)+(t?.running?uiNow()-t.started:0))/1000);return n<3600?secondsLabel(n):`${Math.floor(n/3600)}:${secondsLabel(n%3600)}`;}
   function renderTimerCarousel(){
     const watch=timerMode==='stopwatch',t=lib.timer,seconds=(lib.focusMinutes||25)*60,left=t?(t.paused?t.remaining:Math.max(0,Math.ceil((t.end-uiNow())/1000))):seconds,total=t?.seconds||seconds,progress=watch?1:Math.max(0,Math.min(1,left/Math.max(1,total))),running=watch?lib.stopwatch?.running:t&&!t.paused;
@@ -90,7 +91,7 @@
     return carouselFrame('Shelf',`<div class="shelf-module">${files.length?`<div class="shelf-cards">${files.map(path=>`<div class="shelf-item"><button class="shelf-card" draggable="true" data-path="${esc(path)}" data-do="openFile"><i data-icon-path="${esc(path)}"></i><span>${esc(path.split(/[\\/]/).pop())}</span></button>${btn('removeFile',icons.trash,`data-path="${esc(path)}" class="shelf-remove" aria-label="Remove from shelf" title="Remove from shelf"`)}</div>`).join('')}</div>`:`<button type="button" class="shelf-empty" data-do="chooseFiles"><span class="shelf-illustration">${icons.upload}</span><b>Drop files here</b><small>Drag out anytime / click to open</small></button>`}<div class="shelf-footer">${btn('chooseFiles','Add files')}<span>${files.length} item${files.length===1?'':'s'}</span>${files.length?btn('clearShelf','Clear shelf'):''}</div></div>`);
   }
   function renderPrimary(){
-    if(selected==='media'){root.innerHTML=renderMediaCarousel();loadCarouselMedia();}
+    if(selected==='media'){mediaSurface?.dispose();mediaSurface=null;document.body.classList.add('rich-media');root.innerHTML=renderMediaCarousel();mountMedia();loadCarouselMedia();}
     if(selected==='timer')root.innerHTML=renderTimerCarousel();
     if(selected==='water')root.innerHTML=waterSettings?renderWaterSettings():renderWaterCarousel();
     if(selected==='shelf'){root.innerHTML=renderShelfCarousel();paintShelfIcons();}
@@ -100,9 +101,14 @@
   }
   async function loadCarouselMedia(){
     await refreshCarouselMedia();
-    if(selected==='media'&&!mediaTimer)mediaTimer=setInterval(refreshCarouselMedia,1000);
+    if(selected==='media'&&!root.hidden&&document.body.classList.contains('expanded')){if(!mediaTimer)mediaTimer=setInterval(refreshCarouselMedia,1000);if(!mediaLevelTimer)mediaLevelTimer=setInterval(refreshMediaLevel,100);}
   }
+  async function refreshMediaLevel(){if(selected!=='media'||root.hidden||!document.body.classList.contains('expanded')||levelPending||!media?.available)return;levelPending=true;try{const r=await desktop('media.level');if(selected==='media'&&!root.hidden&&document.body.classList.contains('expanded')&&media){media={...media,peak:r.peak};mediaLevelAt=performance.now();mediaSurface?.update(mediaView());}}catch{}finally{levelPending=false;}}
+  function stopMediaPolling(){clearInterval(mediaTimer);clearInterval(mediaLevelTimer);mediaTimer=mediaLevelTimer=null;}
+  window.addEventListener('island:expanded',e=>{if(e.detail&&selected==='media'&&!root.hidden)loadCarouselMedia();else if(!e.detail)stopMediaPolling();});
+  window.addEventListener('island:view',e=>{if(e.detail!=='tools')stopMediaPolling();else if(selected==='media'&&document.body.classList.contains('expanded'))loadCarouselMedia();});
   function updateMediaControls(){
+    if(mediaSurface){mediaSurface.update(mediaView());return;}
     if(!media?.available)return;
     const caps=media.capabilities||{};root.querySelectorAll('[data-command]').forEach(b=>{const cmd=b.dataset.command;b.disabled=cmd==='toggle'?(media.playing?caps.pause===false:caps.play===false):caps[cmd]===false;});if($('mediaSeek'))$('mediaSeek').disabled=caps.seek===false;
     const toggle=root.querySelector('[data-command="toggle"]');
@@ -114,13 +120,13 @@
     paintLyrics();
   }
   async function refreshCarouselMedia(){
-    if(selected!=='media'||root.hidden||mediaLoading||document.activeElement?.id==='mediaSource')return;mediaLoading=true;
+    if(selected!=='media'||root.hidden||!document.body.classList.contains('expanded')||mediaLoading||$('mediaSource')?.getAttribute('data-state')==='open')return;mediaLoading=true;
     try{
-      const next=await desktop('media');if(selected!=='media'||root.hidden)return;
+      const next=await desktop('media');if(selected!=='media'||root.hidden||!document.body.classList.contains('expanded'))return;
       const changed=media?.app!==next.app||media?.pinnedAppId!==next.pinnedAppId||JSON.stringify(media?.sources)!==JSON.stringify(next.sources)||media?.title!==next.title||media?.artist!==next.artist||media?.available!==next.available;
       media=next;mediaAt=Date.now();
-      if(changed){desktop('lyrics:cancel').catch(()=>{});lyrics=[];lyricsPlain='';lyricsStatus='';lyricIndex=-2;if(document.body.classList.contains('rich-media'))setTimeout(loadLyrics,0);}
-      if(changed||!$('mediaTitle')&&media.available){root.innerHTML=renderMediaCarousel();const v=await desktop('volume');volumeLevel=v.level;if($('mediaVolume'))$('mediaVolume').value=volumeLevel;}
+      if(changed){desktop('lyrics:cancel').catch(()=>{});lyrics=[];lyricsPlain='';lyricsStatus='';lyricIndex=-2;if(lyricsWanted)setTimeout(loadLyrics,0);}
+      if(!mediaSurface){mountMedia();const v=await desktop('volume');volumeLevel=v.level;}
       updateMediaControls();
     }catch(e){error(e);}finally{mediaLoading=false;}
   }
@@ -131,7 +137,7 @@
     if(sliding||page===selected)return;sliding=true;const mode=document.body.dataset.motion||'standard';
     try{if(mode!=='off')await root.animate([{opacity:1,transform:'translateX(0)'},{opacity:0,transform:`translateX(${-direction*32}px)`}],{duration:150,easing:'ease-in'}).finished;selected=page;waterSettings=false;editor=null;render();window.IslandSurface?.animatePage(root,direction,mode);}finally{sliding=false;}
   }
-  function render(){if(!lib)return;if(selected!=='media'){clearInterval(mediaTimer);mediaTimer=null;document.body.classList.remove('rich-media');}if(selected!=='mirror')stopMirror();if(selected!=='prompter')stopPrompter();
+  function render(){if(!lib)return;if(selected!=='media'){mediaSurface?.dispose();mediaSurface=null;lyricsWanted=false;stopMediaPolling();document.body.classList.remove('rich-media');}if(selected!=='mirror')stopMirror();if(selected!=='prompter')stopPrompter();
     if(!settingsMode){const id=selected||'';api.toolSurface({id}).then(reply=>{const select=root.querySelector('[data-tool-size]');if(reply.ok&&selected===id&&select)select.value=reply.value.toolSize||'auto';}).catch(error);}
     disposeCore?.();disposeCore=null;
     document.querySelectorAll('nav [data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===selected));
@@ -177,6 +183,7 @@
     try{const r=await desktop('lyrics');if(selected!=='media'||key!==media?.title+'|'+media?.artist)return;lyrics=r.lines||[];lyricsPlain=r.plain||'';lyricsStatus=r.message||'No matching lyrics found.';lyricIndex=-2;const offset=$('lyricsOffset')?.closest('label');if(offset)offset.hidden=!lyrics.length;paintLyrics();}catch(e){lyricsStatus='Lyrics lookup could not start. See Settings → Lyrics diagnostics.';if($('lyricsRows'))$('lyricsRows').textContent=lyricsStatus;error(e);}
   }
   function paintLyrics(){
+    if(mediaSurface){mediaSurface.update(mediaView());return;}
     const el=$('lyricsRows');if(!el)return;
     if(!lyrics.length){el.textContent=lyricsPlain||lyricsStatus;return;}
     const at=media.position+(media.playing?Date.now()-mediaAt:0)-(lib?.lyricsOffsetMs||0),index=lyrics.findLastIndex(x=>x.at<=at),wordIndex=lyrics[index]?.words?.findLastIndex(w=>w.at<=at)??-1,paintKey=index+':'+wordIndex;
@@ -213,7 +220,8 @@
   async function paintShelfIcons(){try{const icons=await desktop('shelf:icons');for(const item of icons){const el=root.querySelector(`[data-icon-path="${CSS.escape(item.path)}"]`);if(!el)continue;el.style.backgroundImage=item.icon?`url("${item.icon}")`:'';el.title=`${item.name}${item.size?` / ${Math.max(1,Math.round(item.size/1024))} KB`:''}`;}}catch{}}
   api.onSystem(value=>{if(selected==='system'&&!root.hidden)paintSystem(value);});
   let swipeStart=null;
-  root.addEventListener('pointerdown',event=>{if(!event.target.closest('.carousel-body')||event.target.closest('input,button,select,textarea'))return;swipeStart={x:event.clientX,y:event.clientY};});
+  root.addEventListener('pointerdown',event=>{if(!event.target.closest('.carousel-body')||event.target.closest('input,button,select,textarea,[role=slider],[role=combobox],[data-slot=scrub-bar-root]'))return;swipeStart={x:event.clientX,y:event.clientY};});
+  root.addEventListener('pointercancel',()=>{swipeStart=null;});
   root.addEventListener('pointerup',event=>{if(!swipeStart)return;const dx=event.clientX-swipeStart.x,dy=event.clientY-swipeStart.y;swipeStart=null;if(Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*1.4)return;const control=root.querySelector(`[data-do=${dx<0?'carouselNext':'carouselPrev'}]`);control?.click();});
   function updateTimer(){
     if(selected!=='timer'||root.hidden)return;
@@ -225,7 +233,7 @@
     if(button&&button.dataset.running!==String(!!running)){button.innerHTML=running?icons.pause:icons.play;button.dataset.running=String(!!running);button.setAttribute('aria-label',running?'Pause':'Start or resume');}
     if($('timerStatus'))$('timerStatus').textContent=watch?(running?'Counting up':'Ready to count up'):running?'Focus in progress':t?.remaining===0?'Complete':t?.paused?'Paused':'Ready to focus';
   }
-  setInterval(()=>{if(!document.body.classList.contains('expanded')||root.hidden)return;updateTimer();if(selected==='media')updateMediaControls();},250);
+  setInterval(()=>{if(!document.body.classList.contains('expanded')||root.hidden)return;updateTimer();if(selected==='media'&&!mediaSurface)updateMediaControls();},250);
   setInterval(paintCarouselClock,30000);
   result(api.library()).then(value=>{lib=value;clockReceiptAt=performance.now();clockReceiptWall=Date.now();window.islandLibrary=value;render();}).catch(error);
 })();
