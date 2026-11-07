@@ -32,7 +32,7 @@ Preserve the stored transcript exactly. Only translate or paraphrase when the us
 
 function cleanAnswer(value){
  // Some models echo the old prompt's translation bookkeeping at the end of ordinary answers.
- return String(value).replace(/(?:\s*\n|\s+)(?:[*_#]*requested\s+(?:translation(?:\s*(?:\/|or)\s*paraphrase)?|paraphrase)(?:\s+by\s+paraphrase)?[*_]*\s*[:—-]?\s*[*_]*\s*(?:none|not requested|n\/?a)?[*_]*[.!]?\s*)+$/i,'').trim();
+ return String(value).replace(/(?:\s*\n|\s+)(?:[*_#]*requested\s+(?:translation(?:\s*(?:\/|or)\s*paraphrase)?|paraphrase)(?:\s+by\s+paraphrase)?[*_]*\s*[:—-]?\s*[*_]*\s*(?:\(?\s*(?:none(?:\s+provided)?|not requested|n\/?a)\s*\)?)?[*_]*[.!]?\s*)+$/i,'').trim();
 }
 function readingContext(value){if(typeof value!=='string'||value.length>1000)throw new Error('Keep the book or topic below 1,000 characters.');return value.trim();}
 function providerIdentity(s){if(s.companion?.chatEngine==='gemini_live')return 'Google Gemini Live, model '+require('./gemini-live.cjs').MODEL+', with Gemini live audio.';const a=s.assistant||'groq',speech=s.speech||'groq',tts=s.companion?.chatEngine==='sarvam'?'sarvam':s.companion?.tts||'system';return `Answer provider: ${a}; answer model: ${s.models?.[a]?.chat||PROVIDERS[a]?.chat}. Speech recognition: ${speech}, ${s.models?.[speech]?.speech||PROVIDERS[speech]?.speech}. Spoken replies: ${tts==='sarvam'?'Sarvam Bulbul v3, voice '+(s.companion?.sarvamVoice||'priya'):tts==='groq'?'Groq Orpheus':'installed Windows voice'}.`;}
