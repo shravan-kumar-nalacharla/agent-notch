@@ -27,6 +27,10 @@ test('the public site has crawlable metadata, a stable download and the Huygen b
   assert.ok(fs.existsSync(path.join(root,'site/sitemap.xml')));
   assert.ok(fs.existsSync(path.join(root,'site/robots.txt')));
   assert.ok(fs.existsSync(path.join(root,'site/assets/og.png')));
+  const privacy=fs.readFileSync(path.join(root,'site/privacy.html'),'utf8');
+  assert.match(privacy,/no Agent Notch account/i);
+  assert.match(privacy,/no analytics SDK/i);
+  assert.match(fs.readFileSync(path.join(root,'site/sitemap.xml'),'utf8'),/privacy\.html/);
 });
 
 test('the release catalog lists the current release and the update path',()=>{
