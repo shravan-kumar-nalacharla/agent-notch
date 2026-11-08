@@ -23,4 +23,5 @@ for(const expected of ['provider: github','owner: shravan-kumar-nalacharla','rep
 const sums=[`${sha256}  ${path.basename(installer)}`,`${crypto.createHash('sha256').update(fs.readFileSync(blockmap)).digest('hex')}  ${path.basename(blockmap)}`].join('\r\n')+'\r\n';
 fs.mkdirSync(path.join(root,'release'),{recursive:true});
 fs.writeFileSync(path.join(root,'release','SHA256SUMS.txt'),sums);
+fs.copyFileSync(installer,path.join(dir,'Agent-Notch-Setup.exe'));
 console.log(JSON.stringify({version,installer:path.basename(installer),size:bytes.length,sha256,sha512,blockmap:path.basename(blockmap),metadata:path.basename(metadata)},null,2));

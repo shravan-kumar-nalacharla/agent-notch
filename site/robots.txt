@@ -1,0 +1,3 @@
+﻿User-agent: *
+Allow: /
+Sitemap: https://shravan-kumar-nalacharla.github.io/agent-notch-site/sitemap.xml

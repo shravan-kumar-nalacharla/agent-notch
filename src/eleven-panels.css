@@ -34,12 +34,9 @@ body[data-motion=off] .eleven-ui *,body[data-motion=reduced] .eleven-ui *{animat
 .el-player.has-lyrics .el-player-controls #mediaPlayPause{width:28px;height:28px;min-height:28px;padding:6px}
 .el-player.has-lyrics .el-player-controls .el-lyrics-toggle{width:auto;padding:3px 6px}
 .el-player.has-lyrics .el-volume-row{grid-area:4/1;align-self:center;z-index:1;margin:0;min-width:110px;max-width:calc(50% - 64px)}
-.el-player.has-lyrics .el-lyrics{grid-area:5/1;position:relative;min-height:0;max-height:none;overflow:hidden;text-align:left}
-.el-lyric-line{position:absolute;left:0;right:0;bottom:4px;height:40px;display:flex;align-items:flex-end;transform:translateY(0);transform-origin:left bottom;font-size:16px;line-height:20px;font-weight:600;color:var(--text);transition:transform .6s cubic-bezier(.22,1,.36,1),opacity .6s ease,font-size .6s ease,line-height .6s ease;will-change:transform,opacity}
+.el-player.has-lyrics .el-lyrics{grid-area:5/1;position:relative;min-height:0;max-height:none;overflow:hidden;text-align:left;display:flex;flex-direction:column;justify-content:flex-end;gap:4px}
+.el-lyric-line{display:block;flex:none;min-height:0;font-size:13px;line-height:18px;font-weight:600;color:var(--text);transition:opacity .4s ease,font-size .4s ease,line-height .4s ease}
 .el-lyric-line>span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;width:100%;overflow:hidden;overflow-wrap:anywhere}
-.el-lyric-line.current{opacity:1;animation:el-lyric-in .6s cubic-bezier(.22,1,.36,1)}
-.el-lyric-line.previous{transform:translateY(-44px);font-size:14px;opacity:.58}
-.el-lyric-line.older{transform:translateY(-66px);font-size:12px;line-height:18px;opacity:.18}
-.el-lyric-line.departing{transform:translateY(-88px);font-size:11px;line-height:18px;opacity:0}
-.el-lyric-line:not(.current)>span{display:block;white-space:nowrap;text-overflow:ellipsis}
-@keyframes el-lyric-in{from{transform:translateY(26px);opacity:0}to{transform:translateY(0);opacity:1}}
+.el-lyric-line.current{opacity:1;font-size:18px;line-height:22px;font-weight:700;animation:el-lyric-in .5s cubic-bezier(.22,1,.36,1)}
+.el-lyric-line.previous{opacity:.55;font-size:13px;line-height:18px}
+@keyframes el-lyric-in{from{transform:translateY(-8px);opacity:0}to{transform:translateY(0);opacity:1}}

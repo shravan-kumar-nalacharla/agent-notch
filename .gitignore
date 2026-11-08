@@ -13,3 +13,8 @@ dist-qa*
 dist-0.17.*/
 release/SHA256SUMS.txt
 release/published.json
+
+.agents/
+.claude/
+agent/
+skills-lock.json

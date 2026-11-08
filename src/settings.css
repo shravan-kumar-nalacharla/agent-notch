@@ -46,3 +46,5 @@ button.mic-muted{color:#ffb2bc;border-color:#b94557;background:#3c1522}
 .window-rule-row{display:grid;grid-template-columns:minmax(100px,1fr) repeat(2,minmax(90px,1fr)) auto;gap:7px;align-items:end;margin:10px 0}
 .window-rule-row input,.window-rule-row select{min-width:0;width:100%;font-size:11px}
 @media(max-width:700px){.window-rule-row{grid-template-columns:1fr 1fr}.window-rule-row input{grid-column:1/-1}}
+
+.release-notes details{margin:8px 0}.release-notes ul{margin:8px 0 0 18px;padding:0;color:var(--settings-muted);font-size:12px;line-height:1.55}.release-notes summary small{float:right;font-weight:400;color:var(--settings-muted)}

@@ -25,8 +25,7 @@ let errorTimer;
 let surfaceSerial=0;
 let suppressHover=false;
 let rawTranscript='',pendingDraftId='',voiceStreamMessage,voiceStreamUser;
-let keyboardFocus=false,disposed=false,captureOverlayActive=false;
-
+let disposed=false,captureOverlayActive=false,lastInteractionAt=0;
 if (settingsMode) document.title = 'Agent Notch Settings';
 
 function setMascot(mode) {
@@ -90,7 +89,7 @@ async function setExpanded(on){
   animation.then(()=>{if(surfaceSerial===serial&&expanded===on){document.body.classList.remove('surface-animating');if(!on)$('body').hidden=true;sendHitbox();}});
   window.dispatchEvent(new CustomEvent('island:expanded',{detail:on}));
 }
-function canAutoClose(){return !window.islandVoiceHold?.()&&!document.body.classList.contains('is-capturing')&&!document.body.classList.contains('has-windows-task')&&!document.body.classList.contains('has-reminder-hud')&&!captureOverlayActive&&!state?.appearance?.pinned&&state?.appearance?.autoClose!==false&&!nativeRecording&&!nativeProcessing&&recorder?.state!=='recording'&&!document.body.classList.contains('is-dragging')&&!(document.hasFocus()&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))&&!(keyboardFocus&&document.hasFocus()&&$('island').contains(document.activeElement));}
+function canAutoClose(){return !window.islandVoiceHold?.()&&!document.body.classList.contains('is-capturing')&&!document.body.classList.contains('has-windows-task')&&!document.body.classList.contains('has-reminder-hud')&&!captureOverlayActive&&!state?.appearance?.pinned&&state?.appearance?.autoClose!==false&&!nativeRecording&&!nativeProcessing&&recorder?.state!=='recording'&&!document.body.classList.contains('is-dragging')&&!(document.hasFocus()&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||'')&&Date.now()-lastInteractionAt<8000);}
 const motion=new IslandMotion({open:()=>setExpanded(true),close:()=>setExpanded(false),canOpen:()=>!window.islandVoiceDismissed&&!document.body.classList.contains('has-reminder-hud')&&!document.body.classList.contains('has-quote-hud'),canClose:canAutoClose,changed:value=>document.body.dataset.motionState=value});
 window.addEventListener('island:control-drag',e=>motion.lock(e.detail===true||nativeRecording||nativeProcessing||!!window.islandVoiceHold?.()));
 window.addEventListener('island:voice-hold',e=>motion.lock(nativeRecording||nativeProcessing||e.detail===true));
@@ -178,10 +177,12 @@ $('island').addEventListener('mouseleave',()=>{if(!settingsMode&&hoverEnabled)mo
 function scheduleAutoClose(){motion.leave();}
 window.addEventListener('island:test-leave',()=>motion.leave());
 window.addEventListener('island:test-enter',()=>motion.enter());
-document.addEventListener('focusin',()=>{motion.cancel('leave');if(expanded)motion.phase('INTERACTING');});
 document.addEventListener('focusout',()=>setTimeout(()=>{if(!motion.inside&&expanded)motion.leave();},0));
-document.addEventListener('pointerdown', () => { keyboardFocus = false; });
-document.addEventListener('keydown', event => { if (event.key === 'Tab') keyboardFocus = true; });
+document.addEventListener('pointerdown',()=>{lastInteractionAt=Date.now();});
+document.addEventListener('keydown',()=>{lastInteractionAt=Date.now();});
+document.documentElement.addEventListener('mouseleave',()=>{motion.inside=false;if(!settingsMode&&expanded)scheduleAutoClose();});
+window.addEventListener('blur',()=>setTimeout(()=>{if(!motion.inside&&expanded&&!settingsMode)scheduleAutoClose();},150));
+setInterval(()=>{if(settingsMode||!expanded||motion.inside||document.body.classList.contains('surface-animating')||['CLOSING_GRACE','COLLAPSING'].includes(motion.state))return;if(canAutoClose())scheduleAutoClose();},1000);
 window.addEventListener('dragenter', () => { motion.cancel('leave'); document.body.classList.add('is-dragging'); });
 window.addEventListener('dragend', () => document.body.classList.remove('is-dragging'));
 window.addEventListener('drop', () => document.body.classList.remove('is-dragging'));

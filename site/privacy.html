@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en" data-type="software">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agent Notch privacy — Huygen Studios</title>
+<meta name="description" content="How Agent Notch handles local data, provider keys, screen capture, dictation and updates. No Agent Notch account, no analytics SDK.">
+<meta name="page-type" content="software">
+<meta name="site-kind" content="software">
+<link rel="canonical" href="https://shravan-kumar-nalacharla.github.io/agent-notch-site/privacy.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Huygen Studios">
+<meta property="og:title" content="Agent Notch privacy — Huygen Studios">
+<meta property="og:description" content="How Agent Notch handles local data, provider keys, screen capture, dictation and updates.">
+<meta property="og:url" content="https://shravan-kumar-nalacharla.github.io/agent-notch-site/privacy.html">
+<meta property="og:image" content="https://shravan-kumar-nalacharla.github.io/agent-notch-site/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#07090b">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-256.png">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-head" id="siteHead">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="Agent Notch home"><span class="brand-mark" aria-hidden="true">N</span><span>Agent Notch<small>by Huygen Studios</small></span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="./#features">What it does</a>
+      <a href="privacy.html" aria-current="page">Privacy</a>
+      <a href="./#install">Install</a>
+      <a href="releases.html">Updates</a>
+      <a class="nav-download" href="https://github.com/shravan-kumar-nalacharla/agent-notch-releases/releases/latest/download/Agent-Notch-Setup.exe">Download</a>
+    </nav>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="siteHead"><span></span></button>
+  </div>
+</header>
+<main id="main">
+  <section class="releases-hero">
+    <div class="wrap">
+      <span class="eyebrow">Privacy</span>
+      <h1>Your data stays<br>on your PC.</h1>
+      <p>Agent Notch has no Agent Notch account and no analytics SDK. This page explains exactly when content leaves your computer and what is stored locally. It describes the current Windows build, not a future mobile or cloud service.</p>
+    </div>
+  </section>
+  <section class="section-tight">
+    <div class="wrap" style="max-width:840px">
+      <div class="release-notes" style="display:grid;gap:18px">
+        <article class="release-note"><strong>Local profile.</strong> Settings, encrypted provider keys, notes, reminders, history, reading/workout/water records and SQLite data are stored under <code>%APPDATA%\agent-notch</code>. Updates replace the application files, not this profile. Uninstalling keeps the profile by default; erasing it is a separate option.</article>
+        <article class="release-note"><strong>Provider calls.</strong> A cloud request happens only when you start a chat, dictation, screen question or spoken reply. The selected provider receives the content required for that action: text, audio or a captured screen image. The app does not send background telemetry or a transcript of unrelated activity.</article>
+        <article class="release-note"><strong>Keys.</strong> Provider keys are encrypted with Windows secure storage and remain in the main process. The renderer cannot read saved credentials. Keys are never written to release notes, update metadata or the public website.</article>
+        <article class="release-note"><strong>Screen and microphone.</strong> Capture starts from an explicit button or shortcut and shows an indicator. Target windows are revalidated before a grounded click. Microphone access follows the saved listening mode and the Windows privacy setting; muting releases recognition.</article>
+        <article class="release-note"><strong>Terminal.</strong> The manual terminal is a separate reviewed session. Agent Notch does not log terminal content or send it to an AI provider. Child programs can write their own files.</article>
+        <article class="release-note"><strong>Updates.</strong> The app contacts the public release channel for <code>latest.yml</code> and the installer. No account identifier is sent. The downloaded installer is verified against the published hash before it is offered.</article>
+        <article class="release-note"><strong>Website.</strong> This site uses no analytics, cookies or third-party scripts. The browser may request release metadata from the GitHub API to show the current version and checksum; GitHub receives the request under its own policies.</article>
+        <article class="release-note"><strong>Questions.</strong> Huygen Studios is the publisher. Contact <a href="mailto:hello@huygenstudios.example">hello@huygenstudios.example</a> (stand-in address until the studio mailbox is connected) or use the public release repository.</article>
+      </div>
+      <div class="hero-actions"><a class="btn btn-primary" href="./#install">Install Agent Notch</a><a class="btn btn-ghost" href="releases.html">Release catalog</a></div>
+    </div>
+  </section>
+</main>
+<footer class="site-foot">
+  <div class="wrap"><div class="foot-bottom" style="margin-top:0;border-top:0"><span>© 2026 Huygen Studios. Agent Notch is a product of Huygen Studios.</span><span><a href="./">Product</a> · <a href="releases.html">Release notes</a> · <a href="./#install">Install guide</a></span></div></div>
+</footer>
+<script src="assets/site.js" defer></script>
+</body>
+</html>

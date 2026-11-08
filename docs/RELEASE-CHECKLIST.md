@@ -1,8 +1,8 @@
 # Release checklist
 
-## Current — 0.17.9
+## Current — 0.18.0
 
-Updater-enabled public build. See [automatic updates and public downloads](0.17.9-UPDATES.md) for the public repository, asset list, installed update proof, signing state and rollback. Source stays private; only release binaries and update metadata are published. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
+Public Windows release with the Huygen Studios website, install pitch and update catalog. See [0.18.0 update notes](0.18.0-UPDATES.md) and [distribution and website](DISTRIBUTION-AND-WEBSITE.md). Source stays private; release binaries and metadata are public. The installer is unsigned, so SmartScreen can warn; the release workflow requires a certificate for normal releases and fails closed otherwise.
 
 ## Previous — 0.6.2
 

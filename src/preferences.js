@@ -122,6 +122,14 @@
     const r=await api.installUpdate();
     if(!r.ok){$('installUpdate').disabled=false;$('updateState').textContent=r.error;}
   };
+  $('aboutGroup').insertAdjacentHTML('beforeend', `<h3 class="dock-heading">What’s new</h3><div id="whatsNew" class="release-notes">Loading release notes…</div><button type="button" id="openReleases">Open full release history</button>`);
+  const escapeNote=text=>String(text).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  api.releaseNotes?.().then(r=>{
+    if(!r.ok){$('whatsNew').textContent=r.error;return;}
+    const releases=r.value?.releases||[];
+    $('whatsNew').innerHTML=releases.slice(0,4).map((release,index)=>`<details ${index===0?'open':''}><summary><strong>v${escapeNote(release.version)}</strong> · ${escapeNote(release.title)} <small>${escapeNote(release.date)}</small></summary><ul>${release.notes.map(note=>`<li>${escapeNote(note)}</li>`).join('')}</ul></details>`).join('')||'<small>No release notes are bundled with this build.</small>';
+  }).catch(error=>{$('whatsNew').textContent=error.message;});
+  $('openReleases').onclick=()=>api.openExternalLink('https://github.com/shravan-kumar-nalacharla/agent-notch-releases/releases');
   $('aboutGroup').insertAdjacentHTML('beforeend', `<h3 class="dock-heading">Installation</h3><p id="installationState">Checking installation…</p>${check('uninstallDeleteData','Also permanently delete Agent Notch settings, keys and history')}<button type="button" id="uninstallApp">Uninstall Agent Notch…</button><small>Default uninstall keeps your personal data. Removal always uses the registered Windows uninstaller.</small>`);
   api.installation().then(r=>{$('installationState').textContent=r.ok&&r.value.installed?'Installed '+r.value.version+' · '+r.value.location:r.value?.message||r.error||'Portable development build';$('uninstallApp').disabled=!r.ok||!r.value.installed;});
   $('uninstallApp').onclick=async()=>{const r=await api.uninstall({deleteData:$('uninstallDeleteData').checked});if(!r.ok)$('installationState').textContent=r.error;};

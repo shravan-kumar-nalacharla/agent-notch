@@ -1,0 +1,12 @@
+﻿{
+  "name": "Agent Notch for Windows",
+  "short_name": "Agent Notch",
+  "description": "A voice and screen assistant for Windows by Huygen Studios.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#07090b",
+  "theme_color": "#07090b",
+  "icons": [
+    { "src": "assets/icon-256.png", "sizes": "256x256", "type": "image/png" }
+  ]
+}

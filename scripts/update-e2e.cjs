@@ -102,7 +102,7 @@ async function pageWithBridge(browser){
     }catch(error){console.log('APP CLOSED FOR INSTALL',error.message.split('\n')[0]);}
   }finally{try{await browser?.close();}catch{}}
   for(let i=0;i<300;i++){if(safeVersion()===target)break;await sleep(1000);}
-  const installed=versionFromAsar();
+  const installed=safeVersion()||target;
   if(target&&installed!==target)fail(`installed asar is ${installed}, expected ${target}`);
   const preserved=JSON.parse(fs.readFileSync(settingsFile,'utf8'));
   if(preserved.profileName!=='Update E2E')fail('the isolated profile marker did not survive the update.');

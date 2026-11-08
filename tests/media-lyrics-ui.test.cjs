@@ -48,21 +48,23 @@ test('lyrics retain their last text and animate upward through lookup gaps and b
   await page.waitForTimeout(400);
   await update(2000);
   assert.equal(await page.evaluate(()=>window.first===document.querySelector('.el-lyric-line.previous')),true);
-  // The layout animates with transforms, not inline bottom offsets. Assert the
-  // visible result: the old current line moves above the new current line.
-  const motion=await page.evaluate(()=>({previous:window.first.getBoundingClientRect().top,current:document.querySelector('.el-lyric-line.current').getBoundingClientRect().top,transform:getComputedStyle(window.first).transform,entering:document.querySelector('.el-lyric-line.current').getAnimations().length}));
+  // Only the current and previous lines are rendered, so the old line must sit
+  // above the new one without a third clipped row.
+  const motion=await page.evaluate(()=>({previous:window.first.getBoundingClientRect().top,current:document.querySelector('.el-lyric-line.current').getBoundingClientRect().top,entering:document.querySelector('.el-lyric-line.current').getAnimations().length,lines:document.querySelectorAll('.el-lyric-line').length}));
   assert.ok(motion.previous<motion.current,JSON.stringify(motion));
-  assert.notEqual(motion.transform,'none');assert.ok(motion.entering>0);
+  assert.equal(motion.lines,2);assert.ok(motion.entering>0);
   await update(2500);
   assert.equal(await page.locator('.el-lyric-line.current').innerText(),'Second');
   await update(3000);await page.waitForTimeout(400);
   await update(4000);
   assert.equal(await page.locator('.el-lyric-line.current').innerText(),'Fourth');
-  assert.equal(await page.locator('.el-lyric-line.departing').innerText(),'First');
-  const departing=await page.evaluate(()=>({top:window.first.getBoundingClientRect().top,current:document.querySelector('.el-lyric-line.current').getBoundingClientRect().top}));
-  assert.ok(departing.top<departing.current,JSON.stringify(departing));
-  await page.waitForTimeout(400);
-  assert.ok(Number(await page.evaluate(()=>getComputedStyle(window.first).opacity))<0.02);
+  assert.equal(await page.locator('.el-lyric-line.previous').innerText(),'Third');
+  assert.equal(await page.locator('.el-lyric-line.older,.el-lyric-line.departing').count(),0);
+  const lines=await page.evaluate(()=>document.querySelectorAll('.el-lyric-line').length);
+  assert.equal(lines,2);
+  const fitData=await page.evaluate(()=>{const box=document.querySelector('.el-lyrics').getBoundingClientRect();return {box:box.toJSON(),lines:[...document.querySelectorAll('.el-lyric-line')].map(e=>({text:e.textContent,rect:e.getBoundingClientRect().toJSON(),height:getComputedStyle(e).height,lineHeight:getComputedStyle(e).lineHeight}))};});
+  const fits=fitData.lines.every(({rect})=>rect.top>=fitData.box.top-1&&rect.bottom<=fitData.box.bottom+1);
+  assert.equal(fits,true,JSON.stringify(fitData));
   await update(5000);const previous=await page.locator('#elevenLyrics').innerText();
   await update(0,[],'Missing lyrics');
   assert.equal(await page.locator('#elevenLyrics').innerText(),previous);

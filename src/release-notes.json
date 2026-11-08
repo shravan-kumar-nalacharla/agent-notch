@@ -1,0 +1,51 @@
+[
+  {
+    "version": "0.18.0",
+    "date": "2026-11-09",
+    "title": "Clearer lyrics, a quieter chat, and a notch that leaves",
+    "notes": [
+      "Lyrics now show only the current line and the line before it. The current line is larger and bold; the previous line is smaller and faded. No third clipped row.",
+      "Chat opens without the “Ask a question” intro. The conversation and composer get the space instead.",
+      "The island closes after the pointer leaves, unless it is pinned or voice, capture, a task or a manual terminal session is active.",
+      "Settings > About now includes What’s new and the public release history."
+    ]
+  },
+  {
+    "version": "0.17.9",
+    "date": "2026-11-09",
+    "title": "Automatic updates are live",
+    "notes": [
+      "Checks shortly after startup, every six hours and from Settings.",
+      "Downloads in the background, then offers Restart now or Later.",
+      "Installs only after the app exits and keeps settings, keys and local data.",
+      "Added the public release channel at agent-notch-releases."
+    ]
+  },
+  {
+    "version": "0.17.8",
+    "date": "2026-11-08",
+    "title": "Installer hand-off hardening",
+    "notes": [
+      "The install helper is created through Windows Management Instrumentation so it survives the app process ending.",
+      "SQLite is checkpointed and closed before the installer runs."
+    ]
+  },
+  {
+    "version": "0.17.7",
+    "date": "2026-11-08",
+    "title": "Verified update test build",
+    "notes": [
+      "Verified the installed 0.17.6 to 0.17.7 update path.",
+      "Kept the current updater and data-preservation behavior."
+    ]
+  },
+  {
+    "version": "0.17.2",
+    "date": "2026-11-08",
+    "title": "First updater-enabled build",
+    "notes": [
+      "Added NSIS automatic updates with electron-updater.",
+      "Added Settings and tray update status."
+    ]
+  }
+]

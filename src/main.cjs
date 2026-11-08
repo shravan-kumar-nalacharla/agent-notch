@@ -28,6 +28,7 @@ let privacy,callTimer;let trayRefresh=()=>{};
 const {createAgentHub}=require('./agents.cjs');
 const {createUpdateService}=require('./updater.cjs');
 const {busyReason}=require('./update-policy.cjs');
+const releaseNotes=require('./release-notes.json');
 const {highlightBounds}=require('./guidance.cjs');const{randomUUID}=require('node:crypto');
 if(process.argv.includes('--smoke-test')&&!process.argv.includes('--gpu-smoke'))app.disableHardwareAcceleration();
 app.setAppUserModelId('app.agentnotch.desktop');
@@ -397,6 +398,7 @@ else {
     handle('update:status',()=>updateService.status());
     handle('update:check',()=>updateService.check(true));
     handle('update:install',()=>updateService.install());
+    handle('releases:notes',()=>({current:app.getVersion(),releases:releaseNotes}));
     updateService.start();
     registerShortcuts();
     cursorTimer=setInterval(()=>{

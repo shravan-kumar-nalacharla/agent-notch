@@ -114,8 +114,11 @@ jobs:
           $tag = "v$version"
           if (gh release view $tag --repo $env:PUBLIC_REPO 2>$null) { throw "Release $tag already exists. Publish a higher hotfix version instead of replacing released bytes." }
           $installer = Join-Path $PWD "dist\Agent-Notch-Setup-$version.exe"
+          $stable = Join-Path $PWD 'dist\Agent-Notch-Setup.exe'
+          Copy-Item -LiteralPath $installer -Destination $stable -Force
           $assets = @(
             $installer,
+            $stable,
             (Join-Path $PWD 'dist\latest.yml'),
             "$installer.blockmap",
             (Join-Path $PWD 'release\SHA256SUMS.txt'),

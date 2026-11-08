@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('island', {
   updateStatus:()=>ipcRenderer.invoke('update:status'),
   checkForUpdates:()=>ipcRenderer.invoke('update:check'),
   installUpdate:()=>ipcRenderer.invoke('update:install'),
+  releaseNotes:()=>ipcRenderer.invoke('releases:notes'),
   onUpdate:callback=>listen('update:state',callback),
   openPricing:()=>ipcRenderer.invoke('provider:pricing'),
   get: () => ipcRenderer.invoke('state:get'),

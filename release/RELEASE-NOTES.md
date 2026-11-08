@@ -1,17 +1,16 @@
-# Agent Notch 0.17.9
+# Agent Notch 0.18.0
 
-Agent Notch 0.17.9 is the verified Windows release with automatic updates.
+Agent Notch 0.18.0 is the public Windows release from Huygen Studios. It makes the island easier to live with.
 
-- Checks for updates shortly after startup, every six hours and from Settings > About > Updates.
-- Downloads the NSIS package in the background and verifies it against `latest.yml`.
-- Offers **Restart now** or **Later**. Settings and the tray show download and ready state.
-- Creates the install helper through Windows Management Instrumentation so it survives the app's process job, waits for the app to exit, removes `ELECTRON_RUN_AS_NODE`, and runs `--updated /S --force-run`. The updated app reopens.
-- Waits while dictating, recording, capturing the screen, using the manual terminal, editing unsaved settings or running a task.
-- Stops voice, agents, capture and the managed browser, closes the native helper, checkpoints SQLite, flushes settings and then quits.
-- Keeps settings, encrypted provider keys, notes, reminders, history, SQLite data and user documents.
+- Lyrics now show the current line and the line before it. The current line is larger and bold; the previous line is smaller and faded. The third clipped row is gone.
+- Chat no longer opens with “Ask a question” or an empty-state paragraph.
+- The island closes after the pointer leaves, unless it is pinned or voice, capture, a task or a manual terminal session is active.
+- Settings → About adds **What’s new** with the current release notes and recent history.
+- The product site, install guide and full update catalog are live at `https://shravan-kumar-nalacharla.github.io/agent-notch-site/`.
+- Automatic updates remain built in: checks after startup, every six hours and on demand; download in the background; Restart now or Later; local data preserved.
 
-Existing 0.17.1 installations need one manual 0.17.9 install because they contain no updater. Builds 0.17.2 through 0.17.7 may not install automatically; install 0.17.9 manually if you are on one of those builds.
+Existing 0.17.1 installations need one manual 0.18.0 install because they contain no updater. Builds 0.17.2 through 0.17.7 may not install automatically; install 0.18.0 manually if you are on one of them.
 
-The installer is unsigned, so Windows SmartScreen may show an unknown-publisher warning. Verify `SHA256SUMS.txt` and the `sha512` in `latest.yml` before running it. The installer file is `Agent-Notch-Setup-0.17.9.exe`.
+This is an unsigned build. Windows SmartScreen may warn about an unknown publisher. Verify `SHA256SUMS.txt` and the `sha512` in `latest.yml` before running it. The installer file is `Agent-Notch-Setup-0.18.0.exe`; the stable alias is `Agent-Notch-Setup.exe`.
 
 If a release is faulty, publish a higher version with the corrected code. Deleting a release does not downgrade an installed machine.
