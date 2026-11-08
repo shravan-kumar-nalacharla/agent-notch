@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Agent Notch release notes and update catalog â€” Huygen Studios</title>
+<title>Agent Notch release notes and update catalog — Huygen Studios</title>
 <meta name="description" content="Every Agent Notch Windows release, what changed, and how the automatic update path works. Current version 0.18.0 from Huygen Studios.">
 <meta name="page-type" content="software">
 <meta name="site-kind" content="software">
@@ -65,7 +65,7 @@
   <div class="wrap release-layout">
     <aside class="release-aside" aria-label="Release index">
       <h3>Versions</h3>
-      <a href="#v0180">0.18.0 Â· current</a>
+      <a href="#v0180">0.18.0 · current</a>
       <a href="#v0179">0.17.9</a>
       <a href="#v0178">0.17.8</a>
       <a href="#v0177">0.17.7</a>
@@ -74,36 +74,36 @@
       <a href="#update-path">Update path</a>
     </aside>
     <div class="release-body">
-      <p class="lede">Release notes in the app live under <strong>Settings â†’ About â†’ Whatâ€™s new</strong>. The same history is published here so you can read it before installing, or check what a friend is running.</p>
+      <p class="lede">Release notes in the app live under <strong>Settings → About → What’s new</strong>. The same history is published here so you can read it before installing, or check what a friend is running.</p>
       <div class="timeline">
         <article id="v0180">
           <div class="when">09 November 2026 <span class="tag">Current</span></div>
-          <h2>0.18.0 â€” Clearer lyrics, a quieter chat, a notch that leaves</h2>
+          <h2>0.18.0 — Clearer lyrics, a quieter chat, a notch that leaves</h2>
           <p>This release fixes the three visible problems in the island and adds the release-note experience.</p>
           <ul>
             <li>Lyrics show only the current line and the line before it. The current line is larger and bold; the previous line is smaller and faded. A third clipped row is gone.</li>
-            <li>The chat no longer opens with â€œAsk a questionâ€ or an empty-state paragraph. The conversation and composer get the space.</li>
+            <li>The chat no longer opens with “Ask a question” or an empty-state paragraph. The conversation and composer get the space.</li>
             <li>The island closes after the pointer leaves, unless it is pinned or voice, capture, a task or a manual terminal session is active.</li>
-            <li>Settings â†’ About includes Whatâ€™s new, and this public update catalog is linked from the app and the website.</li>
+            <li>Settings → About includes What’s new, and this public update catalog is linked from the app and the website.</li>
           </ul>
           <div class="release-note"><strong>Install:</strong> this is the current direct download. Existing 0.17.1 installations need one manual 0.18.0 install because 0.17.1 has no updater. Builds 0.17.2 through 0.17.7 may not install automatically; install 0.18.0 manually if you are on one of them.</div>
         </article>
 
         <article id="v0179">
           <div class="when">09 November 2026 <span class="tag old">Verified updater</span></div>
-          <h2>0.17.9 â€” Automatic updates are live</h2>
+          <h2>0.17.9 — Automatic updates are live</h2>
           <ul>
             <li>Checks 15 seconds after startup, every six hours and from Settings.</li>
             <li>Downloads in the background, then offers Restart now or Later.</li>
             <li>Installs only after the app exits, through a WMI-created helper that survives the app process job.</li>
             <li>Stops voice, agents, capture and the browser, closes the native helper, checkpoints SQLite and preserves the local profile.</li>
-            <li>Verified installed 0.17.8 â†’ 0.17.9: discovery, download, silent install, relaunch and profile marker.</li>
+            <li>Verified installed 0.17.8 → 0.17.9: discovery, download, silent install, relaunch and profile marker.</li>
           </ul>
         </article>
 
         <article id="v0178">
           <div class="when">08 November 2026 <span class="tag old">Bootstrap</span></div>
-          <h2>0.17.8 â€” Installer hand-off hardening</h2>
+          <h2>0.17.8 — Installer hand-off hardening</h2>
           <ul>
             <li>Created the install helper through Windows Management Instrumentation so it survives the app process ending.</li>
             <li>Checkpointed and closed widgets, timers, capture, voice, agents, the managed browser, the native helper and SQLite before shutdown.</li>
@@ -112,16 +112,16 @@
 
         <article id="v0177">
           <div class="when">08 November 2026 <span class="tag old">Bootstrap</span></div>
-          <h2>0.17.7 â€” Verified update test build</h2>
+          <h2>0.17.7 — Verified update test build</h2>
           <ul>
-            <li>Exercised the installed 0.17.6 â†’ 0.17.7 path.</li>
+            <li>Exercised the installed 0.17.6 → 0.17.7 path.</li>
             <li>Kept the updater and data-preservation behavior unchanged.</li>
           </ul>
         </article>
 
         <article id="v0172">
           <div class="when">08 November 2026 <span class="tag old">Bootstrap</span></div>
-          <h2>0.17.2 â€” First updater-enabled build</h2>
+          <h2>0.17.2 — First updater-enabled build</h2>
           <ul>
             <li>Added electron-updater 6.8.11 with the existing NSIS installer.</li>
             <li>Added Settings and tray update status, Restart now / Later and a six-hour check.</li>
@@ -131,7 +131,7 @@
 
         <article id="v0171">
           <div class="when">08 November 2026 <span class="tag old">Historical</span></div>
-          <h2>0.17.1 â€” Player, settings and interruption fixes</h2>
+          <h2>0.17.1 — Player, settings and interruption fixes</h2>
           <ul>
             <li>Settings focuses on first load; music got a full-width seek bar, output waveform and system-volume slider.</li>
             <li>Synchronized lyrics show the current line and the preceding line; future lines stay hidden.</li>
@@ -144,7 +144,7 @@
       <section id="update-path" style="margin-top:52px">
         <h2 style="font-size:clamp(28px,3vw,38px)">The update path</h2>
         <p class="lede" style="margin-top:14px">The app reads <code>latest.yml</code> from the latest non-prerelease GitHub release. The installer is downloaded and verified, then a helper waits for the app to exit before running the NSIS package. A version tag is never overwritten; a bad release is fixed with a higher version.</p>
-        <div class="release-note"><strong>0.17.1 â†’ 0.18.0:</strong> manual install once. <strong>0.18.0 â†’ future:</strong> automatic. The public channel is <a href="https://github.com/shravan-kumar-nalacharla/agent-notch-releases/releases">agent-notch-releases</a>.</div>
+        <div class="release-note"><strong>0.17.1 → 0.18.0:</strong> manual install once. <strong>0.18.0 → future:</strong> automatic. The public channel is <a href="https://github.com/shravan-kumar-nalacharla/agent-notch-releases/releases">agent-notch-releases</a>.</div>
         <div class="hero-actions"><a class="btn btn-primary" href="https://github.com/shravan-kumar-nalacharla/agent-notch-releases/releases/latest/download/Agent-Notch-Setup.exe">Download 0.18.0</a><a class="btn btn-ghost" href="./#install">Install guide</a></div>
       </section>
     </div>
@@ -164,7 +164,7 @@
         <div class="foot-col"><h4>Studio</h4><a href="https://github.com/shravan-kumar-nalacharla">Huygen Studios on GitHub</a><a href="mailto:hello@huygenstudios.example">hello@huygenstudios.example</a></div>
       </div>
     </div>
-    <div class="foot-bottom"><span>Â© 2026 Huygen Studios. Agent Notch is a product of Huygen Studios.</span><span><a href="releases.html">Release notes</a> Â· <a href="./#install">Install guide</a></span></div>
+    <div class="foot-bottom"><span>© 2026 Huygen Studios. Agent Notch is a product of Huygen Studios.</span><span><a href="releases.html">Release notes</a> · <a href="./#install">Install guide</a></span></div>
   </div>
 </footer>
 <script src="assets/site.js" defer></script>
