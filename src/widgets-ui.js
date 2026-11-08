@@ -179,13 +179,13 @@
   async function loadCalendar(){try{const events=await desktop('calendar');if($('calendarResult'))$('calendarResult').innerHTML=events.map(e=>row(e.title,'',`${new Date(e.start).toLocaleString()}${e.allDay?' · All day':''}`)).join('')||'<small>No upcoming events.</small>';}catch(e){error(e);}}
   async function loadLyrics(){
     document.body.classList.add('rich-media');window.dispatchEvent(new Event('island:layout-change'));
-    const generation=++lyricsGeneration,key=media?.sessionId+'|'+media?.title+'|'+media?.artist;lyricsStatus='Looking for lyrics…';if($('lyricsRows'))$('lyricsRows').textContent=lyricsStatus;
-    try{const r=await desktop('lyrics');if(generation!==lyricsGeneration||!lyricsWanted||selected!=='media'||key!==media?.sessionId+'|'+media?.title+'|'+media?.artist)return;lyrics=r.lines||[];lyricsPlain=r.plain||'';lyricsStatus=r.message||'No matching lyrics found.';lyricIndex=-2;const offset=$('lyricsOffset')?.closest('label');if(offset)offset.hidden=!lyrics.length;paintLyrics();}catch(e){if(generation!==lyricsGeneration||!lyricsWanted)return;lyricsStatus='Lyrics lookup could not start. See Settings → Lyrics diagnostics.';if($('lyricsRows'))$('lyricsRows').textContent=lyricsStatus;error(e);}
+    const generation=++lyricsGeneration,key=media?.sessionId+'|'+media?.title+'|'+media?.artist;lyricsStatus='';
+    try{const r=await desktop('lyrics');if(generation!==lyricsGeneration||!lyricsWanted||selected!=='media'||key!==media?.sessionId+'|'+media?.title+'|'+media?.artist)return;lyrics=r.lines||[];lyricsPlain=r.plain||'';lyricsStatus=r.message||'No matching lyrics found.';lyricIndex=-2;const offset=$('lyricsOffset')?.closest('label');if(offset)offset.hidden=!lyrics.length;paintLyrics();}catch(e){if(generation!==lyricsGeneration||!lyricsWanted)return;lyricsStatus='Lyrics lookup could not start. See Settings → Lyrics diagnostics.';error(e);}
   }
   function paintLyrics(){
     if(mediaSurface){mediaSurface.update(mediaView());return;}
     const el=$('lyricsRows');if(!el)return;
-    if(!lyrics.length){el.textContent=lyricsPlain||lyricsStatus;return;}
+    if(!lyrics.length){if(lyricsPlain)el.textContent=lyricsPlain;return;}
     const at=media.position+(media.playing?Date.now()-mediaAt:0)-(lib?.lyricsOffsetMs||0),index=lyrics.findLastIndex(x=>x.at<=at),wordIndex=lyrics[index]?.words?.findLastIndex(w=>w.at<=at)??-1,paintKey=index+':'+wordIndex;
     if(paintKey===lyricIndex&&el.querySelector('.lyric'))return;lyricIndex=paintKey;
     el.innerHTML=lyrics.slice(Math.max(0,index-1),Math.max(3,index+2)).map(x=>`<button class="lyric ${x===lyrics[index]?'current':''}" data-position="${x.at}" ${media.capabilities?.seek===false?'disabled':''}>${x===lyrics[index]&&x.words?x.words.map(w=>`<span class="${w.at<=at?'sung':''}">${esc(w.text)}</span>`).join(' '):esc(x.text)}</button>`).join('');

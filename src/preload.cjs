@@ -4,7 +4,7 @@ const { contextBridge, ipcRenderer, webUtils } = require('electron');
 const eventPools=new Map();
 function listen(channel,callback){let pool=eventPools.get(channel);if(!pool){pool=new Set();eventPools.set(channel,pool);ipcRenderer.on(channel,(_event,value)=>{for(const cb of [...pool])try{const pending=cb(value);pending?.catch?.(e=>console.error('UI event handler:',e.message));}catch(e){console.error('UI event handler:',e.message);}});}const entry=value=>callback(value);pool.add(entry);return()=>pool.delete(entry);}
 contextBridge.exposeInMainWorld('island', {
-  version: '0.17.1',
+  version: (()=>{try{return ipcRenderer.sendSync('app:version')||'0.0.0';}catch{return '0.0.0';}})(),
   workspace:(op,value={})=>ipcRenderer.invoke('workspace:action',{version:1,op,value}),
   onVisibility:callback=>listen('window:visibility',callback),
   toolSurface:value=>ipcRenderer.invoke('window:tool',value),
@@ -30,6 +30,10 @@ contextBridge.exposeInMainWorld('island', {
 
   installation:()=>ipcRenderer.invoke('system:installation'),
   uninstall:value=>ipcRenderer.invoke('system:uninstall',value),
+  updateStatus:()=>ipcRenderer.invoke('update:status'),
+  checkForUpdates:()=>ipcRenderer.invoke('update:check'),
+  installUpdate:()=>ipcRenderer.invoke('update:install'),
+  onUpdate:callback=>listen('update:state',callback),
   openPricing:()=>ipcRenderer.invoke('provider:pricing'),
   get: () => ipcRenderer.invoke('state:get'),
   productivity:(op,value={})=>ipcRenderer.invoke('productivity:action',{op,value}),

@@ -2,7 +2,7 @@
 function createManualTerminal({app,native,dialog,mainWindow,store}){
  let directory=app.getPath('documents'),starting=false,pasteReview=false,sessionId='',keepAlive=false;
  const size=(v)=>{if(!Number.isInteger(v.cols)||v.cols<2||v.cols>500||!Number.isInteger(v.rows)||v.rows<2||v.rows>200)throw new Error('Invalid terminal dimensions.');return{cols:v.cols,rows:v.rows};};
- return{async action(op,v={}){
+ return{get active(){return !!sessionId;},async action(op,v={}){
   if(op==='terminal:folder'){const result=await dialog.showOpenDialog({defaultPath:directory,properties:['openDirectory']});if(!result.canceled)directory=result.filePaths[0];return{directory};}
   if(op==='terminal:status'){const status=await native.request('terminal.status'),capabilities=await native.request('terminal.capabilities');return{...status,...capabilities,chosenDirectory:directory,keepAlive:status.id===sessionId&&keepAlive,font:store?.view().terminalFont||11};}
   if(op==='terminal:font'){if(!Number.isInteger(v.font)||v.font<10||v.font>20)throw new Error('Choose a terminal font size between 10 and 20.');if(!store)throw new Error('Workspace settings are unavailable.');store.set('terminalFont',v.font);return true;}

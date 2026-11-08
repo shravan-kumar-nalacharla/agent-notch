@@ -9,4 +9,7 @@ tools/
 **/bin/
 **/obj/
 dist-v*/
-dist-qa*/
+dist-qa*
+dist-0.17.*/
+release/SHA256SUMS.txt
+release/published.json

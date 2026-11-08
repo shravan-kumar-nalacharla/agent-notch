@@ -49,8 +49,9 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
     if(library.view().clipboardEnabled){try{const safe=await native.request('clipboard.safe',{},1200);if(safe){const value=clipboard.readText();if(value!==lastClip){lastClip=value;library.action('clips:add',{text:value});emit('library:changed',library.view());}}}catch{}}
   },1000);timer.unref();
   const systemTimer=setInterval(async()=>{if(systemPending)return;systemPending=true;try{lastSystem=await native.request('system',{},3000);productivity.setSystem(lastSystem);emit('desktop:system',lastSystem);onSystem(lastSystem);}catch{}finally{systemPending=false;}},3000);systemTimer.unref();
-  app.on('before-quit',()=>{clearInterval(timer);clearInterval(systemTimer);productivity.close();});
-  return{library,productivity,workspace,captures,emit,notify,getSystem:()=>lastSystem};
+  app.on('before-quit',()=>closeWidgets());
+  function closeWidgets(){clearInterval(timer);clearInterval(systemTimer);productivity.close();}
+  return{library,productivity,workspace,captures,emit,notify,getSystem:()=>lastSystem,close:closeWidgets};
 }
 async function getJSON(url){const response=await fetch(url,{signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`Service HTTP ${response.status}`);return response.json();}
 const{parseLyrics}=require('./lrc.cjs');

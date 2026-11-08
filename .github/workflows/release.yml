@@ -1,0 +1,129 @@
+name: Windows release
+
+# Only merges to the release branch (or an explicit manual dispatch) publish.
+# Ordinary development pushes run tests but never create a release.
+on:
+  push:
+    branches: [release]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact version from package.json, for example 0.17.2
+        required: true
+      allow_unsigned:
+        description: Publish an unsigned installer for the initial bootstrap only
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-notch-windows-release
+  cancel-in-progress: false
+
+env:
+  PUBLIC_REPO: shravan-kumar-nalacharla/agent-notch-releases
+  PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}\tools\agent-browsers
+
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Unit and regression tests
+        run: npm test
+
+      - name: Build native Windows helper
+        run: npm run build:native
+
+      - name: Restore Playwright Chromium
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:PLAYWRIGHT_BROWSERS_PATH | Out-Null
+          npx playwright-core install chromium
+          $shell = Get-ChildItem $env:PLAYWRIGHT_BROWSERS_PATH -Directory -Filter 'chromium_headless_shell-*' | Select-Object -First 1
+          if (-not $shell) { throw 'Playwright headless shell was not restored.' }
+          $browser = Get-ChildItem $env:PLAYWRIGHT_BROWSERS_PATH -Directory -Filter 'chromium-*' | Where-Object { $_.Name -notlike 'chromium_headless_shell-*' } | Select-Object -First 1
+          if (-not $browser) { throw 'Playwright Chromium was not restored.' }
+
+      - name: Check release version
+        shell: pwsh
+        run: |
+          $packageVersion = node -p "require('./package.json').version"
+          $requested = "${{ inputs.version }}"
+          if (-not $requested) { $requested = $env:GITHUB_REF_NAME -replace '^v','' }
+          if ($packageVersion -ne $requested) { throw "package.json is $packageVersion but this release is $requested. Bump the version first." }
+
+      - name: Import signing certificate
+        shell: pwsh
+        env:
+          CERT_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if ($env:CERT_BASE64) {
+            $path = Join-Path $env:RUNNER_TEMP 'agent-notch-signing.pfx'
+            [IO.File]::WriteAllBytes($path, [Convert]::FromBase64String($env:CERT_BASE64))
+            "CSC_LINK=$path" | Out-File -FilePath $env:GITHUB_ENV -Append
+            "CSC_KEY_PASSWORD=$env:CERT_PASSWORD" | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            "UNSIGNED_BUILD=1" | Out-File -FilePath $env:GITHUB_ENV -Append
+            Write-Warning 'No signing certificate secret is configured.'
+          }
+
+      - name: Enforce signing before public rollout
+        if: env.UNSIGNED_BUILD == '1' && (github.event_name != 'workflow_dispatch' || inputs.allow_unsigned != true)
+        shell: pwsh
+        run: throw 'Refusing to publish an unsigned build. Configure WINDOWS_CERTIFICATE_BASE64/WINDOWS_CERTIFICATE_PASSWORD, or dispatch manually with allow_unsigned only for the initial bootstrap.'
+
+      - name: Build NSIS installer and update metadata
+        shell: pwsh
+        run: npm run dist -- --publish never
+
+      - name: Verify installer bytes, latest.yml and app-update.yml
+        shell: pwsh
+        run: node scripts/verify-release.cjs --dir dist --version (node -p "require('./package.json').version")
+
+      - name: Packaged smoke test
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD 'dist\win-unpacked\Agent Notch.exe'
+          & $exe --smoke-test
+          if ($LASTEXITCODE -ne 0) { throw "Packaged smoke test failed with exit code $LASTEXITCODE." }
+
+      - name: Publish tested bytes to the public release-only repository
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          $version = node -p "require('./package.json').version"
+          $tag = "v$version"
+          if (gh release view $tag --repo $env:PUBLIC_REPO 2>$null) { throw "Release $tag already exists. Publish a higher hotfix version instead of replacing released bytes." }
+          $installer = Join-Path $PWD "dist\Agent-Notch-Setup-$version.exe"
+          $assets = @(
+            $installer,
+            (Join-Path $PWD 'dist\latest.yml'),
+            "$installer.blockmap",
+            (Join-Path $PWD 'release\SHA256SUMS.txt'),
+            (Join-Path $PWD 'release\RELEASE-NOTES.md'),
+            (Join-Path $PWD 'THIRD-PARTY-NOTICES.md')
+          )
+          foreach ($asset in $assets) { if (-not (Test-Path -LiteralPath $asset)) { throw "Missing release asset: $asset" } }
+          $ghArgs = @('release','create',$tag,'--repo',$env:PUBLIC_REPO,'--title',"Agent Notch $version",'--notes-file','release/RELEASE-NOTES.md','--latest') + $assets
+          gh @ghArgs
+          gh release view $tag --repo $env:PUBLIC_REPO --json url,assets | Out-File -FilePath release\published.json -Encoding utf8
+          Get-Content release\published.json

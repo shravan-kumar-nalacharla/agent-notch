@@ -26,14 +26,20 @@ const {isStopRequest}=require('./voice-intents.cjs');
 const {DEFAULTS:MIC_DEFAULTS,validatePrivacy,createMicrophonePrivacy}=require('./microphone-privacy.cjs');
 let privacy,callTimer;let trayRefresh=()=>{};
 const {createAgentHub}=require('./agents.cjs');
+const {createUpdateService}=require('./updater.cjs');
+const {busyReason}=require('./update-policy.cjs');
 const {highlightBounds}=require('./guidance.cjs');const{randomUUID}=require('node:crypto');
 if(process.argv.includes('--smoke-test')&&!process.argv.includes('--gpu-smoke'))app.disableHardwareAcceleration();
 app.setAppUserModelId('app.agentnotch.desktop');
+ipcMain.on('app:version',event=>{event.returnValue=app.getVersion();});
 const {IslandGeometry}=require('./geometry.cjs');
 const smokeMode=process.argv.includes('--smoke-test');
 if(smokeMode&&['--sarvam-ptt-check','--voice-experience-check'].some(flag=>process.argv.includes(flag)))globalThis.fetch=require('./smoke-sarvam-ptt.cjs').fetcher;
 if(smokeMode){const smokeData=fs.mkdtempSync(path.join(process.env.TEMP||process.env.TMP||'.','agent-notch-smoke-'));app.setPath('userData',smokeData);fs.writeFileSync(path.join(smokeData,'settings.json'),JSON.stringify({speak:false,quietMoments:{enabled:false,frequencyMigration:true}}));}
+const updateTestMode=process.argv.includes('--update-test');
+if(updateTestMode&&!smokeMode){app.setPath('userData',fs.mkdtempSync(path.join(process.env.TEMP||process.env.TMP||'.','agent-notch-update-test-')));}
 let win, settingsWindow, tray, state, native, widgets, voiceEngine,agents,cursorTimer,boundsTimer,animatingBounds=false,lastCursorX=null,lastCursorY=null,lastBoundsKey='';
+let updateService,updateShutdown=null;
 let shortcutStatus={open:{accelerator:'',ok:false},voice:{accelerator:'',ok:false}};
 let fullscreenHidden=false,userHidden=false,quitting=false;
 let windowRule='normal',windowOverride=false;
@@ -97,6 +103,32 @@ function registerShortcuts(){
   if(privacy){const p=state.microphone;for(const name of ['mute','ptt']){const accelerator=name==='mute'?p.muteShortcut:p.pttShortcut;let ok=false;try{ok=globalShortcut.register(accelerator,name==='mute'?()=>privacy.set({muted:!state.microphone.muted}).catch(()=>{}):()=>{});if(name==='ptt'&&ok)globalShortcut.unregister(accelerator);}catch{}shortcutStatus[name]={accelerator,ok};}}
   shortcutStatus.screenText={accelerator:'Control+Alt+F',ok:globalShortcut.register('Control+Alt+F',()=>{activateIsland({revealOnly:true});win.webContents.send('command:ui',{page:'tools',tool:'screenText'});})};
   if(widgets){widgets.emit('settings:changed',publicState());if(failed.length)widgets.notify('Shortcut unavailable',`Could not register ${failed.join(', ')}. Choose another shortcut in Settings.`);}
+}
+async function settingsDirty(){
+  if(!settingsWindow||settingsWindow.isDestroyed())return false;
+  try{return await Promise.race([settingsWindow.webContents.executeJavaScript('window.islandSettingsDirty===true',true),new Promise(resolve=>setTimeout(()=>resolve(false),500))]);}catch{return false;}
+}
+async function updateBusy(){
+  return busyReason({voiceRecording:!!quoteActivity.voiceRecording,capturing:!!widgets?.captures?.capturing,terminalActive:!!widgets?.workspace?.terminalActive?.(),taskActive:!!taskCoordinator?.active,unsaved:await settingsDirty()});
+}
+async function prepareUpdateShutdown(){
+  if(updateShutdown)return updateShutdown;
+  updateShutdown=(async()=>{
+    quitting=true;
+    clearInterval(callTimer);clearInterval(quotePopupTimer);clearInterval(cursorTimer);
+    quotePopups?.cancel();
+    for(const request of askRequests.values())request.abort();
+    privacy?.close();
+    voiceEngine?.stop();
+    try{await agents?.stop();}catch{}
+    try{await taskCoordinator?.close();}catch{}
+    widgets?.captures?.close?.();
+    native?.close();
+    try{widgets?.close?.();}catch{}
+    try{persist();}catch{}
+    await new Promise(resolve=>setTimeout(resolve,150));
+  })();
+  return updateShutdown;
 }
 function handle(name, fn, settingsOnly=false) {
   ipcMain.handle(name, async (event, value) => {
@@ -337,7 +369,7 @@ else {
     handle('shelf:drag',async value=>{const files=(Array.isArray(value?.paths)?value.paths:[]).filter(p=>widgets.library.view().shelf.includes(p)&&fs.existsSync(p));if(!files.length)throw new Error('No shelf files selected.');win.webContents.startDrag({file:files[0],files,icon:await app.getFileIcon(files[0],{size:'normal'})});return true;});
     const icon = nativeImage.createFromPath(path.join(__dirname,'assets','icon-32.png')).resize({width:16,height:16});
     tray = new Tray(icon); tray.setToolTip('Agent Notch');
-    function refreshTray(){tray.setToolTip('Agent Notch · '+(privacy?.view().reason||'Manual activation only'));tray.setContextMenu(Menu.buildFromTemplate([
+    function refreshTray(){tray.setToolTip('Agent Notch'+(updateService?.hasUpdate()?' · Update ready':' · '+(privacy?.view().reason||'Manual activation only')));tray.setContextMenu(Menu.buildFromTemplate([
       {label:'Open Agent Notch',click:()=>activateIsland({revealOnly:true})},
       {label:privacy?.view().blocked?'Microphone muted / paused':'Microphone available · '+state.microphone.mode,enabled:false},
       {label:state.microphone.muted?'Unmute microphone':'Mute microphone',click:()=>privacy.set({muted:!state.microphone.muted}).catch(()=>{})},
@@ -345,12 +377,27 @@ else {
       {label:'Show active task',click:()=>{userHidden=false;win.showInactive();win.webContents.send('window:open');const task=taskCoordinator.view();if(task)widgets.emit('task:state',task);}},
       {label:'Stop active task',enabled:!!taskCoordinator.active,click:()=>taskCoordinator.cancel()},
       {label:'Settings',click:openSettings},
+      ...(updateService?.trayItem()?[{label:updateService.trayItem().label,enabled:updateService.trayItem().enabled,click:()=>updateService.prompt(true).catch(()=>{})}]:[]),
       {label:userHidden?'Resume Notch':'Pause Notch',click:()=>{userHidden=!userHidden;userHidden?win.hide():win.showInactive();refreshTray();}},
       {label:'Start with Windows',type:'checkbox',checked:state.autostart,click:item=>{state.autostart=item.checked;persist();try{setStartup(app,item.checked);startupError='';}catch{startupError='Windows startup registration failed.';}widgets.emit('settings:changed',publicState());refreshTray();}},
       {label:state.appearance.pinned?'Unpin':'Pin open',click:()=>{state.appearance.pinned=!state.appearance.pinned;persist();widgets.emit('settings:changed',publicState());if(state.appearance.pinned){win.showInactive();win.webContents.send('window:restore');}refreshTray();}},
       {label:'Quit',click:()=>app.quit()}
     ]));}
     trayRefresh=refreshTray;refreshTray();tray.on('click',()=>activateIsland({revealOnly:true}));
+    updateService=createUpdateService({
+      app,dialog,
+      getMainWindow:()=>win,
+      getSettingsWindow:()=>settingsWindow,
+      getBusy:updateBusy,
+      prepareShutdown:prepareUpdateShutdown,
+      isEnabled:()=>app.isPackaged&&!smokeMode,
+      testMode:updateTestMode,
+      onState:value=>{widgets?.emit('update:state',value);try{refreshTray();}catch{}}
+    });
+    handle('update:status',()=>updateService.status());
+    handle('update:check',()=>updateService.check(true));
+    handle('update:install',()=>updateService.install());
+    updateService.start();
     registerShortcuts();
     cursorTimer=setInterval(()=>{
       if(win.isDestroyed()||!win.isVisible()||win.webContents.isDestroyed())return;
@@ -361,5 +408,5 @@ else {
     cursorTimer.unref();
   });
   app.on('will-quit', () => globalShortcut.unregisterAll());
-  app.on('before-quit',()=>{quitting=true;taskCoordinator?.close().catch(()=>{});clearInterval(callTimer);clearInterval(quotePopupTimer);quotePopups?.cancel();privacy?.close();windowsTask?.cancel();for(const request of askRequests.values())request.abort();clearInterval(cursorTimer);voiceEngine?.stop();native?.close();agents?.stop();});
+  app.on('before-quit',()=>{quitting=true;updateService?.stop();taskCoordinator?.close().catch(()=>{});clearInterval(callTimer);clearInterval(quotePopupTimer);quotePopups?.cancel();privacy?.close();windowsTask?.cancel();for(const request of askRequests.values())request.abort();clearInterval(cursorTimer);voiceEngine?.stop();native?.close();agents?.stop();});
 }

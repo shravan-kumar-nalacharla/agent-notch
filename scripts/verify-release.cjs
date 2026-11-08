@@ -1,0 +1,26 @@
+'use strict';
+// Verifies the exact NSIS bytes and update metadata before publication.
+const crypto=require('node:crypto'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const arg=(name,fallback)=>{const index=process.argv.indexOf(name);return index>0&&process.argv[index+1]?process.argv[index+1]:fallback;};
+const dir=path.resolve(root,arg('--dir','dist'));
+const version=arg('--version',require('../package.json').version);
+const installer=path.join(dir,`Agent-Notch-Setup-${version}.exe`);
+const blockmap=installer+'.blockmap';
+const metadata=path.join(dir,'latest.yml');
+const updateConfig=path.join(dir,'win-unpacked','resources','app-update.yml');
+const fail=message=>{console.error('RELEASE VERIFY FAILED:',message);process.exit(1);};
+for(const file of [installer,blockmap,metadata,updateConfig])if(!fs.existsSync(file))fail(`missing ${path.relative(root,file)}`);
+const bytes=fs.readFileSync(installer),sha256=crypto.createHash('sha256').update(bytes).digest('hex'),sha512=crypto.createHash('sha512').update(bytes).digest('base64');
+const yml=fs.readFileSync(metadata,'utf8'),line=(name)=>{const match=new RegExp('^'+name+':\\s*(.+)$','m').exec(yml);return match?match[1].trim().replace(/^['"]|['"]$/g,''):'';};
+if(line('version')!==version)fail(`latest.yml version ${line('version')} does not match ${version}`);
+const listed=line('path'),listedHash=line('sha512'),listedSize=Number(line('size'));
+if(listed!==path.basename(installer))fail(`latest.yml path ${listed} does not match ${path.basename(installer)}`);
+if(!listedHash||listedHash!==sha512)fail('latest.yml sha512 does not match the installer bytes');
+if(listedSize&&listedSize!==bytes.length)fail('latest.yml size does not match the installer bytes');
+const config=fs.readFileSync(updateConfig,'utf8');
+for(const expected of ['provider: github','owner: shravan-kumar-nalacharla','repo: agent-notch-releases'])if(!config.includes(expected))fail(`app-update.yml is missing ${expected}`);
+const sums=[`${sha256}  ${path.basename(installer)}`,`${crypto.createHash('sha256').update(fs.readFileSync(blockmap)).digest('hex')}  ${path.basename(blockmap)}`].join('\r\n')+'\r\n';
+fs.mkdirSync(path.join(root,'release'),{recursive:true});
+fs.writeFileSync(path.join(root,'release','SHA256SUMS.txt'),sums);
+console.log(JSON.stringify({version,installer:path.basename(installer),size:bytes.length,sha256,sha512,blockmap:path.basename(blockmap),metadata:path.basename(metadata)},null,2));

@@ -101,6 +101,27 @@
   installedVoices();speechSynthesis.addEventListener('voiceschanged',installedVoices);
   $('voicePreview').onclick=async()=>{if(!await window.islandSaveSettings())return;try{$('companionStatus').textContent='Preparing voice…';await window.islandSpeak("Hi. I'm "+$('companionName').value+'. How can I help?',{preview:true});$('companionStatus').textContent='Voice preview complete.';}catch(e){$('companionStatus').textContent=e.message;}};
   $('wakeCheck').onclick=async()=>{const r=await api.companionCheck();$('companionStatus').textContent=r.ok?(r.value.enabled?'Listening for hey '+r.value.name:'Wake name is off')+' · Recognizers: '+(r.value.recognizers.join(', ')||'none'):r.error;};
+  $('aboutGroup').insertAdjacentHTML('beforeend', `<h3 class="dock-heading">Updates</h3><p id="updateState" role="status">Checking for updates…</p><div class="row"><button type="button" id="checkUpdates">Check for updates</button><button type="button" id="installUpdate" hidden>Restart and install</button></div><small>Updates come from the public Agent Notch release channel. Settings, encrypted keys and local data are kept. Restart waits while recording, capturing, using the terminal, editing unsaved settings or running a task.</small>`);
+  const showUpdate=value=>{
+    if(!value||!$('updateState'))return;
+    $('updateState').textContent=(value.message||'Updates have not been checked yet.')+(value.detail?' '+value.detail:'');
+    const busy=['checking','downloading','installing'].includes(value.status);
+    $('checkUpdates').disabled=busy||!value.enabled;
+    $('installUpdate').hidden=value.status!=='ready';
+    $('installUpdate').disabled=busy;
+  };
+  api.updateStatus?.().then(r=>{if(!r.ok)$('updateState').textContent=r.error;else showUpdate(r.value);}).catch(error=>{$('updateState').textContent=error.message;});
+  api.onUpdate?.(showUpdate);
+  $('checkUpdates').onclick=async()=>{
+    $('checkUpdates').disabled=true;$('updateState').textContent='Checking for updates…';
+    const r=await api.checkForUpdates();
+    if(!r.ok)$('updateState').textContent=r.error;else showUpdate(r.value);
+  };
+  $('installUpdate').onclick=async()=>{
+    $('installUpdate').disabled=true;$('updateState').textContent='Closing Agent Notch to install the update…';
+    const r=await api.installUpdate();
+    if(!r.ok){$('installUpdate').disabled=false;$('updateState').textContent=r.error;}
+  };
   $('aboutGroup').insertAdjacentHTML('beforeend', `<h3 class="dock-heading">Installation</h3><p id="installationState">Checking installation…</p>${check('uninstallDeleteData','Also permanently delete Agent Notch settings, keys and history')}<button type="button" id="uninstallApp">Uninstall Agent Notch…</button><small>Default uninstall keeps your personal data. Removal always uses the registered Windows uninstaller.</small>`);
   api.installation().then(r=>{$('installationState').textContent=r.ok&&r.value.installed?'Installed '+r.value.version+' · '+r.value.location:r.value?.message||r.error||'Portable development build';$('uninstallApp').disabled=!r.ok||!r.value.installed;});
   $('uninstallApp').onclick=async()=>{const r=await api.uninstall({deleteData:$('uninstallDeleteData').checked});if(!r.ok)$('installationState').textContent=r.error;};

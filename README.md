@@ -92,3 +92,5 @@ See [changes and validation](docs/0.4.0-CHANGES.md) for the fixed-size centered 
 Voice UI 0.16.4: [implementation and verification](docs/0.16.4-VOICE-UI.md).
 
 Sound/quote update 0.16.5: [behavior and verification](docs/0.16.5-SOUND-AND-THOUGHTS.md).
+
+Automatic updates 0.17.9: [update behavior, public download channel and verification](docs/0.17.9-UPDATES.md). Installed builds check shortly after startup, every six hours and manually, download in the background, and restart only after explicit confirmation. Existing 0.17.1 installations need one manual 0.17.9 install because they contain no updater.

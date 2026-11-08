@@ -39,6 +39,6 @@ function setupWorkspace({app,handle,native,shell,dialog,clipboard,calendar,captu
    case 'awake:set':if(typeof v.enabled!=='boolean'||v.enabled&&![15,30,60,120].includes(v.minutes))throw new Error('Choose 15, 30, 60 or 120 minutes.');return native.request('awake',v);
    default:throw new Error('Unsupported workspace operation.');
   }
- });return{store};
+ });return{store,terminalActive:()=>terminal.active};
 }
 module.exports={setupWorkspace};
