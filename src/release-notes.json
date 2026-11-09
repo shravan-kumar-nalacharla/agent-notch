@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.23.0",
+    "date": "2026-11-09",
+    "title": "Local Whisper joins the offline options",
+    "notes": [
+      "Dictation can now use Local Whisper base.en when the openai-whisper CLI and model are installed.",
+      "Groq remains the default. Local (Windows) and Local Whisper are explicit, keyless alternatives.",
+      "Whisper runs locally against a temporary WAV; no audio leaves the PC."
+    ]
+  },
+  {
     "version": "0.22.0",
     "date": "2026-11-09",
     "title": "Convert documents to PDF",

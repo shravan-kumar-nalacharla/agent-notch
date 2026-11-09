@@ -1,14 +1,9 @@
-# Agent Notch 0.22.0
+# Agent Notch 0.23.0
 
-File Actions now covers documents in addition to images, video and audio.
+- Adds **Local Whisper base.en** as a dictation option when the `openai-whisper` CLI and cached model are installed.
+- Groq remains the default. Local (Windows) remains available; both local options need no key and no cloud-audio consent.
+- Local Whisper writes a temporary WAV, runs `whisper --model base.en --output_format txt`, and returns the text. Audio stays on the PC.
+- This is a CLI integration, not a bundled model. The cached `base.en` model is about 145 MB; it is not in the installer.
+- [src/local-whisper.cjs](src/local-whisper.cjs)
 
-- DOCX, DOC, ODT, RTF, TXT, PPTX, XLSX and CSV can be converted to a new PDF.
-- The conversion uses the installed LibreOffice (`soffice.exe`), discovered from PATH, the standard Program Files locations, or `AGENT_NOTCH_SOFFICE`.
-- The original is never overwritten. No LibreOffice binary is bundled, so the installer stays under 1 GB.
-- If LibreOffice is missing, the page explains the requirement.
-
-Implementation: [src/document-tools.cjs](src/document-tools.cjs), [src/widgets-main.cjs](src/widgets-main.cjs), [src/widgets-ui.js](src/widgets-ui.js).
-
-Verified locally: a generated DOCX converted to a 35,717-byte PDF with a valid `%PDF-` header. Packaged verification follows the built installer.
-
-Groq remains the default assistant/transcription provider; Local (Windows, offline) remains the no-key alternative. Whisper/Parakeet model packs are still separate.
+Verified locally: the installed Whisper CLI transcribed a generated WAV as `"Hello Agent Notch, this is a whisper test."` Packaged verification follows the built installer.

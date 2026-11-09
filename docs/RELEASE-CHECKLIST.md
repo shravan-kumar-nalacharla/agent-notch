@@ -1,8 +1,8 @@
 # Release checklist
 
-## Current — 0.22.0
+## Current — 0.23.0
 
-File Actions covers images, video, audio and documents: image crop/rotate/flip/convert, media probe and trim/convert through installed FFmpeg, and DOCX/DOC/ODT/RTF/TXT/PPTX/XLSX/CSV → PDF through installed LibreOffice. No FFmpeg or LibreOffice binary is redistributed. **Groq remains the default**; **Local (Windows, offline)** is the no-key alternative. See [0.22.0 notes](0.22.0-UPDATES.md). Whisper/Parakeet model packs remain phased work. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
+Adds **Local Whisper base.en** as a keyless offline dictation option when `openai-whisper` is installed. Groq remains the default; Local (Windows) remains the other keyless option. File Actions covers images, video, audio and documents with installed FFmpeg/LibreOffice. See [0.23.0 notes](0.23.0-UPDATES.md). No Whisper model is bundled. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
 
 ## Previous — 0.6.2
 
