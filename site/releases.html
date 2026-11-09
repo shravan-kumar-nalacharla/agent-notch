@@ -65,7 +65,8 @@
   <div class="wrap release-layout">
     <aside class="release-aside" aria-label="Release index">
       <h3>Versions</h3>
-      <a href="#v0202">0.20.2 · current</a>
+      <a href="#v0210">0.21.0 · current</a>
+      <a href="#v0202">0.20.2</a>
       <a href="#v0201">0.20.1</a>
       <a href="#v0200">0.20.0</a>
       <a href="#v0190">0.19.0</a>
@@ -80,6 +81,17 @@
     <div class="release-body">
       <p class="lede">Release notes in the app live under <strong>Settings → About → What’s new</strong>. The same history is published here so you can read it before installing, or check what a friend is running.</p>
       <div class="timeline">
+        <article id="v0210">
+          <div class="when">09 November 2026 <span class="tag">Current</span></div>
+          <h2>0.21.0 — Trim video and audio</h2>
+          <ul>
+            <li>File actions accepts video and audio as well as images.</li>
+            <li>When FFmpeg is installed, inspect duration/resolution and trim to a new MP4 or MP3.</li>
+            <li>No FFmpeg binary is bundled, so the installer stays under 1 GB; if it is missing, the page says so.</li>
+            <li>Groq remains the default; Local (Windows, offline) remains optional.</li>
+          </ul>
+          <div class="release-note"><strong>Verified:</strong> a 1920×1080 MP4 was inspected and a 2-second clip was produced through the packaged app.</div>
+        </article>
         <article id="v0202">
           <div class="when">09 November 2026 <span class="tag">Current</span></div>
           <h2>0.20.2 — Rotate and flip images</h2>

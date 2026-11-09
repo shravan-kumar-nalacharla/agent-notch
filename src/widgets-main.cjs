@@ -1,5 +1,5 @@
 'use strict';
-const path=require('node:path');const fs=require('node:fs');const os=require('node:os');const{createLibrary}=require('./library.cjs');const{transformBitmap}=require('./image-transform.cjs');
+const path=require('node:path');const fs=require('node:fs');const os=require('node:os');const{createLibrary}=require('./library.cjs');const{transformBitmap}=require('./image-transform.cjs');const mediaTools=require('./media-tools.cjs');
 const{calendarDate,parseCalendar,readCalendar}=require('./calendar.cjs');
 const{createLyricsClient}=require('./lyrics.cjs');
 function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,powerMonitor,safeStorage,screen,nativeImage,native,handle,mainWindow,canRestore=()=>true,getProviderKey=()=>'',getState=()=>({}),onFunctionalNotification=()=>{},onSystem=()=>{},onTransition=()=>{}}){
@@ -28,27 +28,38 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
     if(op==='shelf:choose'){const r=await dialog.showOpenDialog({properties:['openFile','multiSelections']});return r.canceled?library.view():library.action('shelf:add',{paths:r.filePaths});}
     if(op==='files:choose'||op==='files:inspect'){
       let file=v.path;
-      if(op==='files:choose'){const r=await dialog.showOpenDialog({properties:['openFile'],filters:[{name:'Images',extensions:['png','jpg','jpeg','webp','bmp','gif']},{name:'All files',extensions:['*']}]});if(r.canceled)return null;file=r.filePaths[0];}
+      if(op==='files:choose'){const r=await dialog.showOpenDialog({properties:['openFile'],filters:[{name:'Images, video and audio',extensions:['png','jpg','jpeg','webp','bmp','gif','mp4','mov','mkv','webm','avi','m4v','mp3','wav','m4a','aac','flac','ogg','opus']},{name:'All files',extensions:['*']}]});if(r.canceled)return null;file=r.filePaths[0];}
       if(typeof file!=='string'||file.length>32767)throw new Error('Choose a file.');
       const stat=fs.statSync(file);if(!stat.isFile())throw new Error('That path is not a file.');if(stat.size>2*1024*1024*1024)throw new Error('Files are limited to 2 GB.');
       const image=nativeImage.createFromPath(file),size=image.isEmpty()?null:image.getSize();
-      return{path:file,name:path.basename(file),ext:path.extname(file).slice(1).toLowerCase(),bytes:stat.size,kind:size?'image':'unsupported',width:size?.width,height:size?.height,message:size?'':'This is not an image. Video, audio and document tools need the optional pack.'};
+      if(size)return{path:file,name:path.basename(file),ext:path.extname(file).slice(1).toLowerCase(),bytes:stat.size,kind:'image',width:size.width,height:size.height,message:''};
+      const media=mediaTools.probe(file);
+      if(media)return{path:file,name:path.basename(file),ext:path.extname(file).slice(1).toLowerCase(),bytes:stat.size,...media};
+      return{path:file,name:path.basename(file),ext:path.extname(file).slice(1).toLowerCase(),bytes:stat.size,kind:'unsupported',message:'Documents and other formats are not supported yet. Images, video and audio are available.'};
     }
     if(op==='files:convert'){
-      if(typeof v.path!=='string'||v.path.length>32767)throw new Error('Choose an image first.');
-      let image=nativeImage.createFromPath(v.path);if(image.isEmpty())throw new Error('This build can convert images only.');
-      if(v.crop==='square'){const size=image.getSize(),side=Math.min(size.width,size.height);if(side<16)throw new Error('Image is too small to crop.');image=image.crop({x:Math.floor((size.width-side)/2),y:Math.floor((size.height-side)/2),width:side,height:side});}
-      const rotate=[0,90,180,270].includes(Number(v.rotate))?Number(v.rotate):0,flip=v.flip===true;
-      if(rotate||flip){const size=image.getSize(),transformed=transformBitmap(image.toBitmap(),size.width,size.height,rotate,flip);image=nativeImage.createFromBitmap(transformed.data,{width:transformed.width,height:transformed.height});}
-      const format=['png','jpeg'].includes(v.format)?v.format:'png',ext=format==='jpeg'?'jpg':'png',width=Number(v.width)||0;
-      if(width&&(!Number.isInteger(width)||width<16||width>8000))throw new Error('Width must be 16–8,000 pixels.');
-      const source=image.getSize(),targetWidth=width||source.width,targetHeight=width?Math.max(1,Math.round(source.height*width/source.width)):source.height;
-      if(targetWidth*targetHeight>40000000)throw new Error('That output is too large.');
-      const r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(v.path),path.basename(v.path,path.extname(v.path))+'-agent-notch.'+ext),filters:[{name:format==='jpeg'?'JPEG image':'PNG image',extensions:[ext]}]});if(r.canceled)return false;
+      if(typeof v.path!=='string'||v.path.length>32767)throw new Error('Choose a file first.');
+      let image=nativeImage.createFromPath(v.path);
+      if(!image.isEmpty()){
+        if(v.crop==='square'){const size=image.getSize(),side=Math.min(size.width,size.height);if(side<16)throw new Error('Image is too small to crop.');image=image.crop({x:Math.floor((size.width-side)/2),y:Math.floor((size.height-side)/2),width:side,height:side});}
+        const rotate=[0,90,180,270].includes(Number(v.rotate))?Number(v.rotate):0,flip=v.flip===true;
+        if(rotate||flip){const size=image.getSize(),transformed=transformBitmap(image.toBitmap(),size.width,size.height,rotate,flip);image=nativeImage.createFromBitmap(transformed.data,{width:transformed.width,height:transformed.height});}
+        const format=['png','jpeg'].includes(v.format)?v.format:'png',ext=format==='jpeg'?'jpg':'png',width=Number(v.width)||0;
+        if(width&&(!Number.isInteger(width)||width<16||width>8000))throw new Error('Width must be 16–8,000 pixels.');
+        const source=image.getSize(),targetWidth=width||source.width,targetHeight=width?Math.max(1,Math.round(source.height*width/source.width)):source.height;
+        if(targetWidth*targetHeight>40000000)throw new Error('That output is too large.');
+        const r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(v.path),path.basename(v.path,path.extname(v.path))+'-agent-notch.'+ext),filters:[{name:format==='jpeg'?'JPEG image':'PNG image',extensions:[ext]}]});if(r.canceled)return false;
+        if(path.resolve(r.filePath).toLowerCase()===path.resolve(v.path).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
+        const output=width||targetHeight!==source.height?image.resize({width:targetWidth,height:targetHeight,quality:'best'}):image;
+        fs.writeFileSync(r.filePath,format==='jpeg'?output.toJPEG(92):output.toPNG());
+        return{path:r.filePath,name:path.basename(r.filePath),bytes:fs.statSync(r.filePath).size,width:targetWidth,height:targetHeight,kind:'image'};
+      }
+      const media=mediaTools.probe(v.path);if(!media)throw new Error('This file type is not supported.');
+      if(!media.available)throw new Error(media.message);
+      const ext=media.kind==='video'?'mp4':'mp3',r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(v.path),path.basename(v.path,path.extname(v.path))+'-agent-notch.'+ext),filters:[{name:media.kind==='video'?'MP4 video':'MP3 audio',extensions:[ext]}]});if(r.canceled)return false;
       if(path.resolve(r.filePath).toLowerCase()===path.resolve(v.path).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
-      const output=width||targetHeight!==source.height?image.resize({width:targetWidth,height:targetHeight,quality:'best'}):image;
-      fs.writeFileSync(r.filePath,format==='jpeg'?output.toJPEG(92):output.toPNG());
-      return{path:r.filePath,name:path.basename(r.filePath),bytes:fs.statSync(r.filePath).size,width:targetWidth,height:targetHeight};
+      await mediaTools.transcode({input:v.path,output:r.filePath,start:v.start,end:v.end,kind:media.kind});
+      return{path:r.filePath,name:path.basename(r.filePath),bytes:fs.statSync(r.filePath).size,kind:media.kind};
     }
     if(op==='shelf:open'){if(!library.view().shelf.includes(v.path))throw new Error('File is not in the shelf.');const error=await shell.openPath(v.path);if(error)throw new Error(error);return true;}
     if(op==='shelf:reveal'){if(!library.view().shelf.includes(v.path))throw new Error('File is not in the shelf.');shell.showItemInFolder(v.path);return true;}

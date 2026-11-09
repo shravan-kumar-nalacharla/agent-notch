@@ -1,8 +1,8 @@
 # Release checklist
 
-## Current — 0.20.2
+## Current — 0.21.0
 
-Adds image rotate/flip to File Actions, with a pure transform module and unit tests. **Groq remains the default**; **Local (Windows, offline)** is the no-key alternative. 0.20.1's square crop and 0.20.0's local speech remain. See [0.20.2 notes](0.20.2-UPDATES.md). Offline Whisper/Parakeet packs and video/audio/document editors remain phased work. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
+File Actions now covers images, video and audio: image crop/rotate/flip/convert, plus media probe and trim/convert through installed FFmpeg. No FFmpeg binary is redistributed. **Groq remains the default**; **Local (Windows, offline)** is the no-key alternative. See [0.21.0 notes](0.21.0-UPDATES.md). Document conversion and Whisper/Parakeet model packs remain phased work. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
 
 ## Previous — 0.6.2
 

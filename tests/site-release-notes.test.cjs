@@ -35,6 +35,7 @@ test('the public site has crawlable metadata, a stable download and the Huygen b
 
 test('the release catalog lists the current release and the update path',()=>{
   const html=fs.readFileSync(path.join(root,'site/releases.html'),'utf8');
+  assert.match(html,/0\.21\.0/);
   assert.match(html,/0\.20\.1/);
   assert.match(html,/0\.19\.0/);
   assert.match(html,/0\.18\.0/);

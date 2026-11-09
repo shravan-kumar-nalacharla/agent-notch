@@ -1,0 +1,39 @@
+'use strict';
+const{spawn,spawnSync}=require('node:child_process'),fs=require('node:fs'),path=require('node:path');
+const VIDEO=new Set(['.mp4','.mov','.mkv','.webm','.avi','.m4v']),AUDIO=new Set(['.mp3','.wav','.m4a','.aac','.flac','.ogg','.opus']);
+function findTool(name){
+  const explicit=process.env['AGENT_NOTCH_'+name.toUpperCase()];
+  if(explicit&&fs.existsSync(explicit))return explicit;
+  try{const result=spawnSync('where.exe',[name+'.exe'],{encoding:'utf8',windowsHide:true,timeout:5000});const first=result.stdout?.split(/\r?\n/).map(x=>x.trim()).find(x=>x&&fs.existsSync(x));if(first)return first;}catch{}
+  return null;
+}
+function tools(){return{ffmpeg:findTool('ffmpeg'),ffprobe:findTool('ffprobe')};}
+function probe(file){
+  if(typeof file!=='string'||!fs.existsSync(file))throw new Error('Choose a media file.');
+  const ext=path.extname(file).toLowerCase(),kind=VIDEO.has(ext)?'video':AUDIO.has(ext)?'audio':null;
+  if(!kind)return null;
+  const{ffprobe}=tools();if(!ffprobe)return{kind,duration:0,width:null,height:null,available:false,message:'FFmpeg is not installed. Install it to trim or convert video and audio.'};
+  const result=spawnSync(ffprobe,['-v','error','-print_format','json','-show_format','-show_streams',file],{encoding:'utf8',windowsHide:true,timeout:15000,maxBuffer:4*1024*1024});
+  if(result.status!==0)throw new Error('FFmpeg could not read this media file.');
+  let data;try{data=JSON.parse(result.stdout);}catch{throw new Error('FFmpeg returned unreadable metadata.');}
+  const streams=data.streams||[],video=streams.find(x=>x.codec_type==='video'),audio=streams.find(x=>x.codec_type==='audio');
+  return{kind,duration:Number(data.format?.duration)||0,width:video?.width||null,height:video?.height||null,available:true,message:''};
+}
+function buildArgs({input,output,start=0,end=0,kind='video'}){
+  if(!input||!output)throw new Error('Choose input and output files.');
+  if(path.resolve(input).toLowerCase()===path.resolve(output).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
+  if(!['video','audio'].includes(kind))throw new Error('Unsupported media kind.');
+  const begin=Math.max(0,Number(start)||0),finish=Math.max(0,Number(end)||0);
+  if(finish&&finish<=begin)throw new Error('End time must be after start time.');
+  const args=['-y','-ss',String(begin),'-i',input];
+  if(finish)args.push('-t',String(finish-begin));
+  if(kind==='video')args.push('-c:v','libx264','-preset','veryfast','-crf','23','-c:a','aac','-b:a','160k','-movflags','+faststart');
+  else args.push('-vn','-c:a','libmp3lame','-q:a','2');
+  args.push(output);return args;
+}
+function transcode(options){
+  const{ffmpeg}=tools();if(!ffmpeg)return Promise.reject(new Error('FFmpeg is not installed. Install FFmpeg, then try again.'));
+  const args=buildArgs(options);
+  return new Promise((resolve,reject)=>{const child=spawn(ffmpeg,args,{windowsHide:true,stdio:['ignore','ignore','pipe']});let error='';child.stderr.on('data',d=>{error+=d;if(error.length>12000)error=error.slice(-12000);});child.on('error',reject);child.on('close',code=>code===0?resolve({output:options.output}):reject(new Error('FFmpeg failed: '+(error.trim().split(/\r?\n/).pop()||'unknown error'))));});
+}
+module.exports={probe,buildArgs,transcode,tools};

@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.21.0",
+    "date": "2026-11-09",
+    "title": "Trim and convert video and audio",
+    "notes": [
+      "File actions now accepts video and audio as well as images.",
+      "When FFmpeg is installed, it probes duration/resolution and can trim and convert to MP4 or MP3 locally.",
+      "If FFmpeg is missing, the page explains how to add it instead of failing silently. No FFmpeg binary is bundled, so the installer stays under 1 GB."
+    ]
+  },
+  {
     "version": "0.20.2",
     "date": "2026-11-09",
     "title": "Rotate and flip images in File actions",
