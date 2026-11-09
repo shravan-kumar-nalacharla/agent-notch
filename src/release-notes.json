@@ -1,5 +1,16 @@
 [
   {
+    "version": "0.24.0",
+    "date": "2026-11-09",
+    "title": "The real Blobatar, and files you can drop on the notch",
+    "notes": [
+      "The blob companion now uses the vendored Blobatar library (MIT), with its exact silhouettes, fourteen expressions, hues and a custom seed.",
+      "Drop an image, video, audio file or document anywhere on the notch to open File actions with that file loaded.",
+      "Added a paperclip button in the header and a Files button on Home, so File actions is visible without opening All Tools.",
+      "Vendored the full Nashi and Blobatar repositories under vendor/ with their licenses and upstream commit hashes."
+    ]
+  },
+  {
     "version": "0.23.0",
     "date": "2026-11-09",
     "title": "Local Whisper joins the offline options",

@@ -16,9 +16,12 @@ test('the agent face is bundled and persisted in the appearance settings',()=>{
   const html=read('src/index.html'),prefs=read('src/preferences.js'),main=read('src/main.cjs');
   assert.match(html,/agent-face\.js/);
   assert.match(html,/agent-face-slot/);
+  assert.match(html,/vendor\/blobatar\.js/);
+  assert.match(html,/openFileActions/);
   assert.match(prefs,/facePreview/);
   assert.match(prefs,/face:\{enabled/);
   assert.match(main,/face:\{enabled:false/);
+  assert.match(main,/handle\('files:open'/);
 });
 
 test('Groq remains the default assistant and transcription provider',()=>{

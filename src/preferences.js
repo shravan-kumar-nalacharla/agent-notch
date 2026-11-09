@@ -37,9 +37,10 @@
       ${check('islandMascot', 'Show the eyes companion')}
       <h3 class="dock-heading">Agent face</h3>
       ${check('faceEnabled', 'Show a blob companion instead of the eyes')}
-      ${choose('faceShape', 'Blob shape', [['organic', 'Organic'], ['round', 'Round'], ['squircle', 'Squircle'], ['droplet', 'Droplet'], ['hexagon', 'Hexagon']])}
+      <label>Blob seed<input id="faceSeed" maxlength="80" placeholder="Any name or phrase"></label>
+      ${choose('faceShape', 'Blob shape', [['organic', 'Organic'], ['round', 'Round'], ['boxy', 'Boxy'], ['capsule', 'Capsule'], ['nub', 'Nub'], ['cloud', 'Cloud'], ['droplet', 'Droplet'], ['hexagon', 'Hexagon'], ['sun', 'Sun'], ['triangle', 'Triangle']])}
       <label>Hue <span id="faceHueValue">165</span><input id="faceHue" type="range" min="0" max="360" step="1" value="165"></label>
-      ${choose('faceExpression', 'Expression', [['idle', 'Idle'], ['happy', 'Happy'], ['curious', 'Curious'], ['sleepy', 'Sleepy'], ['love', 'Love']])}
+      ${choose('faceExpression', 'Expression', [['idle', 'Idle'], ['happy', 'Happy'], ['sad', 'Sad'], ['mad', 'Mad'], ['surprised', 'Surprised'], ['wink', 'Wink'], ['sleepy', 'Sleepy'], ['smug', 'Smug'], ['unsure', 'Unsure'], ['scared', 'Scared'], ['love', 'Love'], ['shy', 'Shy'], ['sick', 'Sick'], ['thinking', 'Thinking']])}
       <div id="facePreview" class="face-preview" aria-label="Agent face preview"></div>
       <small class="settings-hint">The blob replaces the two eyes in the notch. Click it for a small reaction. It never covers the status text or buttons.</small>
       ${check('islandFullscreen', 'Hide while another app is full screen')}
@@ -177,10 +178,10 @@
   function facePreview(){
     const el=$('facePreview');if(!el)return;
     if(!window.AgentFace){el.textContent='Face preview is unavailable.';return;}
-    el.innerHTML=window.AgentFace.svg({seed:$('profileName')?.value||'Agent Notch',shape:$('faceShape').value,hue:+$('faceHue').value,expression:$('faceExpression').value,size:104});
+    el.innerHTML=window.AgentFace.svg({seed:$('faceSeed')?.value||$('profileName')?.value||'Agent Notch',shape:$('faceShape').value,hue:+$('faceHue').value,expression:$('faceExpression').value,size:104});
     $('faceHueValue').textContent=$('faceHue').value;
   }
-  ['faceShape','faceHue','faceExpression','faceEnabled','profileName'].forEach(id=>$(id)?.addEventListener('input',facePreview));
+  ['faceShape','faceHue','faceExpression','faceEnabled','faceSeed','profileName'].forEach(id=>$(id)?.addEventListener('input',facePreview));
   function load(state) {
     if (!state) return;
     const voice = state.voice || {};
@@ -208,7 +209,7 @@
     $('pinIsland').checked = !!appearance.pinned;
     $('islandMinimal').checked = !!appearance.minimal;
     $('islandMascot').checked = appearance.mascot !== false;
-    const face=appearance.face||{};$('faceEnabled').checked=!!face.enabled;$('faceShape').value=face.shape||'organic';$('faceHue').value=face.hue??165;$('faceExpression').value=face.expression||'idle';facePreview();
+    const face=appearance.face||{};$('faceEnabled').checked=!!face.enabled;const legacyShape={'squircle':'organic'}[face.shape]||face.shape,legacyExpression={'curious':'thinking'}[face.expression]||face.expression;$('faceSeed').value=face.seed||$('profileName')?.value||'Agent Notch';$('faceShape').value=legacyShape||'organic';$('faceHue').value=face.hue??165;$('faceExpression').value=legacyExpression||'idle';facePreview();
     $('islandFullscreen').checked = appearance.hideFullscreen !== false;
     $('islandAutoClose').checked = appearance.autoClose !== false;
     $('islandStartup').checked = !!state.autostart;
@@ -248,7 +249,7 @@
       mascot: $('islandMascot').checked,
       hideFullscreen: $('islandFullscreen').checked,
       autoClose: $('islandAutoClose').checked,
-      face:{enabled:$('faceEnabled').checked,shape:$('faceShape').value,hue:+$('faceHue').value,expression:$('faceExpression').value}
+      face:{enabled:$('faceEnabled').checked,seed:$('faceSeed').value.slice(0,80),shape:$('faceShape').value,hue:+$('faceHue').value,expression:$('faceExpression').value}
     },
     autostart: $('islandStartup').checked
     ,

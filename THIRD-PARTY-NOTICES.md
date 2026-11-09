@@ -60,3 +60,12 @@ use-stick-to-bottom and utility dependencies retain their upstream licenses;
 bundler license notices are included in `src/vendor/eleven-components.js.LEGAL.txt`.
 
 Short UI sound excerpts were provided by the application owner from their local editing pack. Redistribution rights for that pack must be confirmed by the owner before public distribution.
+
+## Blobatar
+
+Vendored at vendor/blobatar and bundled from packages/blobatar/src. MIT License. Copyright (c) 2026 Alain. https://github.com/Alain00/blobatar
+
+## Nashi
+
+Vendored at vendor/nashi-app for feature reference and licensing. MIT License. Copyright (c) 2026 Orkun Isitmak and Nashi contributors. https://github.com/orkunisitmak/nashi-app
+

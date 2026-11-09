@@ -90,7 +90,7 @@ async function setExpanded(on){
   window.dispatchEvent(new CustomEvent('island:expanded',{detail:on}));
 }
 function canAutoClose(){return !window.islandVoiceHold?.()&&!document.body.classList.contains('is-capturing')&&!document.body.classList.contains('has-windows-task')&&!document.body.classList.contains('has-reminder-hud')&&!captureOverlayActive&&!state?.appearance?.pinned&&state?.appearance?.autoClose!==false&&!nativeRecording&&!nativeProcessing&&recorder?.state!=='recording'&&!document.body.classList.contains('is-dragging')&&!(document.hasFocus()&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||'')&&Date.now()-lastInteractionAt<8000);}
-const motion=new IslandMotion({open:()=>setExpanded(true),close:()=>setExpanded(false),canOpen:()=>!window.islandVoiceDismissed&&!document.body.classList.contains('has-reminder-hud')&&!document.body.classList.contains('has-quote-hud'),canClose:canAutoClose,changed:value=>document.body.dataset.motionState=value});
+let forceFileOpen=false;const motion=new IslandMotion({open:()=>setExpanded(true),close:()=>setExpanded(false),canOpen:()=>!window.islandVoiceDismissed&&(forceFileOpen||!document.body.classList.contains('has-reminder-hud')&&!document.body.classList.contains('has-quote-hud')),canClose:canAutoClose,changed:value=>document.body.dataset.motionState=value});
 window.addEventListener('island:control-drag',e=>motion.lock(e.detail===true||nativeRecording||nativeProcessing||!!window.islandVoiceHold?.()));
 window.addEventListener('island:voice-hold',e=>motion.lock(nativeRecording||nativeProcessing||e.detail===true));
 async function expand(on=true){if(settingsMode)return;return on?motion.open():motion.close();}
@@ -161,6 +161,9 @@ $('collapse').onclick = () => {
 };
 $('hide').onclick = () => window.island.hide();
 $('openSettings').onclick = () => window.island.settings();
+const openFileActions=path=>window.island.openFileActions?.(path).catch(showError);
+$('openFileActions').onclick = () => openFileActions();
+$('homeFiles').onclick = () => openFileActions();
 $('closeSettings').onclick = () => window.island.closeWindow ? window.island.closeWindow() : window.close();
 $('pin').onclick = async () => {
   try {
@@ -177,6 +180,7 @@ $('island').addEventListener('mouseenter',()=>{if(!settingsMode&&hoverEnabled&&w
 $('island').addEventListener('mouseleave',()=>{if(!settingsMode&&hoverEnabled)motion.leave();});
 function scheduleAutoClose(){motion.leave();}
 window.addEventListener('island:test-leave',()=>motion.leave());
+window.island.onForceOpen?.(()=>{const panel=document.getElementById('notchReminder');if(panel)panel.hidden=true;document.body.classList.remove('has-reminder-hud','has-quote-hud');forceFileOpen=true;expand(true).finally(()=>setTimeout(()=>{forceFileOpen=false;},1200));});
 window.addEventListener('island:test-enter',()=>motion.enter());
 document.addEventListener('focusout',()=>setTimeout(()=>{if(!motion.inside&&expanded)motion.leave();},0));
 document.addEventListener('pointerdown',()=>{lastInteractionAt=Date.now();});
@@ -187,6 +191,9 @@ setInterval(()=>{if(settingsMode||!expanded||motion.inside||document.body.classL
 window.addEventListener('dragenter', () => { motion.cancel('leave'); document.body.classList.add('is-dragging'); });
 window.addEventListener('dragend', () => document.body.classList.remove('is-dragging'));
 window.addEventListener('drop', () => document.body.classList.remove('is-dragging'));
+window.addEventListener('dragover', event => {if(event.dataTransfer?.types?.includes('Files')){event.preventDefault();document.body.classList.add('file-dragging');}});
+window.addEventListener('dragleave', event => {if(!event.relatedTarget)document.body.classList.remove('file-dragging');});
+document.addEventListener('drop', async event => {const files=[...event.dataTransfer?.files||[]];if(!files.length)return;event.preventDefault();event.stopPropagation();document.body.classList.remove('file-dragging');const path=window.island.filePath?.(files[0]);if(path)await openFileActions(path);},true);
 document.addEventListener('contextmenu', event => {
   event.preventDefault();
   window.island.settings();
@@ -290,13 +297,13 @@ $('homeAsk').onclick = () => {
 
 async function startNativeVoice(kind = 'chat') {
   state = await result(window.island.get());
-  const conversation=['chat','command','ptt'].includes(kind),provider=conversation&&state.companion?.chatEngine==='gemini_live'?'gemini':conversation&&state.companion?.chatEngine==='sarvam'?'sarvam':state.speech;
-  if (!state.configured[provider]) {
+  const conversation=['chat','command','ptt'].includes(kind),provider=conversation&&state.companion?.chatEngine==='gemini_live'?'gemini':conversation&&state.companion?.chatEngine==='sarvam'?'sarvam':state.speech,offline=provider==='local'||provider==='whisper';
+  if (!offline&&!state.configured[provider]) {
     $('status').textContent = 'API key needed';
     await result(window.island.settings());
     throw new Error(`Add your ${provider} API key in AI & API keys to start voice.`);
   }
-  if(!state.languages.cloudAudioConsent){await result(window.island.settings('voice'));throw new Error('Allow cloud audio beside Enable the global voice hotkey, then save.');}
+  if(!offline&&!state.languages.cloudAudioConsent){await result(window.island.settings('voice'));throw new Error('Allow cloud audio beside Enable the global voice hotkey, then save.');}
   await result(window.island.nativeVoice('start', { kind }));
 }
 
@@ -329,12 +336,13 @@ async function toggleChatVoice() {
     error();
     cancelled = false;
     state = await result(window.island.get());
-    if (!state.configured[state.companion?.chatEngine === 'gemini_live' ? 'gemini' : state.companion?.chatEngine === 'sarvam' ? 'sarvam' : state.speech]) {
+    const provider=state.companion?.chatEngine === 'gemini_live' ? 'gemini' : state.companion?.chatEngine === 'sarvam' ? 'sarvam' : state.speech,offline=provider==='local'||provider==='whisper';
+    if (!offline&&!state.configured[provider]) {
       $('status').textContent = 'API key needed';
       await result(window.island.settings());
-      throw new Error(`Add your ${state.companion?.chatEngine === 'gemini_live' ? 'Gemini' : state.companion?.chatEngine === 'sarvam' ? 'Sarvam' : state.speech} API key in AI & API keys to start voice chat.`);
+      throw new Error(`Add your ${provider} API key in AI & API keys to start voice chat.`);
     }
-    if(!state.languages.cloudAudioConsent){await result(window.island.settings('voice'));throw new Error('Allow cloud audio in Voice typing, then save.');}
+    if(!offline&&!state.languages.cloudAudioConsent){await result(window.island.settings('voice'));throw new Error('Allow cloud audio in Voice typing, then save.');}
     if (window.island.nativeVoice) {
       await result(window.island.nativeVoice('start', { kind: 'chat' }));
       return;

@@ -1,8 +1,8 @@
 # Release checklist
 
-## Current — 0.23.0
+## Current — 0.24.0
 
-Adds **Local Whisper base.en** as a keyless offline dictation option when `openai-whisper` is installed. Groq remains the default; Local (Windows) remains the other keyless option. File Actions covers images, video, audio and documents with installed FFmpeg/LibreOffice. See [0.23.0 notes](0.23.0-UPDATES.md). No Whisper model is bundled. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
+Uses the actual vendored **Blobatar** library, adds **drop-on-notch** and visible header/Home entry points for File Actions, and vendors full **Nashi** and Blobatar sources under `vendor/`. Groq remains the default; Local (Windows) and Local Whisper are keyless options. See [0.24.0 notes](0.24.0-UPDATES.md). Nashi's PDF/archive/QR/metadata/annotation/web tools are not yet ported. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
 
 ## Previous — 0.6.2
 

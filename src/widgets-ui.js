@@ -15,6 +15,7 @@
   const button=document.querySelector('nav [data-tab=tools]');
   button.onclick=()=>{selected='';editor=null;waterSettings=false;window.dispatchEvent(new CustomEvent('island:navigate',{detail:'tools'}));render();};
   window.islandOpenTool = id => { if(!pages.some(p=>p[0]===id))return;selected=id;editor=null;waterSettings=false;window.dispatchEvent(new CustomEvent('island:navigate',{detail:'tools'}));render(); };
+  window.island.onFilesOpen?.(async value=>{try{selected='files';editor=null;waterSettings=false;window.dispatchEvent(new CustomEvent('island:navigate',{detail:'tools'}));fileInfo=value?.path?await desktop('files:inspect',{path:value.path}):null;render();}catch(e){error(e);}});
   window.islandUpdateDock = ids => {
     const nav=document.querySelector('nav');nav.querySelectorAll('[data-tool]').forEach(el=>el.remove());
     for(const id of new Set(ids)){if(id==='timer')continue;const page=pages.find(p=>p[0]===id);if(!page)continue;const b=document.createElement('button');b.className='dock-shortcut';b.dataset.tool=id;b.title=page[2];b.setAttribute('aria-label',page[2]);b.innerHTML=`${page[1]}<span>${esc(page[2])}</span>`;nav.insertBefore(b,nav.querySelector('[data-tab=settings]'));}

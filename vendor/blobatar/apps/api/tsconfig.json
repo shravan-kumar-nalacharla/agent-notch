@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    // No `blobatar/*` paths, unlike `apps/site` and `apps/demo`.
+    //
+    // Those alias the library to source so that editing a curve shows up on
+    // save. This app resolves it through `exports` instead — the same way a
+    // fresh clone will, and therefore the same built JS anyone deploying this
+    // gets. Tests here run against the published surface, so `bun --filter
+    // blobatar build` has to have happened before `bun test` does.
+    "types": ["bun"]
+  },
+  // `bun-env.d.ts` carries the ambient `*.css` / `*.svg` declarations. It
+  // lives at the root, where the root config picks it up by including
+  // everything, and an app that narrows `include` to its own directory drops
+  // it: every `import "./styles.css"` then fails with TS2882 even though the
+  // declaration exists three directories up.
+  "include": [".", "../../bun-env.d.ts"]
+}
