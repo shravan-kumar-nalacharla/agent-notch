@@ -1,8 +1,8 @@
 # Release checklist
 
-## Current — 0.24.0
+## Current — 0.25.0
 
-Uses the actual vendored **Blobatar** library, adds **drop-on-notch** and visible header/Home entry points for File Actions, and vendors full **Nashi** and Blobatar sources under `vendor/`. Groq remains the default; Local (Windows) and Local Whisper are keyless options. See [0.24.0 notes](0.24.0-UPDATES.md). Nashi's PDF/archive/QR/metadata/annotation/web tools are not yet ported. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
+File Actions adds the Nashi PDF core: inspect, merge, split and rotate, plus images → PDF through `pdf-lib`. Actual Blobatar remains the companion; drop-on-notch, image editing, media trim/convert and document → PDF remain. See [0.25.0 notes](0.25.0-UPDATES.md). Archive/QR/metadata/annotation/collage/subtitle/web tools are still outstanding. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
 
 ## Previous — 0.6.2
 

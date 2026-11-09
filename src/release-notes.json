@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.25.0",
+    "date": "2026-11-09",
+    "title": "Nashi PDF actions in the notch",
+    "notes": [
+      "File actions now handles PDFs: inspect page count, merge multiple PDFs, split every page into its own PDF, and rotate 90°/180°/270°.",
+      "PNG/JPEG images can be combined into a PDF from File actions.",
+      "All PDF work runs locally through pdf-lib; the source files are never overwritten."
+    ]
+  },
+  {
     "version": "0.24.0",
     "date": "2026-11-09",
     "title": "The real Blobatar, and files you can drop on the notch",
