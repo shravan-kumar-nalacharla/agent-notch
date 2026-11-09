@@ -126,3 +126,5 @@ input[type=number],input[type=text],select{height:31px;border:1px solid var(--li
 .toast.error{background:var(--danger);color:#fff}
 [hidden]{display:none!important}
 @media(max-width:900px){.studio-body{grid-template-columns:190px 1fr}.editor-main{grid-template-columns:1fr 260px}.pdf-editor .pdf-main{grid-template-columns:100px 1fr 220px}}
+
+.timeline-options{display:flex;gap:14px;margin-top:8px}.check-inline{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);margin:4px 10px 6px 0}.check-inline input{width:14px;height:14px}.range-label{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted);margin:6px 0}.range-label input{flex:1}.video-summary{margin-left:auto;font-size:9.5px;color:var(--muted);align-self:center}.timeline{touch-action:none;cursor:crosshair;height:32px}.handle{width:18px;height:38px;top:-4px;z-index:5}.playhead{width:3px;height:38px;top:-4px;z-index:4;pointer-events:none}.timeline-range{pointer-events:none}

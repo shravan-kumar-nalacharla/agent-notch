@@ -58,20 +58,20 @@ function join(inputs,output){
   fs.writeFileSync(list,inputs.map(file=>`file '${file.replace(/'/g,"'\\''")}'`).join('\n'));
   return new Promise((resolve,reject)=>{const child=spawn(ffmpeg,['-y','-f','concat','-safe','0','-i',list,'-c','copy',output],{windowsHide:true,stdio:['ignore','ignore','pipe']});let error='';child.stderr.on('data',d=>{error+=d;if(error.length>8000)error=error.slice(-8000);});const done=code=>{try{fs.unlinkSync(list);}catch{}code===0?resolve({output}):reject(new Error('FFmpeg failed: '+(error.trim().split(/\r?\n/).pop()||'unknown error')));};child.on('error',reject);child.on('close',done);});
 }
-function edit({input,output,action='trim',start=0,end=0,crop=null,speed=1,mute=false,time=0}){
+function edit({input,output,action='trim',start=0,end=0,crop=null,speed=1,mute=false,volume=1,time=0}){
   const{ffmpeg}=tools();if(!ffmpeg)return Promise.reject(new Error('FFmpeg is not installed.'));
   if(path.resolve(input).toLowerCase()===path.resolve(output).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
   let args;
   if(action==='snapshot')args=['-y','-i',input,'-ss',String(Math.max(0,Number(time)||0)),'-frames:v','1','-update','1',output];
   else{
     const begin=Math.max(0,Number(start)||0),finish=Math.max(0,Number(end)||0),factor=Math.max(.25,Math.min(4,Number(speed)||1));
-    args=['-y','-i',input];if(finish>begin)args.push('-ss',String(begin),'-t',String(finish-begin));
+    args=['-y'];if(finish>begin)args.push('-ss',String(begin),'-t',String(finish-begin));args.push('-i',input);
     const vf=[],af=[];
     if(crop&&Number(crop.width)>0&&Number(crop.height)>0){const w=Math.max(2,Math.floor(Number(crop.width)/2)*2),h=Math.max(2,Math.floor(Number(crop.height)/2)*2),x=Math.max(0,Math.floor(Number(crop.x)||0)),y=Math.max(0,Math.floor(Number(crop.y)||0));vf.push(`crop=${w}:${h}:${x}:${y}`);}
     if(factor!==1){vf.push(`setpts=${(1/factor).toFixed(4)}*PTS`);let rest=factor;while(rest>2){af.push('atempo=2.00');rest/=2;}while(rest<.5){af.push('atempo=0.50');rest/=.5;}af.push(`atempo=${rest.toFixed(2)}`);}
     if(vf.length)args.push('-vf',vf.join(','));
     if(af.length)args.push('-af',af.join(','));
-    if(mute)args.push('-an');else args.push('-c:a','aac','-b:a','160k');
+    if(mute)args.push('-an');else{const v=Math.max(0,Math.min(1,Number(volume)||1));if(v!==1)af.push(`volume=${v.toFixed(3)}`);if(af.length)args.push('-af',af.join(','));args.push('-c:a','aac','-b:a','160k');}
     args.push('-c:v','libx264','-preset','veryfast','-crf','23','-movflags','+faststart',output);
   }
   return new Promise((resolve,reject)=>{const child=spawn(ffmpeg,args,{windowsHide:true,stdio:['ignore','ignore','pipe']});let error='';child.stderr.on('data',d=>{error+=d;if(error.length>8000)error=error.slice(-8000);});child.on('error',reject);child.on('close',code=>code===0?resolve({output}):reject(new Error('FFmpeg failed: '+(error.trim().split(/\r?\n/).pop()||'unknown error'))));});

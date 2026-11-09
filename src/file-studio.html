@@ -71,29 +71,34 @@
           <div class="video-current"><span id="videoFile"></span><span id="videoClock">00:00.000</span></div>
           <div id="filmstrip" class="filmstrip"></div>
           <div id="videoTimeline" class="timeline"><div id="timelineRange" class="timeline-range"></div><button id="inHandle" class="handle in" aria-label="In"></button><button id="outHandle" class="handle out" aria-label="Out"></button><div id="playhead" class="playhead"></div></div>
+          <div class="timeline-options"><label class="check-inline"><input id="loopSelection" type="checkbox">Loop selection</label><label class="check-inline"><input id="focusSelection" type="checkbox">Focus selection</label></div>
           <div class="transport"><button id="prevFrame" class="icon-btn">⏮</button><button id="playPause" class="icon-btn">▶</button><button id="nextFrame" class="icon-btn">⏭</button><span id="videoTotal">00:00.000</span><button id="playRange" class="soft">Play selected range</button></div>
           <div class="shortcuts">Space play/pause · ←/→ 1s · Shift+←/→ frame · I/O set range · Shift+Space play range</div>
         </div>
         <div class="control-pane">
-          <div class="tabs"><button id="trimTab" class="active">Trim</button><button id="cropTab">Crop</button></div>
+          <div class="tabs"><button id="trimTab" class="active">Trim</button><button id="cropTab">Crop</button><span id="videoSummary" class="video-summary"></span></div>
           <div id="trimControls">
+            <label class="check-inline"><input id="trimEnabled" type="checkbox" checked>Enable trim</label>
             <span class="eyebrow">SELECT THE RANGE</span>
             <div class="time-grid"><label>Start<input id="trimStart" type="text" placeholder="00:00:00.000"></label><label>End<input id="trimEnd" type="text" placeholder="00:00:12.000"></label></div>
             <p class="selected">Selected duration <b id="trimDuration">00:00:00.000</b></p>
           </div>
           <div id="cropControls" hidden>
+            <label class="check-inline"><input id="cropEnabled" type="checkbox">Enable crop</label>
             <span class="eyebrow">CROP THE FRAME</span>
             <label class="field-label">Aspect ratio</label>
             <div id="videoAspects" class="chips"><button data-aspect="0" class="active">Free</button><button data-aspect="1">1:1</button><button data-aspect="1.7778">16:9</button><button data-aspect="0.5625">9:16</button><button data-aspect="1.3333">4:3</button><button data-aspect="0.75">3:4</button></div>
             <div class="num-grid"><label>W<input id="videoCropW" type="number" min="2"></label><label>H<input id="videoCropH" type="number" min="2"></label><label>X<input id="videoCropX" type="number" min="0"></label><label>Y<input id="videoCropY" type="number" min="0"></label></div>
             <div class="row"><button id="videoSelectAll" class="soft">Select All</button><button id="videoClearCrop" class="soft">Clear</button></div>
           </div>
-          <label class="field-label">More actions</label>
-          <div class="row"><button id="videoMute" class="soft">Mute</button><button id="videoSnapshot" class="soft">Snapshot PNG</button></div>
-          <div class="row"><select id="videoSpeed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select><button id="videoSpeedApply" class="soft">Change speed</button></div>
+          <label class="field-label">Audio</label>
+          <label class="check-inline"><input id="videoMuted" type="checkbox">Mute audio</label>
+          <label class="range-label">Volume <input id="videoVolume" type="range" min="0" max="100" value="100"></label>
+          <label class="field-label">Speed</label>
+          <div class="row"><select id="videoSpeed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1×</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="3">3×</option><option value="4">4×</option></select><button id="videoSnapshot" class="soft">Snapshot PNG</button></div>
         </div>
       </div>
-      <footer class="editor-foot"><button id="videoReset" class="soft">Reset</button><span class="safe">▣ Original stays safe</span><button id="saveVideo" class="primary">Save trimmed copy</button></footer>
+      <footer class="editor-foot"><button id="videoReset" class="soft">Reset</button><span class="safe">▣ Original stays safe</span><button id="saveVideo" class="primary">Render final video</button></footer>
     </section>
 
     <section id="pdfEditor" class="editor pdf-editor" hidden>

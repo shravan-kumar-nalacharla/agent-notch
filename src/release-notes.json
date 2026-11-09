@@ -1,5 +1,26 @@
 [
   {
+    "version": "0.33.0",
+    "date": "2026-11-09",
+    "title": "Cross-application task workflows",
+    "notes": [
+      "Requests that contain both browser and Windows work are split into two workflows instead of stopping after one route.",
+      "Each workflow reports its own success or failure; the overall task cannot be marked complete unless both branches verify.",
+      "Task details show browser and Windows branch status."
+    ]
+  },
+  {
+    "version": "0.32.0",
+    "date": "2026-11-09",
+    "title": "Unified mini video editor",
+    "notes": [
+      "Video editing now has one recipe for trim, crop, speed, mute and volume, exported in a single FFmpeg pass.",
+      "The playhead can be clicked and dragged anywhere; In/Out handles use pointer capture and have larger hit areas.",
+      "Added independent Loop Selection and Focus Selection controls.",
+      "PDF and File Studio remain detached from the notch."
+    ]
+  },
+  {
     "version": "0.31.0",
     "date": "2026-11-09",
     "title": "File Studio is a separate Windows window",

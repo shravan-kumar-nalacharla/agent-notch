@@ -154,66 +154,86 @@ $('saveImage').onclick = () => runStudio(() => window.studio.image({ path: activ
 $('imageEditor').querySelector('[data-back]').onclick = () => selectFile(state.active);
 window.addEventListener('resize', () => { if (state.mode === 'image') layoutImageCrop(); if (state.mode === 'video') layoutVideoCrop(); });
 
-/* ---------------- video ---------------- */
-let videoDrag = null;
+/* ---------------- unified video editor ---------------- */
+let timelineDrag = null, videoCropDrag = null;
 function timeText(seconds) { seconds = Math.max(0, Number(seconds) || 0); const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60), s = seconds % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${s.toFixed(3).padStart(6, '0')}`; }
 function parseTime(value) { const parts = String(value).trim().split(':').map(Number); if (parts.some(Number.isNaN)) return NaN; if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]; if (parts.length === 2) return parts[0] * 60 + parts[1]; return parts[0]; }
 function setupVideo(file, mode) {
-  $('videoTitle').textContent = mode === 'crop' ? 'Crop Video' : mode === 'mute' ? 'Mute Video' : mode === 'speed' ? 'Change Speed' : mode === 'snapshot' ? 'Video Snapshot' : 'Trim Video';
-  $('videoSubtitle').textContent = mode === 'crop' ? 'Keep a region of every frame.' : mode === 'mute' ? 'Remove the audio track.' : mode === 'speed' ? 'Change playback speed.' : mode === 'snapshot' ? 'Export a frame as PNG.' : 'Straight to the good stuff.';
+  $('videoTitle').textContent = mode === 'crop' ? 'Crop Video' : 'Video Editor';
+  $('videoSubtitle').textContent = 'Trim, crop, speed and audio in one render.';
   $('videoFormat').textContent = file.ext.toUpperCase(); $('videoFile').textContent = file.name;
-  const video = $('videoPreview'); video.src = file.url; videoState.duration = file.duration || 0; videoState.start = 0; videoState.end = file.duration || 0; videoState.tab = mode === 'crop' ? 'crop' : 'trim'; videoState.crop = { x: 0, y: 0, width: file.width, height: file.height }; videoState.natural = { width: file.width, height: file.height }; videoState.aspect = 0;
+  const video = $('videoPreview'); video.src = file.url; video.loop = false; video.playbackRate = 1;
+  videoState.duration = file.duration || 0; videoState.start = 0; videoState.end = file.duration || 0; videoState.tab = mode === 'crop' ? 'crop' : 'trim';
+  videoState.trimEnabled = true; videoState.cropEnabled = mode === 'crop'; videoState.loop = false; videoState.focus = false; videoState.speed = 1; videoState.muted = false; videoState.volume = 100;
+  videoState.crop = { x: 0, y: 0, width: file.width, height: file.height }; videoState.natural = { width: file.width, height: file.height }; videoState.aspect = 0; videoState.playingRange = false;
   $('videoDims').textContent = file.width ? `${file.width} × ${file.height}` : 'Audio'; $('videoTotal').textContent = timeText(videoState.duration);
   $('trimStart').value = timeText(0); $('trimEnd').value = timeText(videoState.duration); $('trimDuration').textContent = timeText(videoState.duration);
-  $('trimTab').classList.toggle('active', videoState.tab === 'trim'); $('cropTab').classList.toggle('active', videoState.tab === 'crop'); $('trimControls').hidden = videoState.tab !== 'trim'; $('cropControls').hidden = videoState.tab !== 'crop'; $('videoCrop').hidden = videoState.tab !== 'crop';
-  $('filmstrip').innerHTML = ''; window.studio.frames(file.path).then(result => { if (result.ok) $('filmstrip').innerHTML = result.value.map(src => `<img src="${src}" alt="">`).join(''); });
-  video.onloadedmetadata = () => { if (!videoState.duration) { videoState.duration = video.duration; videoState.end = video.duration; $('trimEnd').value = timeText(video.duration); $('trimDuration').textContent = timeText(video.duration); $('videoTotal').textContent = timeText(video.duration); } layoutVideoCrop(); timeline(); };
-  video.ontimeupdate = () => { $('videoClock').textContent = timeText(video.currentTime); if (videoState.playingRange && video.currentTime >= videoState.end) { video.pause(); videoState.playingRange = false; $('playPause').textContent = '▶'; } timeline(); };
-  $('saveVideo').textContent = videoState.tab === 'crop' ? 'Save cropped copy' : 'Save trimmed copy';
+  $('trimEnabled').checked = true; $('cropEnabled').checked = videoState.cropEnabled; $('loopSelection').checked = false; $('focusSelection').checked = false; $('videoMuted').checked = false; $('videoVolume').value = 100; $('videoSpeed').value = '1';
+  $('trimTab').classList.toggle('active', videoState.tab === 'trim'); $('cropTab').classList.toggle('active', videoState.tab === 'crop'); $('trimControls').hidden = videoState.tab !== 'trim'; $('cropControls').hidden = videoState.tab !== 'crop'; $('videoCrop').hidden = !videoState.cropEnabled;
+  $('saveVideo').textContent = 'Render final video'; $('filmstrip').innerHTML = '';
+  window.studio.frames(file.path).then(result => { if (result.ok) $('filmstrip').innerHTML = result.value.map(src => `<img src="${src}" alt="">`).join(''); }).catch(() => {});
+  video.onloadedmetadata = () => { if (!videoState.duration) { videoState.duration = video.duration; videoState.end = video.duration; $('trimEnd').value = timeText(video.duration); $('videoTotal').textContent = timeText(video.duration); } timeline(); };
+  video.ontimeupdate = () => { $('videoClock').textContent = timeText(video.currentTime); if (videoState.loop && videoState.trimEnabled && video.currentTime >= videoState.end - .03) { video.currentTime = videoState.start; if (video.paused) video.play(); } if (videoState.playingRange && !videoState.loop && video.currentTime >= videoState.end - .03) { video.pause(); videoState.playingRange = false; $('playPause').textContent = '▶'; } timeline(); };
   timeline(); layoutVideoCrop();
 }
+function viewRange() { const d = videoState.duration || 1; return videoState.focus && videoState.trimEnabled ? { start: videoState.start, end: videoState.end, duration: Math.max(.001, videoState.end - videoState.start) } : { start: 0, end: d, duration: d }; }
+function timePct(time) { const view = viewRange(); return Math.max(0, Math.min(1, (time - view.start) / view.duration)); }
 function timeline() {
-  const d = videoState.duration || 1, start = Math.max(0, Math.min(d, videoState.start)), end = Math.max(start, Math.min(d, videoState.end));
-  $('inHandle').style.left = `calc(${start / d * 100}% - 0px)`; $('outHandle').style.left = `calc(${end / d * 100}% - 14px)`;
-  $('timelineRange').style.left = `${start / d * 100}%`; $('timelineRange').style.width = `${(end - start) / d * 100}%`;
-  const v = $('videoPreview'); if (v) $('playhead').style.left = `${Math.min(1, (v.currentTime || 0) / d) * 100}%`;
+  const d = videoState.duration || 1, view = viewRange(), start = Math.max(view.start, Math.min(view.end, videoState.start)), end = Math.max(start, Math.min(view.end, videoState.end));
+  const startPct = (start - view.start) / view.duration, endPct = (end - view.start) / view.duration;
+  $('inHandle').style.left = `calc(${startPct * 100}% - 9px)`; $('outHandle').style.left = `calc(${endPct * 100}% - 9px)`;
+  $('timelineRange').style.left = `${startPct * 100}%`; $('timelineRange').style.width = `${Math.max(0, endPct - startPct) * 100}%`;
+  const v = $('videoPreview'); $('playhead').style.left = `calc(${timePct(v?.currentTime || 0) * 100}% - 1px)`;
   $('trimDuration').textContent = timeText(Math.max(0, end - start));
+  $('videoSummary').textContent = `${videoState.trimEnabled ? 'Trim ON' : 'Trim off'} · ${videoState.cropEnabled ? 'Crop ON' : 'Crop off'} · ${(+videoState.speed).toFixed(2)}× · ${videoState.muted ? 'Muted' : 'Audio'}`;
 }
-function setRange(start, end) { videoState.start = Math.max(0, Math.min(videoState.duration, start)); videoState.end = Math.max(videoState.start, Math.min(videoState.duration, end)); $('trimStart').value = timeText(videoState.start); $('trimEnd').value = timeText(videoState.end); timeline(); }
+function setRange(start, end) { const d = videoState.duration || 0; videoState.start = Math.max(0, Math.min(d, Number(start) || 0)); videoState.end = Math.max(videoState.start + .001, Math.min(d, Number(end) || d)); $('trimStart').value = timeText(videoState.start); $('trimEnd').value = timeText(videoState.end); timeline(); }
+function xToTime(clientX) { const rect = $('videoTimeline').getBoundingClientRect(), view = viewRange(), p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)); return view.start + p * view.duration; }
+function seek(time) { const v = $('videoPreview'); v.currentTime = Math.max(0, Math.min(videoState.duration, time)); $('videoClock').textContent = timeText(v.currentTime); timeline(); }
 $('trimStart').addEventListener('change', () => { const value = parseTime($('trimStart').value); if (Number.isFinite(value)) setRange(value, videoState.end); });
 $('trimEnd').addEventListener('change', () => { const value = parseTime($('trimEnd').value); if (Number.isFinite(value)) setRange(videoState.start, value); });
-$('inHandle').addEventListener('pointerdown', e => { videoDrag = { which: 'in', x: e.clientX }; e.currentTarget.setPointerCapture(e.pointerId); });
-$('outHandle').addEventListener('pointerdown', e => { videoDrag = { which: 'out', x: e.clientX }; e.currentTarget.setPointerCapture(e.pointerId); });
-$('videoTimeline').addEventListener('pointermove', e => { if (!videoDrag) return; const rect = $('videoTimeline').getBoundingClientRect(), time = (e.clientX - rect.left) / rect.width * videoState.duration; if (videoDrag.which === 'in') setRange(Math.min(time, videoState.end - .05), videoState.end); else setRange(videoState.start, Math.max(time, videoState.start + .05)); });
-$('videoTimeline').addEventListener('pointerup', () => { videoDrag = null; });
-$('prevFrame').onclick = () => { const v = $('videoPreview'); v.currentTime = Math.max(0, v.currentTime - 1 / 30); };
-$('nextFrame').onclick = () => { const v = $('videoPreview'); v.currentTime = Math.min(videoState.duration, v.currentTime + 1 / 30); };
-$('playPause').onclick = () => { const v = $('videoPreview'); if (v.paused) { v.play(); $('playPause').textContent = '❚❚'; } else { v.pause(); $('playPause').textContent = '▶'; } };
+$('trimEnabled').addEventListener('change', () => { videoState.trimEnabled = $('trimEnabled').checked; timeline(); });
+$('cropEnabled').addEventListener('change', () => { videoState.cropEnabled = $('cropEnabled').checked; $('videoCrop').hidden = !videoState.cropEnabled; layoutVideoCrop(); timeline(); });
+$('loopSelection').addEventListener('change', () => { videoState.loop = $('loopSelection').checked; });
+$('focusSelection').addEventListener('change', () => { videoState.focus = $('focusSelection').checked; timeline(); layoutVideoCrop(); });
+$('videoMuted').addEventListener('change', () => { videoState.muted = $('videoMuted').checked; $('videoPreview').muted = videoState.muted; timeline(); });
+$('videoVolume').addEventListener('input', () => { videoState.volume = +$('videoVolume').value; $('videoPreview').volume = Math.min(1, videoState.volume / 100); });
+$('videoSpeed').addEventListener('change', () => { videoState.speed = +$('videoSpeed').value || 1; $('videoPreview').playbackRate = videoState.speed; timeline(); });
+$('prevFrame').onclick = () => seek(($('videoPreview').currentTime || 0) - 1 / 30);
+$('nextFrame').onclick = () => seek(($('videoPreview').currentTime || 0) + 1 / 30);
+$('playPause').onclick = () => { const v = $('videoPreview'); if (v.paused) { if (videoState.trimEnabled && (v.currentTime < videoState.start || v.currentTime >= videoState.end)) v.currentTime = videoState.start; v.play(); $('playPause').textContent = '❚❚'; } else { v.pause(); $('playPause').textContent = '▶'; } };
 $('playRange').onclick = () => { const v = $('videoPreview'); v.currentTime = videoState.start; videoState.playingRange = true; v.play(); $('playPause').textContent = '❚❚'; };
-$('trimTab').onclick = () => { videoState.tab = 'trim'; $('trimTab').classList.add('active'); $('cropTab').classList.remove('active'); $('trimControls').hidden = false; $('cropControls').hidden = true; $('videoCrop').hidden = true; $('saveVideo').textContent = 'Save trimmed copy'; };
-$('cropTab').onclick = () => { videoState.tab = 'crop'; $('cropTab').classList.add('active'); $('trimTab').classList.remove('active'); $('trimControls').hidden = true; $('cropControls').hidden = false; $('videoCrop').hidden = false; $('saveVideo').textContent = 'Save cropped copy'; layoutVideoCrop(); };
+$('videoTimeline').addEventListener('pointerdown', event => {
+  const handle = event.target.closest('#inHandle,#outHandle'); const mode = handle ? (handle.id === 'inHandle' ? 'in' : 'out') : 'playhead';
+  timelineDrag = { mode, pointerId: event.pointerId }; event.currentTarget.setPointerCapture(event.pointerId); event.preventDefault();
+  if (mode === 'playhead') seek(xToTime(event.clientX)); else if (mode === 'in') setRange(Math.min(xToTime(event.clientX), videoState.end - .001), videoState.end); else setRange(videoState.start, Math.max(xToTime(event.clientX), videoState.start + .001));
+});
+$('videoTimeline').addEventListener('pointermove', event => { if (!timelineDrag) return; const time = xToTime(event.clientX); if (timelineDrag.mode === 'playhead') seek(time); else if (timelineDrag.mode === 'in') setRange(Math.min(time, videoState.end - .001), videoState.end); else setRange(videoState.start, Math.max(time, videoState.start + .001)); });
+$('videoTimeline').addEventListener('pointerup', () => { timelineDrag = null; }); $('videoTimeline').addEventListener('pointercancel', () => { timelineDrag = null; });
+$('trimTab').onclick = () => { videoState.tab = 'trim'; $('trimTab').classList.add('active'); $('cropTab').classList.remove('active'); $('trimControls').hidden = false; $('cropControls').hidden = true; };
+$('cropTab').onclick = () => { videoState.tab = 'crop'; $('cropTab').classList.add('active'); $('trimTab').classList.remove('active'); $('trimControls').hidden = true; $('cropControls').hidden = false; layoutVideoCrop(); };
 function videoBox() { const v = $('videoPreview'), stage = $('videoStage'), vr = v.getBoundingClientRect(), sr = stage.getBoundingClientRect(); return { left: vr.left - sr.left, top: vr.top - sr.top, width: vr.width, height: vr.height, scaleX: vr.width / (videoState.natural?.width || 1), scaleY: vr.height / (videoState.natural?.height || 1) }; }
-function layoutVideoCrop() { const box = videoBox(), crop = videoState.crop, el = $('videoCrop'); if (!crop || !box.width || videoState.tab !== 'crop') { el.hidden = true; return; } el.hidden = false; el.style.left = box.left + crop.x * box.scaleX + 'px'; el.style.top = box.top + crop.y * box.scaleY + 'px'; el.style.width = crop.width * box.scaleX + 'px'; el.style.height = crop.height * box.scaleY + 'px'; el.querySelector('.crop-size').textContent = `${Math.round(crop.width)} × ${Math.round(crop.height)}`; }
+function layoutVideoCrop() { const box = videoBox(), crop = videoState.crop, el = $('videoCrop'); if (!crop || !box.width || !videoState.cropEnabled) { el.hidden = true; return; } el.hidden = false; el.style.left = box.left + crop.x * box.scaleX + 'px'; el.style.top = box.top + crop.y * box.scaleY + 'px'; el.style.width = crop.width * box.scaleX + 'px'; el.style.height = crop.height * box.scaleY + 'px'; el.querySelector('.crop-size').textContent = `${Math.round(crop.width)} × ${Math.round(crop.height)}`; }
 function clampVideoCrop(c) { const n = videoState.natural; c.width = Math.max(2, Math.min(n.width, c.width)); c.height = Math.max(2, Math.min(n.height, c.height)); c.x = Math.max(0, Math.min(n.width - c.width, c.x)); c.y = Math.max(0, Math.min(n.height - c.height, c.y)); return c; }
 function syncVideoCrop() { $('videoCropW').value = Math.round(videoState.crop.width); $('videoCropH').value = Math.round(videoState.crop.height); $('videoCropX').value = Math.round(videoState.crop.x); $('videoCropY').value = Math.round(videoState.crop.y); layoutVideoCrop(); }
-$('videoCropW').onchange = $('videoCropH').onchange = $('videoCropX').onchange = $('videoCropY').onchange = () => { videoState.crop = clampVideoCrop({ width: +$('videoCropW').value, height: +$('videoCropH').value, x: +$('videoCropX').value, y: +$('videoCropY').value }); syncVideoCrop(); };
+['videoCropW','videoCropH','videoCropX','videoCropY'].forEach(id => $(id).addEventListener('change', () => { videoState.crop = clampVideoCrop({ x: +$('videoCropX').value, y: +$('videoCropY').value, width: +$('videoCropW').value, height: +$('videoCropH').value }); syncVideoCrop(); }));
 $('videoSelectAll').onclick = () => { videoState.crop = { x: 0, y: 0, width: videoState.natural.width, height: videoState.natural.height }; syncVideoCrop(); };
 $('videoClearCrop').onclick = () => { videoState.crop = { x: 0, y: 0, width: videoState.natural.width, height: videoState.natural.height }; syncVideoCrop(); };
 $('videoAspects').addEventListener('click', e => { const b = e.target.closest('[data-aspect]'); if (!b) return; videoState.aspect = +b.dataset.aspect; [...$('videoAspects').children].forEach(x => x.classList.toggle('active', x === b)); if (videoState.aspect) { videoState.crop.height = videoState.crop.width / videoState.aspect; clampVideoCrop(videoState.crop); syncVideoCrop(); } });
 function videoPoint(e) { const b = videoBox(); return { x: (e.clientX - b.left) / b.scaleX, y: (e.clientY - b.top) / b.scaleY }; }
-$('videoStage').addEventListener('pointerdown', e => { if (videoState.tab !== 'crop') return; const p = videoPoint(e), c = videoState.crop, handle = e.target.dataset.handle; videoDrag = { mode: handle ? 'resize' : 'move', handle, start: p, original: { ...c } }; e.currentTarget.setPointerCapture(e.pointerId); });
-$('videoStage').addEventListener('pointermove', e => { if (!videoDrag) return; const p = videoPoint(e), s = videoDrag.start, o = videoDrag.original; const c = { ...o }; if (videoDrag.mode === 'move') { c.x = o.x + p.x - s.x; c.y = o.y + p.y - s.y; } else { const h = videoDrag.handle; if (h.includes('e')) c.width = o.width + p.x - s.x; if (h.includes('s')) c.height = o.height + p.y - s.y; if (h.includes('w')) { c.width = o.width - (p.x - s.x); c.x = o.x + p.x - s.x; } if (h.includes('n')) { c.height = o.height - (p.y - s.y); c.y = o.y + p.y - s.y; } if (videoState.aspect || e.shiftKey) c.height = c.width / (videoState.aspect || o.width / o.height); } videoState.crop = clampVideoCrop(c); syncVideoCrop(); });
-$('videoStage').addEventListener('pointerup', () => { videoDrag = null; });
-$('videoMute').onclick = () => exportVideo('mute'); $('videoSnapshot').onclick = () => exportVideo('snapshot'); $('videoSpeedApply').onclick = () => exportVideo('speed');
+$('videoStage').addEventListener('pointerdown', e => { if (!videoState.cropEnabled || !e.target.closest('#videoCrop')) return; const p = videoPoint(e), c = videoState.crop, handle = e.target.dataset.handle; videoCropDrag = { mode: handle ? 'resize' : 'move', handle, start: p, original: { ...c } }; e.currentTarget.setPointerCapture(e.pointerId); });
+$('videoStage').addEventListener('pointermove', e => { if (!videoCropDrag) return; const p = videoPoint(e), s = videoCropDrag.start, o = videoCropDrag.original, c = { ...o }; if (videoCropDrag.mode === 'move') { c.x = o.x + p.x - s.x; c.y = o.y + p.y - s.y; } else { const h = videoCropDrag.handle; if (h.includes('e')) c.width = o.width + p.x - s.x; if (h.includes('s')) c.height = o.height + p.y - s.y; if (h.includes('w')) { c.width = o.width - (p.x - s.x); c.x = o.x + p.x - s.x; } if (h.includes('n')) { c.height = o.height - (p.y - s.y); c.y = o.y + p.y - s.y; } if (videoState.aspect || e.shiftKey) c.height = c.width / (videoState.aspect || o.width / o.height); } videoState.crop = clampVideoCrop(c); syncVideoCrop(); });
+$('videoStage').addEventListener('pointerup', () => { videoCropDrag = null; });
+$('videoSnapshot').onclick = () => runStudio(() => window.studio.media({ path: activeFile().path, action: 'snapshot', time: $('videoPreview').currentTime }), result => { if (result) toast('Saved ' + result.name); });
 $('videoReset').onclick = () => setupVideo(activeFile(), videoState.tab); $('videoEditor').querySelector('[data-back]').onclick = () => selectFile(state.active);
-$('saveVideo').onclick = () => exportVideo(videoState.tab === 'crop' ? 'crop' : 'trim');
-function exportVideo(action) { const file = activeFile(); return runStudio(() => window.studio.media({ path: file.path, action, start: videoState.start, end: videoState.end, crop: action === 'crop' ? videoState.crop : null, speed: +$('videoSpeed').value || 1, mute: action === 'mute', time: $('videoPreview').currentTime }), result => { if (result) { toast('Saved ' + result.name); addFiles([result.path]); } }); }
+$('saveVideo').onclick = () => { const file = activeFile(); const start = videoState.trimEnabled ? videoState.start : 0, end = videoState.trimEnabled ? videoState.end : videoState.duration; return runStudio(() => window.studio.media({ path: file.path, action: 'render', start, end, crop: videoState.cropEnabled ? videoState.crop : null, speed: videoState.speed, mute: videoState.muted, volume: videoState.volume }), result => { if (result) { toast('Rendered ' + result.name); addFiles([result.path]); } }); };
 document.addEventListener('keydown', event => {
   if (state.mode !== 'video' || /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName || '')) return; const v = $('videoPreview');
   if (event.code === 'Space' && event.shiftKey) { event.preventDefault(); v.currentTime = videoState.start; videoState.playingRange = true; v.play(); }
   else if (event.code === 'Space') { event.preventDefault(); if (v.paused) v.play(); else v.pause(); }
-  else if (event.code === 'ArrowLeft') { event.preventDefault(); v.currentTime = Math.max(0, v.currentTime - (event.shiftKey ? 1 / 30 : 1)); }
-  else if (event.code === 'ArrowRight') { event.preventDefault(); v.currentTime = Math.min(videoState.duration, v.currentTime + (event.shiftKey ? 1 / 30 : 1)); }
+  else if (event.code === 'ArrowLeft') { event.preventDefault(); seek(v.currentTime - (event.shiftKey ? 1 / 30 : 1)); }
+  else if (event.code === 'ArrowRight') { event.preventDefault(); seek(v.currentTime + (event.shiftKey ? 1 / 30 : 1)); }
+  else if (event.code === 'Home') seek(0); else if (event.code === 'End') seek(videoState.duration);
   else if (event.code === 'KeyI') setRange(v.currentTime, videoState.end); else if (event.code === 'KeyO') setRange(videoState.start, v.currentTime);
 });
 

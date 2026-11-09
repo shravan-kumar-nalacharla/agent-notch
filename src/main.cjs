@@ -181,8 +181,8 @@ async function studioImage(value={}){
 }
 async function studioMedia(value={}){
   if(typeof value.path!=='string'||!fs.existsSync(value.path))throw new Error('Choose a media file.');const info=mediaTools.probe(value.path);if(!info)throw new Error('Choose a video or audio file.');if(!info.available)throw new Error(info.message);
-  const action=['trim','crop','mute','speed','snapshot'].includes(value.action)?value.action:'trim',ext=action==='snapshot'?'png':info.kind==='video'?'mp4':'mp3',r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(value.path),path.basename(value.path,path.extname(value.path))+'-studio.'+ext),filters:[{name:ext.toUpperCase(),extensions:[ext]}]});if(r.canceled)return false;if(path.resolve(r.filePath).toLowerCase()===path.resolve(value.path).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
-  await mediaTools.edit({input:value.path,output:r.filePath,action,start:value.start,end:value.end,crop:value.crop,speed:value.speed,mute:value.mute,time:value.time});
+  const action=['trim','crop','mute','speed','snapshot','render'].includes(value.action)?value.action:'trim',ext=action==='snapshot'?'png':info.kind==='video'?'mp4':'mp3',r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(value.path),path.basename(value.path,path.extname(value.path))+'-studio.'+ext),filters:[{name:ext.toUpperCase(),extensions:[ext]}]});if(r.canceled)return false;if(path.resolve(r.filePath).toLowerCase()===path.resolve(value.path).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
+  await mediaTools.edit({input:value.path,output:r.filePath,action,start:value.start,end:value.end,crop:value.crop,speed:value.speed,mute:value.mute,volume:value.volume,time:value.time});
   return{path:r.filePath,name:path.basename(r.filePath),size:fs.statSync(r.filePath).size};
 }
 
