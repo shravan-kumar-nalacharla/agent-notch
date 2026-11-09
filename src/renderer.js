@@ -764,6 +764,7 @@ result(window.island.get()).then(value => {
       $(id).append(option);
     }
   }
+  if(!$('speechProvider').querySelector('option[value="local"]')){const option=document.createElement('option');option.value='local';option.textContent='Local (Windows, offline)';$('speechProvider').append(option);}
   $('assistantProvider').value = state.assistant;
   $('speechProvider').value = state.speech;
   $('keyProvider').value = state.assistant;

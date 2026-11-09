@@ -34,7 +34,8 @@ function launch(extra=[]){
   return 0;
 }
 function stopInstalled(){
-  try{execFileSync('taskkill.exe',['/IM','Agent Notch.exe','/T','/F'],{windowsHide:true,stdio:'ignore'});}catch{}
+  const quoted=exe.replace(/'/g,"''");
+  try{execFileSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',`Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -eq '${quoted}' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force }`],{windowsHide:true,stdio:'ignore'});}catch{}
 }
 process.on('exit',()=>stopInstalled());
 async function connect(){

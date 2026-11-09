@@ -28,3 +28,4 @@ The current installer is unsigned, so Windows SmartScreen may show an unknown-pu
 
 Required third-party notices are included with each release as `THIRD-PARTY-NOTICES.md` and inside the installed application. Do not redistribute modified builds.
 
+

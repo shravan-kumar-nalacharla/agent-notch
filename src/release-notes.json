@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.20.0",
+    "date": "2026-11-09",
+    "title": "An offline speech option that needs no API key",
+    "notes": [
+      "Dictation and recorded voice can use Local (Windows, offline). It uses the speech recognizer already installed in Windows; audio stays on this PC.",
+      "Local speech needs no provider key and no cloud-audio consent. Quality depends on the Windows speech language pack.",
+      "Cloud providers remain the default and are unchanged. Whisper/Parakeet model packs are still a separate optional download."
+    ]
+  },
+  {
     "version": "0.19.0",
     "date": "2026-11-09",
     "title": "Keys leave with the app, lyrics hold still, and the agent gets a face",

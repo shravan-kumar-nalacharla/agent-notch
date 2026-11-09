@@ -1,11 +1,10 @@
-# Agent Notch 0.19.0
+# Agent Notch 0.20.0
 
-Agent Notch 0.19.0 fixes the post-0.18.0 issues and starts the file and agent-face work.
+Agent Notch 0.20.0 adds an optional local speech path that needs no API key.
 
-- **API keys are removed on uninstall.** Provider keys, integration secrets and the local agent token are scrubbed even when notes and history are kept. Keys live in the Windows profile, not in the installer.
-- **Lyrics stop re-animating.** Only the current and previous full lines render. The current line slides in once and stays still; word-level repainting is removed from the fallback surface too.
-- **Agent Face.** Settings → Appearance adds a blob companion with five shapes, hue, five expressions, live preview and a click reaction.
-- **File actions.** All Tools → File actions accepts a dropped or chosen image, shows its size, converts PNG/JPEG and optionally resizes to a new file. The original is never overwritten.
-- **PRD published** for Nashi-style file tools, Blobatar-shaped faces, Rune/Astryx UI evaluation and optional Handy/Whisper offline speech. Video/audio/document packs and offline models are not bundled yet.
+- **Local (Windows, offline)** is now selectable as the dictation provider. It uses the speech recognizer already installed in Windows. Audio stays on the PC and no cloud-audio consent or provider key is required.
+- Cloud transcription remains the default and is unchanged. Quality and supported languages depend on the installed Windows speech pack; this is not a Whisper/Parakeet model.
+- The native helper exposes `voice.local` only to the main process. Audio is capped at 6 MB per segment, and the recognizer runs off the UI thread.
+- The 0.19.0 fixes remain: uninstall scrubs saved API keys, lyrics render only current/previous full lines without per-word re-animation, Agent Face is customizable, and File actions converts/resizes images locally.
 
-Automatic updates continue from 0.18.0. The installer is unsigned; verify the published checksums. The stable alias is `Agent-Notch-Setup.exe`.
+The installer remains unsigned. Verify the checksums. The stable alias is `Agent-Notch-Setup.exe`.

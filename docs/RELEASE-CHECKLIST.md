@@ -1,8 +1,8 @@
 # Release checklist
 
-## Current — 0.19.0
+## Current — 0.20.0
 
-Fixes uninstall key retention and lyric re-animation; adds Agent Face and the first local image File Actions slice. See [0.19.0 notes](0.19.0-UPDATES.md) and the [0.19.0 PRD](0.19.0-PRD.md). Offline speech, video/audio/document packs and full editors remain phased work, not claims. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
+Adds optional **Local (Windows, offline)** dictation using the installed Windows speech recognizer; no API key or cloud-audio consent. The 0.19.0 key scrub, two-line lyrics, Agent Face and image File Actions remain. See [0.20.0 notes](0.20.0-UPDATES.md). Offline Whisper/Parakeet model packs and video/audio/document editors remain phased work. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
 
 ## Previous — 0.6.2
 

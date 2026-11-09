@@ -65,7 +65,8 @@
   <div class="wrap release-layout">
     <aside class="release-aside" aria-label="Release index">
       <h3>Versions</h3>
-      <a href="#v0190">0.19.0 · current</a>
+      <a href="#v0200">0.20.0 · current</a>
+      <a href="#v0190">0.19.0</a>
       <a href="#v0180">0.18.0</a>
       <a href="#v0179">0.17.9</a>
       <a href="#v0178">0.17.8</a>
@@ -77,6 +78,18 @@
     <div class="release-body">
       <p class="lede">Release notes in the app live under <strong>Settings → About → What’s new</strong>. The same history is published here so you can read it before installing, or check what a friend is running.</p>
       <div class="timeline">
+        <article id="v0200">
+          <div class="when">09 November 2026 <span class="tag">Current</span></div>
+          <h2>0.20.0 — Local speech, no API key</h2>
+          <p>Dictation and recorded voice can now use the speech recognizer already installed in Windows.</p>
+          <ul>
+            <li>Choose <strong>Local (Windows, offline)</strong> for Dictation &amp; recorded voice.</li>
+            <li>No provider key and no cloud-audio consent; audio stays on the PC.</li>
+            <li>Cloud providers remain the default and are unchanged.</li>
+            <li>Quality and language support depend on the installed Windows speech pack; this is not a Whisper model.</li>
+          </ul>
+          <div class="release-note"><strong>Still optional:</strong> Handy-style Whisper/Parakeet packs are not bundled. Their models are far larger than the installer headroom.</div>
+        </article>
         <article id="v0190">
           <div class="when">09 November 2026 <span class="tag">Current</span></div>
           <h2>0.19.0 — Keys leave, lyrics hold still, agent face</h2>

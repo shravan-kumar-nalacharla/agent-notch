@@ -5,6 +5,11 @@ test('missing consent and keys explain inactive voice without changing the saved
  assert.equal(voiceStatus(state,()=>true).needs,'consent');assert.equal(state.voice.enabled,true);
  state.languages.cloudAudioConsent=true;assert.equal(voiceStatus(state,()=>false).needs,'key');assert.equal(state.voice.enabled,true);assert.equal(voiceStatus(state,()=>true).ready,true);
 });
+test('local Windows speech is ready without cloud consent or an API key',()=>{
+ const state={voice:{enabled:true},languages:{cloudAudioConsent:false},speech:'local'};
+ const status=voiceStatus(state,()=>false);
+ assert.equal(status.ready,true);assert.equal(status.needs,undefined);assert.match(status.message,/leaves this PC/);
+});
 test('startup uses matching executable and arguments for registration and readback',()=>{
  for(const packaged of [true,false]){let registered,queried;const app={isPackaged:packaged,getAppPath:()=>'/app with spaces',setLoginItemSettings:value=>registered=value,getLoginItemSettings:value=>{queried=value;return{openAtLogin:registered.openAtLogin};}};assert.equal(setStartup(app,true).openAtLogin,true);assert.deepEqual(queried,loginOptions(app));assert.deepEqual(registered.args,packaged?[]:['/app with spaces']);assert.equal(registered.path,'"'+process.execPath+'"');assert.equal(registered.name,'app.agentnotch.desktop');assert.equal(setStartup(app,false).openAtLogin,false);}
 });
