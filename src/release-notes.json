@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.20.2",
+    "date": "2026-11-09",
+    "title": "Rotate and flip images in File actions",
+    "notes": [
+      "Image edits now include 90°/180°/270° rotation and horizontal flip, alongside square crop and resize.",
+      "All transforms run locally before conversion; the original file is never overwritten."
+    ]
+  },
+  {
     "version": "0.20.1",
     "date": "2026-11-09",
     "title": "Square crop and the Groq/local voice split",

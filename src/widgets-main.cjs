@@ -1,5 +1,5 @@
 'use strict';
-const path=require('node:path');const fs=require('node:fs');const os=require('node:os');const{createLibrary}=require('./library.cjs');
+const path=require('node:path');const fs=require('node:fs');const os=require('node:os');const{createLibrary}=require('./library.cjs');const{transformBitmap}=require('./image-transform.cjs');
 const{calendarDate,parseCalendar,readCalendar}=require('./calendar.cjs');
 const{createLyricsClient}=require('./lyrics.cjs');
 function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,powerMonitor,safeStorage,screen,nativeImage,native,handle,mainWindow,canRestore=()=>true,getProviderKey=()=>'',getState=()=>({}),onFunctionalNotification=()=>{},onSystem=()=>{},onTransition=()=>{}}){
@@ -38,6 +38,8 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
       if(typeof v.path!=='string'||v.path.length>32767)throw new Error('Choose an image first.');
       let image=nativeImage.createFromPath(v.path);if(image.isEmpty())throw new Error('This build can convert images only.');
       if(v.crop==='square'){const size=image.getSize(),side=Math.min(size.width,size.height);if(side<16)throw new Error('Image is too small to crop.');image=image.crop({x:Math.floor((size.width-side)/2),y:Math.floor((size.height-side)/2),width:side,height:side});}
+      const rotate=[0,90,180,270].includes(Number(v.rotate))?Number(v.rotate):0,flip=v.flip===true;
+      if(rotate||flip){const size=image.getSize(),transformed=transformBitmap(image.toBitmap(),size.width,size.height,rotate,flip);image=nativeImage.createFromBitmap(transformed.data,{width:transformed.width,height:transformed.height});}
       const format=['png','jpeg'].includes(v.format)?v.format:'png',ext=format==='jpeg'?'jpg':'png',width=Number(v.width)||0;
       if(width&&(!Number.isInteger(width)||width<16||width>8000))throw new Error('Width must be 16–8,000 pixels.');
       const source=image.getSize(),targetWidth=width||source.width,targetHeight=width?Math.max(1,Math.round(source.height*width/source.width)):source.height;
