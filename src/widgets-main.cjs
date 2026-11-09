@@ -1,5 +1,5 @@
 'use strict';
-const path=require('node:path');const fs=require('node:fs');const os=require('node:os');const{createLibrary}=require('./library.cjs');const{transformBitmap}=require('./image-transform.cjs');const mediaTools=require('./media-tools.cjs');
+const path=require('node:path');const fs=require('node:fs');const os=require('node:os');const{createLibrary}=require('./library.cjs');const{transformBitmap}=require('./image-transform.cjs');const mediaTools=require('./media-tools.cjs');const documentTools=require('./document-tools.cjs');
 const{calendarDate,parseCalendar,readCalendar}=require('./calendar.cjs');
 const{createLyricsClient}=require('./lyrics.cjs');
 function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,powerMonitor,safeStorage,screen,nativeImage,native,handle,mainWindow,canRestore=()=>true,getProviderKey=()=>'',getState=()=>({}),onFunctionalNotification=()=>{},onSystem=()=>{},onTransition=()=>{}}){
@@ -28,11 +28,13 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
     if(op==='shelf:choose'){const r=await dialog.showOpenDialog({properties:['openFile','multiSelections']});return r.canceled?library.view():library.action('shelf:add',{paths:r.filePaths});}
     if(op==='files:choose'||op==='files:inspect'){
       let file=v.path;
-      if(op==='files:choose'){const r=await dialog.showOpenDialog({properties:['openFile'],filters:[{name:'Images, video and audio',extensions:['png','jpg','jpeg','webp','bmp','gif','mp4','mov','mkv','webm','avi','m4v','mp3','wav','m4a','aac','flac','ogg','opus']},{name:'All files',extensions:['*']}]});if(r.canceled)return null;file=r.filePaths[0];}
+      if(op==='files:choose'){const r=await dialog.showOpenDialog({properties:['openFile'],filters:[{name:'Images, video and audio',extensions:['png','jpg','jpeg','webp','bmp','gif','mp4','mov','mkv','webm','avi','m4v','mp3','wav','m4a','aac','flac','ogg','opus','docx','doc','odt','rtf','txt','pptx','xlsx','csv']},{name:'All files',extensions:['*']}]});if(r.canceled)return null;file=r.filePaths[0];}
       if(typeof file!=='string'||file.length>32767)throw new Error('Choose a file.');
       const stat=fs.statSync(file);if(!stat.isFile())throw new Error('That path is not a file.');if(stat.size>2*1024*1024*1024)throw new Error('Files are limited to 2 GB.');
       const image=nativeImage.createFromPath(file),size=image.isEmpty()?null:image.getSize();
       if(size)return{path:file,name:path.basename(file),ext:path.extname(file).slice(1).toLowerCase(),bytes:stat.size,kind:'image',width:size.width,height:size.height,message:''};
+      const document=documentTools.probe(file);
+      if(document)return{path:file,name:path.basename(file),ext:path.extname(file).slice(1).toLowerCase(),bytes:stat.size,...document};
       const media=mediaTools.probe(file);
       if(media)return{path:file,name:path.basename(file),ext:path.extname(file).slice(1).toLowerCase(),bytes:stat.size,...media};
       return{path:file,name:path.basename(file),ext:path.extname(file).slice(1).toLowerCase(),bytes:stat.size,kind:'unsupported',message:'Documents and other formats are not supported yet. Images, video and audio are available.'};
@@ -54,6 +56,8 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
         fs.writeFileSync(r.filePath,format==='jpeg'?output.toJPEG(92):output.toPNG());
         return{path:r.filePath,name:path.basename(r.filePath),bytes:fs.statSync(r.filePath).size,width:targetWidth,height:targetHeight,kind:'image'};
       }
+      const document=documentTools.probe(v.path);
+      if(document){if(!document.available)throw new Error(document.message);const r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(v.path),path.basename(v.path,path.extname(v.path))+'-agent-notch.pdf'),filters:[{name:'PDF document',extensions:['pdf']}]});if(r.canceled)return false;if(path.resolve(r.filePath).toLowerCase()===path.resolve(v.path).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');await documentTools.convert({input:v.path,output:r.filePath});return{path:r.filePath,name:path.basename(r.filePath),bytes:fs.statSync(r.filePath).size,kind:'document'};}
       const media=mediaTools.probe(v.path);if(!media)throw new Error('This file type is not supported.');
       if(!media.available)throw new Error(media.message);
       const ext=media.kind==='video'?'mp4':'mp3',r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(v.path),path.basename(v.path,path.extname(v.path))+'-agent-notch.'+ext),filters:[{name:media.kind==='video'?'MP4 video':'MP3 audio',extensions:[ext]}]});if(r.canceled)return false;

@@ -1,8 +1,8 @@
 # Release checklist
 
-## Current — 0.21.0
+## Current — 0.22.0
 
-File Actions now covers images, video and audio: image crop/rotate/flip/convert, plus media probe and trim/convert through installed FFmpeg. No FFmpeg binary is redistributed. **Groq remains the default**; **Local (Windows, offline)** is the no-key alternative. See [0.21.0 notes](0.21.0-UPDATES.md). Document conversion and Whisper/Parakeet model packs remain phased work. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
+File Actions covers images, video, audio and documents: image crop/rotate/flip/convert, media probe and trim/convert through installed FFmpeg, and DOCX/DOC/ODT/RTF/TXT/PPTX/XLSX/CSV → PDF through installed LibreOffice. No FFmpeg or LibreOffice binary is redistributed. **Groq remains the default**; **Local (Windows, offline)** is the no-key alternative. See [0.22.0 notes](0.22.0-UPDATES.md). Whisper/Parakeet model packs remain phased work. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
 
 ## Previous — 0.6.2
 

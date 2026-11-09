@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.22.0",
+    "date": "2026-11-09",
+    "title": "Convert documents to PDF",
+    "notes": [
+      "File actions now accepts DOCX, DOC, ODT, RTF, TXT, PPTX, XLSX and CSV.",
+      "When LibreOffice is installed, it converts the document to a new PDF locally; the original is never overwritten.",
+      "If LibreOffice is missing, the page explains the requirement. No LibreOffice binary is bundled, so the installer stays under 1 GB."
+    ]
+  },
+  {
     "version": "0.21.0",
     "date": "2026-11-09",
     "title": "Trim and convert video and audio",
