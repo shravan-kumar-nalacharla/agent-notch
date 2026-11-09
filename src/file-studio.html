@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: studio-file:; media-src 'self' blob: studio-file:; connect-src 'self'; worker-src 'self' blob:;">
+<title>Agent Notch — File Studio</title>
+<link rel="stylesheet" href="file-studio.css">
+</head>
+<body>
+<header class="studio-head">
+  <div class="studio-brand"><span class="brand-mark">AN</span><div><b>File Studio</b><small>Local editing, originals stay safe</small></div></div>
+  <div class="head-file"><b id="headName">No file selected</b><span id="headMeta"></span></div>
+  <button id="closeStudio" class="icon-btn" title="Close File Studio" aria-label="Close File Studio">×</button>
+</header>
+<div class="studio-body">
+  <aside class="queue" aria-label="Files">
+    <div class="queue-head"><span>FILES</span><button id="addFiles" class="mini-btn" title="Add files">+ Add</button></div>
+    <div id="fileList" class="file-list"></div>
+    <div class="queue-foot"><span id="queueCount">0 files</span><small>Drop files anywhere</small></div>
+  </aside>
+  <main id="workspace" class="workspace">
+    <section id="emptyState" class="empty">
+      <div class="empty-icon">＋</div>
+      <h1>Drop something good.</h1>
+      <p>Images, videos, PDFs and documents. Everything is processed on this PC.</p>
+      <button id="emptyChoose" class="primary">Choose files</button>
+      <div class="empty-actions"><span>Convert</span><span>Edit</span><span>Export</span></div>
+    </section>
+
+    <section id="fileOverview" class="overview" hidden>
+      <div class="overview-card">
+        <div id="overviewIcon" class="overview-icon">▧</div>
+        <div><span class="eyebrow">SELECTED FILE</span><h1 id="overviewName"></h1><p id="overviewMeta"></p></div>
+      </div>
+      <div id="overviewPreview" class="overview-preview"></div>
+      <h2>What do you want to do?</h2>
+      <div id="operationGrid" class="operation-grid"></div>
+    </section>
+
+    <section id="imageEditor" class="editor" hidden>
+      <div class="editor-head"><button class="back" data-back>‹</button><div class="tool-icon">◫</div><div><h2 id="imageTitle">Crop Image</h2><p>Keep the good part.</p></div><span id="imageFormat" class="format-badge">PNG</span></div>
+      <div class="editor-main">
+        <div class="preview-pane">
+          <div class="pane-label"><span>PREVIEW</span><span id="imageDims"></span></div>
+          <div id="imageStage" class="image-stage"><img id="imagePreview" alt=""><div id="imageCrop" class="crop-box" hidden><i data-handle="nw"></i><i data-handle="n"></i><i data-handle="ne"></i><i data-handle="e"></i><i data-handle="se"></i><i data-handle="s"></i><i data-handle="sw"></i><i data-handle="w"></i><b class="crop-size"></b></div></div>
+          <div class="file-line"><span id="imageFile"></span><span id="imageSize"></span></div>
+        </div>
+        <div class="control-pane">
+          <span class="eyebrow">MAKE IT YOURS</span>
+          <p class="hint">Drag across the preview to select the area to keep. Shift locks the ratio. Drag inside to move; a handle to resize.</p>
+          <label class="field-label">Aspect ratio</label>
+          <div id="imageAspects" class="chips"><button data-aspect="0" class="active">Free</button><button data-aspect="1">1:1</button><button data-aspect="1.7778">16:9</button><button data-aspect="0.5625">9:16</button><button data-aspect="1.3333">4:3</button><button data-aspect="0.75">3:4</button></div>
+          <div class="num-grid"><label>W<input id="cropW" type="number" min="1"></label><label>H<input id="cropH" type="number" min="1"></label><label>X<input id="cropX" type="number" min="0"></label><label>Y<input id="cropY" type="number" min="0"></label></div>
+          <div class="row"><button id="selectAll" class="soft">Select All</button><button id="clearCrop" class="soft">Clear Selection</button></div>
+          <label class="field-label">Adjust</label>
+          <div class="row"><button id="rotateImage" class="soft">Rotate 90°</button><button id="flipImage" class="soft">Flip</button></div>
+          <label class="field-label">Output</label>
+          <div class="row"><select id="imageOutFormat"><option value="png">PNG</option><option value="jpeg">JPEG</option></select><button id="imageReset" class="soft">Reset</button></div>
+        </div>
+      </div>
+      <footer class="editor-foot"><span class="safe">▣ Original stays safe</span><button id="saveImage" class="primary">Save cropped copy</button></footer>
+    </section>
+
+    <section id="videoEditor" class="editor" hidden>
+      <div class="editor-head"><button class="back" data-back>‹</button><div class="tool-icon">✂</div><div><h2 id="videoTitle">Trim Video</h2><p id="videoSubtitle">Straight to the good stuff.</p></div><span id="videoFormat" class="format-badge">MP4</span></div>
+      <div class="editor-main">
+        <div class="preview-pane">
+          <div class="pane-label"><span>PREVIEW</span><span id="videoDims"></span></div>
+          <div id="videoStage" class="video-stage"><video id="videoPreview" controls preload="metadata"></video><div id="videoCrop" class="crop-box" hidden><i data-handle="nw"></i><i data-handle="n"></i><i data-handle="ne"></i><i data-handle="e"></i><i data-handle="se"></i><i data-handle="s"></i><i data-handle="sw"></i><i data-handle="w"></i><b class="crop-size"></b></div></div>
+          <div class="video-current"><span id="videoFile"></span><span id="videoClock">00:00.000</span></div>
+          <div id="filmstrip" class="filmstrip"></div>
+          <div id="videoTimeline" class="timeline"><div id="timelineRange" class="timeline-range"></div><button id="inHandle" class="handle in" aria-label="In"></button><button id="outHandle" class="handle out" aria-label="Out"></button><div id="playhead" class="playhead"></div></div>
+          <div class="transport"><button id="prevFrame" class="icon-btn">⏮</button><button id="playPause" class="icon-btn">▶</button><button id="nextFrame" class="icon-btn">⏭</button><span id="videoTotal">00:00.000</span><button id="playRange" class="soft">Play selected range</button></div>
+          <div class="shortcuts">Space play/pause · ←/→ 1s · Shift+←/→ frame · I/O set range · Shift+Space play range</div>
+        </div>
+        <div class="control-pane">
+          <div class="tabs"><button id="trimTab" class="active">Trim</button><button id="cropTab">Crop</button></div>
+          <div id="trimControls">
+            <span class="eyebrow">SELECT THE RANGE</span>
+            <div class="time-grid"><label>Start<input id="trimStart" type="text" placeholder="00:00:00.000"></label><label>End<input id="trimEnd" type="text" placeholder="00:00:12.000"></label></div>
+            <p class="selected">Selected duration <b id="trimDuration">00:00:00.000</b></p>
+          </div>
+          <div id="cropControls" hidden>
+            <span class="eyebrow">CROP THE FRAME</span>
+            <label class="field-label">Aspect ratio</label>
+            <div id="videoAspects" class="chips"><button data-aspect="0" class="active">Free</button><button data-aspect="1">1:1</button><button data-aspect="1.7778">16:9</button><button data-aspect="0.5625">9:16</button><button data-aspect="1.3333">4:3</button><button data-aspect="0.75">3:4</button></div>
+            <div class="num-grid"><label>W<input id="videoCropW" type="number" min="2"></label><label>H<input id="videoCropH" type="number" min="2"></label><label>X<input id="videoCropX" type="number" min="0"></label><label>Y<input id="videoCropY" type="number" min="0"></label></div>
+            <div class="row"><button id="videoSelectAll" class="soft">Select All</button><button id="videoClearCrop" class="soft">Clear</button></div>
+          </div>
+          <label class="field-label">More actions</label>
+          <div class="row"><button id="videoMute" class="soft">Mute</button><button id="videoSnapshot" class="soft">Snapshot PNG</button></div>
+          <div class="row"><select id="videoSpeed"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option><option value="2">2×</option></select><button id="videoSpeedApply" class="soft">Change speed</button></div>
+        </div>
+      </div>
+      <footer class="editor-foot"><button id="videoReset" class="soft">Reset</button><span class="safe">▣ Original stays safe</span><button id="saveVideo" class="primary">Save trimmed copy</button></footer>
+    </section>
+
+    <section id="pdfEditor" class="editor pdf-editor" hidden>
+      <div class="editor-head"><button class="back" data-back>‹</button><div class="tool-icon">▤</div><div><h2>PDF Workspace</h2><p>Preview, reorder, rotate and export.</p></div><span id="pdfFormat" class="format-badge">PDF</span></div>
+      <div class="pdf-main">
+        <aside id="pdfThumbs" class="pdf-thumbs"></aside>
+        <div class="pdf-canvas-wrap"><div class="pdf-toolbar"><button id="pdfPrev" class="soft">‹ Prev</button><span id="pdfPageLabel">1 / 1</span><button id="pdfNext" class="soft">Next ›</button><button id="pdfZoomOut" class="soft">−</button><span id="pdfZoomLabel">100%</span><button id="pdfZoomIn" class="soft">+</button><button id="pdfFit" class="soft">Fit</button></div><div id="pdfScroll" class="pdf-scroll"><canvas id="pdfCanvas"></canvas></div></div>
+        <div class="control-pane"><span class="eyebrow">DOCUMENT</span><div class="row"><button id="pdfRotate" class="soft">Rotate page</button><button id="pdfDuplicate" class="soft">Duplicate</button></div><div class="row"><button id="pdfDelete" class="soft">Delete page</button><button id="pdfUp" class="soft">Move up</button></div><div class="row"><button id="pdfDown" class="soft">Move down</button><button id="pdfMerge" class="soft">Merge PDFs</button></div><div class="row"><button id="pdfSplit" class="soft">Export current page</button><button id="pdfImages" class="soft">Pages → PNG</button></div><p id="pdfStatus" class="hint"></p></div>
+      </div>
+      <footer class="editor-foot"><button id="pdfReset" class="soft">Reset</button><span class="safe">▣ Original stays safe</span><button id="savePdf" class="primary">Save PDF copy</button></footer>
+    </section>
+  </main>
+</div>
+<div id="toast" class="toast" hidden></div>
+<script type="module" src="file-studio.js"></script>
+</body>
+</html>

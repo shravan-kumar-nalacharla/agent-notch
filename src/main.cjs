@@ -1,7 +1,9 @@
 ﻿'use strict';
-const { app, BrowserWindow, ipcMain, screen, safeStorage, clipboard, globalShortcut, Tray, Menu, nativeImage, session, dialog, shell, Notification, powerMonitor } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, safeStorage, clipboard, globalShortcut, Tray, Menu, nativeImage, session, dialog, shell, Notification, powerMonitor, protocol, net } = require('electron');
 const fs = require('node:fs');
 const{liveContents,trustedWindowEvent}=require('./window-lifecycle.cjs');
+const{transformBitmap}=require('./image-transform.cjs');
+const pdfTools=require('./pdf-tools.cjs'),documentTools=require('./document-tools.cjs'),archiveTools=require('./archive-tools.cjs'),subtitleTools=require('./subtitle-tools.cjs'),mediaTools=require('./media-tools.cjs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { PROVIDERS, chat, transcribe } = require('./providers.cjs');
@@ -32,6 +34,7 @@ const releaseNotes=require('./release-notes.json');
 const {highlightBounds}=require('./guidance.cjs');const{randomUUID}=require('node:crypto');
 if(process.argv.includes('--smoke-test')&&!process.argv.includes('--gpu-smoke'))app.disableHardwareAcceleration();
 app.setAppUserModelId('app.agentnotch.desktop');
+protocol.registerSchemesAsPrivileged([{scheme:'studio-file',privileges:{standard:true,secure:true,supportFetchAPI:true,stream:true}}]);
 ipcMain.on('app:version',event=>{event.returnValue=app.getVersion();});
 const {IslandGeometry}=require('./geometry.cjs');
 const smokeMode=process.argv.includes('--smoke-test');
@@ -39,7 +42,7 @@ if(smokeMode&&['--sarvam-ptt-check','--voice-experience-check'].some(flag=>proce
 if(smokeMode){const smokeData=fs.mkdtempSync(path.join(process.env.TEMP||process.env.TMP||'.','agent-notch-smoke-'));app.setPath('userData',smokeData);fs.writeFileSync(path.join(smokeData,'settings.json'),JSON.stringify({speak:false,quietMoments:{enabled:false,frequencyMigration:true}}));}
 const updateTestMode=process.argv.includes('--update-test');
 if(updateTestMode&&!smokeMode){app.setPath('userData',fs.mkdtempSync(path.join(process.env.TEMP||process.env.TMP||'.','agent-notch-update-test-')));}
-let win, settingsWindow, tray, state, native, widgets, voiceEngine,agents,cursorTimer,boundsTimer,animatingBounds=false,lastCursorX=null,lastCursorY=null,lastBoundsKey='';
+let win, settingsWindow, fileStudioWindow, tray, state, native, widgets, voiceEngine,agents,cursorTimer,boundsTimer,animatingBounds=false,lastCursorX=null,lastCursorY=null,lastBoundsKey='';
 let updateService,updateShutdown=null;
 let shortcutStatus={open:{accelerator:'',ok:false},voice:{accelerator:'',ok:false}};
 let fullscreenHidden=false,userHidden=false,quitting=false;
@@ -48,6 +51,9 @@ let surfaceExpanded=false,geometry,voiceHudActive=false;
 const geometryTrace=[],askRequests=new Map();
 let lastGuide,guideOverlay,windowsTask,taskCoordinator;
 const page = pathToFileURL(path.join(__dirname, 'index.html')).href;
+const fileStudioPage=pathToFileURL(path.join(__dirname,'file-studio.html')).href;
+const studioAllowed=new Set();
+const studioUrl=file=>`studio-file://local/${encodeURIComponent(file)}`;
 const file = () => path.join(app.getPath('userData'), 'settings.json');
 function migrateUserData(){
   const current=app.getPath('userData');
@@ -138,6 +144,67 @@ function handle(name, fn, settingsOnly=false) {
     try { return { ok: true, value: await fn(value) }; } catch (error) { return { ok: false, error: error.message }; }
   });
 }
+function handleStudio(name,fn){ipcMain.handle(name,async(event,value)=>{if(!trustedWindowEvent(event,[fileStudioWindow],fileStudioPage))return{ok:false,error:'Untrusted window.'};try{return{ok:true,value:await fn(value)}}catch(error){return{ok:false,error:error.message}}});}
+async function studioInspect({paths=[]}={}){
+  const out=[];
+  for(const file of paths.filter(x=>typeof x==='string'&&fs.existsSync(x)).slice(0,50)){
+    studioAllowed.add(file);const stat=fs.statSync(file),ext=path.extname(file).slice(1).toLowerCase(),base={path:file,url:studioUrl(file),name:path.basename(file),ext,size:stat.size};
+    const image=nativeImage.createFromPath(file);if(!image.isEmpty()){const size=image.getSize();out.push({...base,kind:'image',width:size.width,height:size.height});continue;}
+    const pdf=await pdfTools.probe(file);if(pdf){out.push({...base,...pdf});continue;}
+    const archive=await archiveTools.probe(file);if(archive){out.push({...base,...archive});continue;}
+    const subtitle=subtitleTools.probe(file);if(subtitle){out.push({...base,...subtitle});continue;}
+    const doc=documentTools.probe(file);if(doc){out.push({...base,...doc});continue;}
+    const media=mediaTools.probe(file);if(media){out.push({...base,...media,fps:media.fps||null});continue;}
+    if(['txt','md','csv','json','log','srt','vtt'].includes(ext)&&stat.size<2*1024*1024){out.push({...base,kind:'text',text:fs.readFileSync(file,'utf8').slice(0,300000)});continue;}
+    out.push({...base,kind:'unsupported',message:'Preview is not available for this format.'});
+  }
+  return out;
+}
+function studioBounds(){try{const value=JSON.parse(fs.readFileSync(path.join(app.getPath('userData'),'file-studio-bounds.json'),'utf8'));if(Number.isFinite(value.width)&&Number.isFinite(value.height))return{width:Math.max(850,value.width),height:Math.max(560,value.height),x:Number.isFinite(value.x)?value.x:undefined,y:Number.isFinite(value.y)?value.y:undefined};}catch{}return{width:1100,height:720};}
+async function openFileStudio(files=[]){
+  const paths=[...new Set(files.filter(file=>typeof file==='string'&&fs.existsSync(file)))].slice(0,50);for(const file of paths)studioAllowed.add(file);
+  if(fileStudioWindow&&!fileStudioWindow.isDestroyed()){if(!fileStudioWindow.isVisible())fileStudioWindow.show();fileStudioWindow.focus();if(paths.length)fileStudioWindow.webContents.send('studio:add',paths);return true;}
+  fileStudioWindow=new BrowserWindow({...studioBounds(),minWidth:850,minHeight:560,show:false,title:'Agent Notch — File Studio',icon:path.join(__dirname,'assets','icon-256.png'),backgroundColor:'#0f1113',autoHideMenuBar:true,webPreferences:{backgroundThrottling:false,preload:path.join(__dirname,'preload.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false}});
+  fileStudioWindow.webContents.setWindowOpenHandler(()=>( {action:'deny'}));fileStudioWindow.webContents.on('will-navigate',event=>event.preventDefault());
+  fileStudioWindow.once('ready-to-show',()=>{if(!fileStudioWindow.isDestroyed()){fileStudioWindow.show();fileStudioWindow.focus();}});
+  fileStudioWindow.webContents.on('did-finish-load',()=>{if(paths.length)setTimeout(()=>{if(fileStudioWindow&&!fileStudioWindow.isDestroyed())fileStudioWindow.webContents.send('studio:add',paths);},900);});
+  let studioBoundsTimer;const saveStudioBounds=()=>{if(!fileStudioWindow||fileStudioWindow.isDestroyed())return;const b=fileStudioWindow.getBounds();try{fs.writeFileSync(path.join(app.getPath('userData'),'file-studio-bounds.json'),JSON.stringify(b));}catch{}};fileStudioWindow.on('resize',()=>{clearTimeout(studioBoundsTimer);studioBoundsTimer=setTimeout(saveStudioBounds,400);});fileStudioWindow.on('move',()=>{clearTimeout(studioBoundsTimer);studioBoundsTimer=setTimeout(saveStudioBounds,400);});
+  fileStudioWindow.on('closed',()=>{fileStudioWindow=null;});fileStudioWindow.loadFile(path.join(__dirname,'file-studio.html'));return true;
+}
+async function studioImage(value={}){
+  if(typeof value.path!=='string'||!fs.existsSync(value.path))throw new Error('Choose an image.');
+  let image=nativeImage.createFromPath(value.path);if(image.isEmpty())throw new Error('This image could not be decoded.');
+  if(value.crop){const c=value.crop,size=image.getSize(),x=Math.max(0,Math.min(size.width-1,Math.round(Number(c.x)||0))),y=Math.max(0,Math.min(size.height-1,Math.round(Number(c.y)||0))),w=Math.max(1,Math.min(size.width-x,Math.round(Number(c.width)||size.width))),h=Math.max(1,Math.min(size.height-y,Math.round(Number(c.height)||size.height)));image=image.crop({x,y,width:w,height:h});}
+  const rotate=[0,90,180,270].includes(Number(value.rotate))?Number(value.rotate):0,flip=!!value.flip;if(rotate||flip){const s=image.getSize(),r=transformBitmap(image.toBitmap(),s.width,s.height,rotate,flip);image=nativeImage.createFromBitmap(r.data,{width:r.width,height:r.height});}
+  if(Number(value.width)>0||Number(value.height)>0){const s=image.getSize(),w=Math.max(1,Math.round(Number(value.width)||s.width)),h=Math.max(1,Math.round(Number(value.height)||s.height));if(w*h<40000000)image=image.resize({width:w,height:h,quality:'best'});}
+  const format=value.format==='jpeg'?'jpeg':'png',ext=format==='jpeg'?'jpg':'png',r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(value.path),path.basename(value.path,path.extname(value.path))+'-studio.'+ext),filters:[{name:format==='jpeg'?'JPEG':'PNG',extensions:[ext]}]});if(r.canceled)return false;if(path.resolve(r.filePath).toLowerCase()===path.resolve(value.path).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');fs.writeFileSync(r.filePath,format==='jpeg'?image.toJPEG(92):image.toPNG());return{path:r.filePath,name:path.basename(r.filePath),size:fs.statSync(r.filePath).size,width:image.getSize().width,height:image.getSize().height};
+}
+async function studioMedia(value={}){
+  if(typeof value.path!=='string'||!fs.existsSync(value.path))throw new Error('Choose a media file.');const info=mediaTools.probe(value.path);if(!info)throw new Error('Choose a video or audio file.');if(!info.available)throw new Error(info.message);
+  const action=['trim','crop','mute','speed','snapshot'].includes(value.action)?value.action:'trim',ext=action==='snapshot'?'png':info.kind==='video'?'mp4':'mp3',r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(value.path),path.basename(value.path,path.extname(value.path))+'-studio.'+ext),filters:[{name:ext.toUpperCase(),extensions:[ext]}]});if(r.canceled)return false;if(path.resolve(r.filePath).toLowerCase()===path.resolve(value.path).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
+  await mediaTools.edit({input:value.path,output:r.filePath,action,start:value.start,end:value.end,crop:value.crop,speed:value.speed,mute:value.mute,time:value.time});
+  return{path:r.filePath,name:path.basename(r.filePath),size:fs.statSync(r.filePath).size};
+}
+
+async function studioMetadata({path:file}={}){
+  if(typeof file!=='string'||!fs.existsSync(file))throw new Error('Choose a file.');const image=nativeImage.createFromPath(file),base=path.basename(file,path.extname(file));
+  if(!image.isEmpty()){const ext=path.extname(file).toLowerCase()==='.jpg'||path.extname(file).toLowerCase()==='.jpeg'?'jpg':'png',r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(file),base+'-clean.'+ext),filters:[{name:ext.toUpperCase(),extensions:[ext]}]});if(r.canceled)return false;fs.writeFileSync(r.filePath,ext==='jpg'?image.toJPEG(92):image.toPNG());return{path:r.filePath,name:path.basename(r.filePath),size:fs.statSync(r.filePath).size};}
+  const pdf=await pdfTools.probe(file);if(pdf){const r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(file),base+'-clean.pdf'),filters:[{name:'PDF',extensions:['pdf']}]});if(r.canceled)return false;await pdfTools.stripMetadata(file,r.filePath);return{path:r.filePath,name:path.basename(r.filePath),size:fs.statSync(r.filePath).size};}
+  const media=mediaTools.probe(file);if(media){const ext=media.kind==='video'?'mp4':'mp3',r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(file),base+'-clean.'+ext),filters:[{name:ext.toUpperCase(),extensions:[ext]}]});if(r.canceled)return false;await mediaTools.stripMetadata(file,r.filePath);return{path:r.filePath,name:path.basename(r.filePath),size:fs.statSync(r.filePath).size};}
+  throw new Error('Metadata removal supports images, PDFs, video and audio.');
+}
+async function studioPdfRead({path:file}={}){
+  if(typeof file!=='string'||!fs.existsSync(file))throw new Error('Choose a PDF.');const stat=fs.statSync(file);if(stat.size>120*1024*1024)throw new Error('This PDF is larger than the 120 MB preview limit.');studioAllowed.add(file);return{name:path.basename(file),data:fs.readFileSync(file).toString('base64')};
+}
+async function studioPdfSave(value={}){
+  if(typeof value.path!=='string'||!fs.existsSync(value.path))throw new Error('Choose a PDF.');const r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(value.path),path.basename(value.path,path.extname(value.path))+'-studio.pdf'),filters:[{name:'PDF',extensions:['pdf']}]});if(r.canceled)return false;const result=await pdfTools.compose(value.path,value.pages||[],r.filePath);return{...result,name:path.basename(r.filePath),size:fs.statSync(r.filePath).size};
+}
+async function studioPdfMerge(value={}){
+  const r=await dialog.showOpenDialog({properties:['openFile','multiSelections'],filters:[{name:'PDF',extensions:['pdf']}]});if(r.canceled||r.filePaths.length<2)return false;const s=await dialog.showSaveDialog({defaultPath:'merged-studio.pdf',filters:[{name:'PDF',extensions:['pdf']}]});if(s.canceled)return false;const result=await pdfTools.merge(r.filePaths,s.filePath);return{...result,name:path.basename(s.filePath),size:fs.statSync(s.filePath).size};
+}
+async function studioWriteImages(value={}){
+  const r=await dialog.showOpenDialog({properties:['openDirectory','createDirectory']});if(r.canceled)return false;const outputs=[];for(const image of value.images||[]){const match=/^data:image\/png;base64,(.+)$/.exec(image.data||'');if(!match)continue;const name=String(image.name||'page').replace(/[\\/:*?"<>|]/g,'-')+'.png',target=path.join(r.filePaths[0],name);fs.writeFileSync(target,Buffer.from(match[1],'base64'));outputs.push(target);}return{outputs,folder:r.filePaths[0]};
+}
 async function saveSnapshot(window,file){
   for(let attempt=0;attempt<3;attempt++){try{fs.writeFileSync(file,(await Promise.race([window.webContents.capturePage(),new Promise((_,reject)=>setTimeout(()=>reject(new Error('Screenshot capture timed out.')),5000))])).toPNG());return;}catch(e){if(e.message!=='UnknownVizError')throw e;await new Promise(resolve=>setTimeout(resolve,300));}}
   console.warn('SCREENSHOT UNAVAILABLE',path.basename(file),'UnknownVizError');
@@ -156,6 +223,7 @@ else {
     app.once('will-quit',()=>{powerMonitor.off('lock-screen',screenLock);powerMonitor.off('suspend',lock);powerMonitor.off('unlock-screen',unlock);powerMonitor.off('resume',resume);keyCache.clear();});
     session.defaultSession.setPermissionRequestHandler((contents, permission, callback, details) => callback(!privacy?.view().blocked&&privacy?.view().mode!=='ptt'&&[liveContents(win),liveContents(settingsWindow)].includes(contents) && contents?.getURL().split('?')[0] === page && permission === 'media' && details.mediaTypes?.every(t => contents===liveContents(win)?['audio','video'].includes(t):t==='audio')));
     session.defaultSession.setPermissionCheckHandler((contents, permission) => !privacy?.view().blocked&&privacy?.view().mode!=='ptt'&&[liveContents(win),liveContents(settingsWindow)].includes(contents) && contents?.getURL().split('?')[0] === page && permission === 'media');
+    protocol.handle('studio-file',request=>{try{const file=decodeURIComponent(new URL(request.url).pathname.slice(1));if(!studioAllowed.has(file))return new Response('Forbidden',{status:403});return net.fetch(pathToFileURL(file).href);}catch{return new Response('Not found',{status:404});}});
     win = new BrowserWindow({ width: 174, height: 42, frame: false, transparent: true, resizable: false, alwaysOnTop: true, skipTaskbar: true, show:false, icon:path.join(__dirname,'assets','icon-32.png'), webPreferences: { backgroundThrottling:false, preload: path.join(__dirname, 'preload.cjs'), sandbox: true, contextIsolation: true, nodeIntegration: false } });
     geometry=new IslandGeometry({win,screen,getAppearance:()=>state.appearance,trace:value=>{if(smokeMode||process.argv.includes('--trace-motion')){geometryTrace.push(value);if(geometryTrace.length>1000)geometryTrace.shift();}}});
     win.once('closed',()=>{clearInterval(cursorTimer);if(!quitting)app.quit();});
@@ -228,7 +296,7 @@ else {
     handle('task:cancel',id=>taskCoordinator.cancel(id));
     handle('task:pause',id=>taskCoordinator.pause(id));handle('task:continue',id=>taskCoordinator.resume(id));handle('task:get',()=>taskCoordinator.view());
     handle('task:diagnostics',async()=>{const result=await dialog.showSaveDialog(settingsWindow||win,{defaultPath:'Agent-Notch-task-diagnostics.json',filters:[{name:'JSON',extensions:['json']}]});if(result.canceled)return false;fs.writeFileSync(result.filePath,JSON.stringify(taskCoordinator.trace(),null,2));return true;});
-    handle('browser:clear',async()=>{const result=await dialog.showMessageBox(settingsWindow||win,{type:'question',buttons:['Cancel','Clear managed browser data'],defaultId:0,cancelId:0,message:'Clear Agent Notch browser data?',detail:'This removes logins and history from Agent Notchâ€™s dedicated browser profiles. Your ordinary browser profiles are unaffected.'});if(result.response!==1)return false;taskCoordinator.cancel();await browser.clear();return true;},true);
+    handle('browser:clear',async()=>{const result=await dialog.showMessageBox(settingsWindow||win,{type:'question',buttons:['Cancel','Clear managed browser data'],defaultId:0,cancelId:0,message:'Clear Agent Notch browser data?',detail:'This removes logins and history from Agent Notch’s dedicated browser profiles. Your ordinary browser profiles are unaffected.'});if(result.response!==1)return false;taskCoordinator.cancel();await browser.clear();return true;},true);
     handle('task:confirm',value=>taskCoordinator.confirm(value));
     agents=createAgentHub({folder:app.getPath('userData'),onChange:value=>widgets.emit('agents:state',value),notify:widgets.notify});
     agents.start().catch(e=>console.log('[agents]',e.message));
@@ -264,11 +332,11 @@ else {
       if (typeof value.note === 'string') next.note = value.note.slice(0, 20000);
       if (typeof value.profileName === 'string') next.profileName = value.profileName.trim().slice(0,50);
       if (typeof value.speak === 'boolean') next.speak = value.speak;
-      if(value.companion){if(quoteActivity.voiceRecording)throw new Error('Stop recording before changing voice settings.');const c=value.companion;if(c.chatEngine!==undefined){if(!['gemini_live','standard','sarvam'].includes(c.chatEngine))throw new Error('Invalid voice chat engine.');next.companion.chatEngine=c.chatEngine;}for(const[k,min,max]of [['rate',.8,1.2],['volume',0,1]])if(c[k]!==undefined){if(!Number.isFinite(c[k])||c[k]<min||c[k]>max)throw new Error('Invalid voice '+k);next.companion[k]=c[k];}const name=c.name===undefined?next.companion.name:c.name;if(typeof name!=='string'||!/^([\p{L}\p{N}]| ){2,30}$/u.test(name.trim()))throw new Error('Use 2â€“30 letters, spaces or numbers for the companion name.');next.companion={...next.companion,name:name.trim()};if(c.readingContext!==undefined)next.companion.readingContext=require('./voice-conversation.cjs').readingContext(c.readingContext);if(typeof c.readTypedReplies==='boolean')next.companion.readTypedReplies=c.readTypedReplies;if(typeof c.wakeEnabled==='boolean')next.companion.wakeEnabled=c.wakeEnabled;if(['groq','system','sarvam'].includes(c.tts))next.companion.tts=c.tts;if(c.sarvamVoice!==undefined){if(!require('./sarvam.cjs').VOICES.includes(c.sarvamVoice))throw new Error('Choose a supported Sarvam voice.');next.companion.sarvamVoice=c.sarvamVoice;}if(require('./speech.cjs').VOICES.includes(c.voice))next.companion.voice=c.voice;if(typeof c.systemVoice==='string')next.companion.systemVoice=c.systemVoice.slice(0,300);}
+      if(value.companion){if(quoteActivity.voiceRecording)throw new Error('Stop recording before changing voice settings.');const c=value.companion;if(c.chatEngine!==undefined){if(!['gemini_live','standard','sarvam'].includes(c.chatEngine))throw new Error('Invalid voice chat engine.');next.companion.chatEngine=c.chatEngine;}for(const[k,min,max]of [['rate',.8,1.2],['volume',0,1]])if(c[k]!==undefined){if(!Number.isFinite(c[k])||c[k]<min||c[k]>max)throw new Error('Invalid voice '+k);next.companion[k]=c[k];}const name=c.name===undefined?next.companion.name:c.name;if(typeof name!=='string'||!/^([\p{L}\p{N}]| ){2,30}$/u.test(name.trim()))throw new Error('Use 2–30 letters, spaces or numbers for the companion name.');next.companion={...next.companion,name:name.trim()};if(c.readingContext!==undefined)next.companion.readingContext=require('./voice-conversation.cjs').readingContext(c.readingContext);if(typeof c.readTypedReplies==='boolean')next.companion.readTypedReplies=c.readTypedReplies;if(typeof c.wakeEnabled==='boolean')next.companion.wakeEnabled=c.wakeEnabled;if(['groq','system','sarvam'].includes(c.tts))next.companion.tts=c.tts;if(c.sarvamVoice!==undefined){if(!require('./sarvam.cjs').VOICES.includes(c.sarvamVoice))throw new Error('Choose a supported Sarvam voice.');next.companion.sarvamVoice=c.sarvamVoice;}if(require('./speech.cjs').VOICES.includes(c.voice))next.companion.voice=c.voice;if(typeof c.systemVoice==='string')next.companion.systemVoice=c.systemVoice.slice(0,300);}
 
       if(value.voice&&typeof value.voice==='object'){
         for(const k of ['enabled','autoInsert','whisper','chatOnSilence'])if(typeof value.voice[k]==='boolean')next.voice[k]=value.voice[k];
-        if(value.voice.sensitivity!==undefined){if(!Number.isFinite(value.voice.sensitivity)||value.voice.sensitivity<.001||value.voice.sensitivity>.1)throw new Error('Speech sensitivity must be 0.001â€“0.1.');next.voice.sensitivity=value.voice.sensitivity;}
+        if(value.voice.sensitivity!==undefined){if(!Number.isFinite(value.voice.sensitivity)||value.voice.sensitivity<.001||value.voice.sensitivity>.1)throw new Error('Speech sensitivity must be 0.001–0.1.');next.voice.sensitivity=value.voice.sensitivity;}
         if(typeof value.voice.inputDeviceId==='string')next.voice.inputDeviceId=value.voice.inputDeviceId.slice(0,500);
         for(const [k,allowed]of Object.entries({hotkey:['rightAlt','rightCtrl','ctrlShiftWin'],cleanup:['none','light','medium'],style:['formal','casual','very casual','excited','code'],telugu:['','telugu','mixed','roman']}))if(allowed.includes(value.voice[k]))next.voice[k]=value.voice[k];
         if(typeof value.voice.language==='string'&&/^[a-z]{0,3}$/.test(value.voice.language))next.voice.language=value.voice.language;
@@ -355,7 +423,18 @@ else {
     });
     handle('voice:transcribe', async value => {privacy.assertAllowed();const controller=new AbortController();privacy.uploads.add(controller);try{if(state.speech==='local'){const local=await native.request('voice.local',{audio:value?.audio||''},30000);return local.text;}if(state.speech==='whisper'){const local=await require('./local-whisper.cjs').transcribe(value?.audio||'');return local.text;}if(!state.languages.cloudAudioConsent)throw new Error('Allow cloud audio in Voice & typing before recording.');return transcribe({ provider: state.speech, key: key(state.speech), model: state.models[state.speech]?.speech, audio: Buffer.from(value?.audio || []), mime: value?.mime,signal:controller.signal,...localization.speechOptions(state.languages) });}finally{privacy.uploads.delete(controller);}});
     handle('text:copy', text => { if (typeof text !== 'string' || text.length > 100000) throw new Error('Invalid text.'); clipboard.writeText(text); });
-    handle('files:open',value=>{const file=typeof value?.path==='string'?value.path:'';if(file&&!fs.existsSync(file))throw new Error('That file is no longer available.');activateIsland({force:true});setTimeout(()=>{if(liveContents(win))win.webContents.send('files:open',{path:file});},700);return true;});
+    handleStudio('studio:metadata',studioMetadata);
+    handleStudio('studio:choose',async()=>{const r=await dialog.showOpenDialog({properties:['openFile','multiSelections'],filters:[{name:'Supported files',extensions:['png','jpg','jpeg','webp','bmp','gif','svg','mp4','mov','mkv','webm','avi','mp3','wav','m4a','flac','pdf','docx','doc','odt','rtf','txt','md','pptx','xlsx','csv','zip','tar','gz','srt','vtt']},{name:'All files',extensions:['*']}]});return r.canceled?[]:studioInspect({paths:r.filePaths});});
+    handleStudio('studio:frames',async({path:file}={})=>{if(typeof file!=='string'||!fs.existsSync(file))throw new Error('Choose a video.');return mediaTools.frames(file,12);});
+    handleStudio('studio:inspect',studioInspect);
+    handleStudio('studio:image',studioImage);
+    handleStudio('studio:media',studioMedia);
+    handleStudio('studio:pdfRead',studioPdfRead);
+    handleStudio('studio:pdfSave',studioPdfSave);
+    handleStudio('studio:pdfMerge',studioPdfMerge);
+    handleStudio('studio:writeImages',studioWriteImages);
+    handleStudio('studio:openExternal',async({path:file})=>{if(typeof file!=='string'||!studioAllowed.has(file))throw new Error('File is not part of this studio session.');const error=await shell.openPath(file);if(error)throw new Error(error);return true;});
+    handle('files:open',value=>{const paths=(Array.isArray(value?.paths)?value.paths:value?.path?[value.path]:[]).filter(file=>typeof file==='string'&&fs.existsSync(file));if(value?.paths?.length&&!paths.length)throw new Error('That file is no longer available.');if(paths.length&&liveContents(win))win.webContents.send('file:detected',{name:path.basename(paths[0]),count:paths.length});return openFileStudio(paths);});
     handle('window:activate',activateIsland);
     handle('window:expand', value => resize(value === true || value?.on === true, value?.view, value?.height,value?.hud===true));
 
@@ -371,9 +450,9 @@ else {
     handle('shelf:drag',async value=>{const files=(Array.isArray(value?.paths)?value.paths:[]).filter(p=>widgets.library.view().shelf.includes(p)&&fs.existsSync(p));if(!files.length)throw new Error('No shelf files selected.');win.webContents.startDrag({file:files[0],files,icon:await app.getFileIcon(files[0],{size:'normal'})});return true;});
     const icon = nativeImage.createFromPath(path.join(__dirname,'assets','icon-32.png')).resize({width:16,height:16});
     tray = new Tray(icon); tray.setToolTip('Agent Notch');
-    function refreshTray(){tray.setToolTip('Agent Notch'+(updateService?.hasUpdate()?' Â· Update ready':' Â· '+(privacy?.view().reason||'Manual activation only')));tray.setContextMenu(Menu.buildFromTemplate([
+    function refreshTray(){tray.setToolTip('Agent Notch'+(updateService?.hasUpdate()?' · Update ready':' · '+(privacy?.view().reason||'Manual activation only')));tray.setContextMenu(Menu.buildFromTemplate([
       {label:'Open Agent Notch',click:()=>activateIsland({revealOnly:true})},
-      {label:privacy?.view().blocked?'Microphone muted / paused':'Microphone available Â· '+state.microphone.mode,enabled:false},
+      {label:privacy?.view().blocked?'Microphone muted / paused':'Microphone available · '+state.microphone.mode,enabled:false},
       {label:state.microphone.muted?'Unmute microphone':'Mute microphone',click:()=>privacy.set({muted:!state.microphone.muted}).catch(()=>{})},
       {label:'Gaming / Meeting Mode',type:'checkbox',checked:state.microphone.gaming,click:item=>privacy.set({gaming:item.checked}).catch(()=>{})},
       {label:'Show active task',click:()=>{userHidden=false;win.showInactive();win.webContents.send('window:open');const task=taskCoordinator.view();if(task)widgets.emit('task:state',task);}},
@@ -413,5 +492,6 @@ else {
   app.on('will-quit', () => globalShortcut.unregisterAll());
   app.on('before-quit',()=>{quitting=true;updateService?.stop();taskCoordinator?.close().catch(()=>{});clearInterval(callTimer);clearInterval(quotePopupTimer);quotePopups?.cancel();privacy?.close();windowsTask?.cancel();for(const request of askRequests.values())request.abort();clearInterval(cursorTimer);voiceEngine?.stop();native?.close();agents?.stop();});
 }
+
 
 

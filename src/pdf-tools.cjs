@@ -43,4 +43,10 @@ async function stripMetadata(file,output){
   doc.setTitle('');doc.setAuthor('');doc.setSubject('');doc.setKeywords([]);doc.setCreator('');doc.setProducer('Agent Notch');
   fs.writeFileSync(output,await doc.save());return{pages:doc.getPageCount(),output};
 }
-module.exports={probe,merge,split,rotate,imagesToPdf,stripMetadata};
+async function compose(file,pages,output){
+  if(!Array.isArray(pages)||!pages.length)throw new Error('Keep at least one page.');
+  const{PDFDocument,degrees}=await load(),source=await PDFDocument.load(fs.readFileSync(file)),target=await PDFDocument.create();
+  for(const entry of pages){const index=Number(entry.index);if(!Number.isInteger(index)||index<0||index>=source.getPageCount())throw new Error('Invalid page selection.');const[copied]=await target.copyPages(source,[index]);if(entry.rotate)copied.setRotation(degrees((copied.getRotation().angle+Number(entry.rotate))%360));target.addPage(copied);}
+  fs.writeFileSync(output,await target.save());return{pages:target.getPageCount(),output};
+}
+module.exports={probe,merge,split,rotate,imagesToPdf,stripMetadata,compose};

@@ -1,5 +1,16 @@
 [
   {
+    "version": "0.31.0",
+    "date": "2026-11-09",
+    "title": "File Studio is a separate Windows window",
+    "notes": [
+      "Dropping a file on the notch now opens Agent Notch — File Studio in its own resizable Windows window.",
+      "The notch has no embedded file editor; it stays compact.",
+      "File Studio has a multi-file queue, real image crop/resize/rotate, video trim/crop/mute/speed/snapshot with FFmpeg, and PDF.js rendering with PDF page rotate/delete/duplicate/reorder/save/export.",
+      "File Studio uses its own restricted studio API and persists window bounds."
+    ]
+  },
+  {
     "version": "0.30.0",
     "date": "2026-11-09",
     "title": "Join videos",

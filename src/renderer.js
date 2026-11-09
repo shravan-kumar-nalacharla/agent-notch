@@ -161,7 +161,7 @@ $('collapse').onclick = () => {
 };
 $('hide').onclick = () => window.island.hide();
 $('openSettings').onclick = () => window.island.settings();
-const openFileActions=path=>window.island.openFileActions?.(path).catch(showError);
+const openFileActions=paths=>window.island.openFileActions?.(paths).catch(showError);
 $('openFileActions').onclick = () => openFileActions();
 $('homeFiles').onclick = () => openFileActions();
 $('closeSettings').onclick = () => window.island.closeWindow ? window.island.closeWindow() : window.close();
@@ -180,6 +180,7 @@ $('island').addEventListener('mouseenter',()=>{if(!settingsMode&&hoverEnabled&&w
 $('island').addEventListener('mouseleave',()=>{if(!settingsMode&&hoverEnabled)motion.leave();});
 function scheduleAutoClose(){motion.leave();}
 window.addEventListener('island:test-leave',()=>motion.leave());
+window.island.onFileDetected?.(({name,count})=>{$('status').textContent=count>1?`${count} files detected`:`${name} detected`;clearTimeout(window.__fileStatusTimer);window.__fileStatusTimer=setTimeout(()=>{if($('status').textContent.includes('detected'))$('status').textContent='Ready';},3500);});
 window.island.onForceOpen?.(()=>{const panel=document.getElementById('notchReminder');if(panel)panel.hidden=true;document.body.classList.remove('has-reminder-hud','has-quote-hud');forceFileOpen=true;expand(true).finally(()=>setTimeout(()=>{forceFileOpen=false;},1200));});
 window.addEventListener('island:test-enter',()=>motion.enter());
 document.addEventListener('focusout',()=>setTimeout(()=>{if(!motion.inside&&expanded)motion.leave();},0));
@@ -193,7 +194,7 @@ window.addEventListener('dragend', () => document.body.classList.remove('is-drag
 window.addEventListener('drop', () => document.body.classList.remove('is-dragging'));
 window.addEventListener('dragover', event => {if(event.dataTransfer?.types?.includes('Files')){event.preventDefault();document.body.classList.add('file-dragging');}});
 window.addEventListener('dragleave', event => {if(!event.relatedTarget)document.body.classList.remove('file-dragging');});
-document.addEventListener('drop', async event => {const files=[...event.dataTransfer?.files||[]];if(!files.length)return;event.preventDefault();event.stopPropagation();document.body.classList.remove('file-dragging');const path=window.island.filePath?.(files[0]);if(path)await openFileActions(path);},true);
+document.addEventListener('drop', async event => {const files=[...event.dataTransfer?.files||[]];if(!files.length)return;event.preventDefault();event.stopPropagation();document.body.classList.remove('file-dragging');const paths=files.map(file=>window.island.filePath?.(file)).filter(Boolean);if(paths.length)await openFileActions(paths);},true);
 document.addEventListener('contextmenu', event => {
   event.preventDefault();
   window.island.settings();

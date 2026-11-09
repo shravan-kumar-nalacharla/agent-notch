@@ -5,7 +5,7 @@ test('file actions are wired through the notch, main process and uninstaller',()
   const ui=read('src/widgets-ui.js'),main=read('src/widgets-main.cjs'),nsh=read('installer/consent.nsh');
   assert.match(ui,/files:choose/);
   assert.match(ui,/files:convert/);
-  assert.match(ui,/Drop a file here/);
+  assert.match(ui,/Open File Studio/);
   assert.match(main,/files:inspect/);
   assert.match(main,/nativeImage\.createFromPath/);
   assert.match(nsh,/scrub-keys\.cjs/);

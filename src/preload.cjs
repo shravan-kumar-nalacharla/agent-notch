@@ -1,9 +1,25 @@
-'use strict';
+﻿'use strict';
 const { contextBridge, ipcRenderer, webUtils } = require('electron');
 // One IPC listener per event; individual UI components get disposable subscriptions.
 const eventPools=new Map();
 function listen(channel,callback){let pool=eventPools.get(channel);if(!pool){pool=new Set();eventPools.set(channel,pool);ipcRenderer.on(channel,(_event,value)=>{for(const cb of [...pool])try{const pending=cb(value);pending?.catch?.(e=>console.error('UI event handler:',e.message));}catch(e){console.error('UI event handler:',e.message);}});}const entry=value=>callback(value);pool.add(entry);return()=>pool.delete(entry);}
-contextBridge.exposeInMainWorld('island', {
+const studioMode=typeof location!=='undefined'&&(location.pathname.endsWith('/file-studio.html')||location.pathname.endsWith('file-studio.html'));
+contextBridge.exposeInMainWorld('studio', {
+  inspect:paths=>ipcRenderer.invoke('studio:inspect',{paths}),
+  choose:()=>ipcRenderer.invoke('studio:choose'),
+  metadata:options=>ipcRenderer.invoke('studio:metadata',options),
+  frames:path=>ipcRenderer.invoke('studio:frames',{path}),
+  onAdd:callback=>ipcRenderer.on('studio:add',(_event,paths)=>callback(paths)),
+  filePath:file=>{try{return webUtils.getPathForFile(file);}catch{return'';}},
+  image:options=>ipcRenderer.invoke('studio:image',options),
+  media:options=>ipcRenderer.invoke('studio:media',options),
+  pdfRead:path=>ipcRenderer.invoke('studio:pdfRead',{path}),
+  pdfSave:options=>ipcRenderer.invoke('studio:pdfSave',options),
+  pdfMerge:options=>ipcRenderer.invoke('studio:pdfMerge',options),
+  writeImages:options=>ipcRenderer.invoke('studio:writeImages',options),
+  openExternal:path=>ipcRenderer.invoke('studio:openExternal',{path})
+});
+if(!studioMode)contextBridge.exposeInMainWorld('island', {
   version: (()=>{try{return ipcRenderer.sendSync('app:version')||'0.0.0';}catch{return '0.0.0';}})(),
   workspace:(op,value={})=>ipcRenderer.invoke('workspace:action',{version:1,op,value}),
   onVisibility:callback=>listen('window:visibility',callback),
@@ -87,7 +103,8 @@ contextBridge.exposeInMainWorld('island', {
   meeting: (op,value={}) => ipcRenderer.invoke('meeting:action',{op,...value}),
   agents: (op,value={}) => ipcRenderer.invoke('agents:action',{op,...value}),
   onAgents: callback => listen('agents:state',callback),
-  openFileActions: path => ipcRenderer.invoke('files:open',{path:typeof path==='string'?path:''}),
+  openFileActions: paths => ipcRenderer.invoke('files:open',{paths:Array.isArray(paths)?paths.filter(x=>typeof x==='string'):typeof paths==='string'?[paths]:[]}),
+  onFileDetected: callback => listen('file:detected',callback),
   filePath: file => {try{return webUtils.getPathForFile(file);}catch{return'';}},
   dragFiles: paths => ipcRenderer.invoke('shelf:drag',{paths}),
   onLibrary: callback => listen('library:changed',callback),
@@ -108,3 +125,4 @@ contextBridge.exposeInMainWorld('island', {
   onCollapse: callback => ipcRenderer.on('window:collapse', () => callback()),
   onRestore: callback => listen('window:restore',callback)
 });
+
