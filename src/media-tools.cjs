@@ -1,5 +1,5 @@
 'use strict';
-const{spawn,spawnSync}=require('node:child_process'),fs=require('node:fs'),path=require('node:path');
+const{spawn,spawnSync}=require('node:child_process'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const VIDEO=new Set(['.mp4','.mov','.mkv','.webm','.avi','.m4v']),AUDIO=new Set(['.mp3','.wav','.m4a','.aac','.flac','.ogg','.opus']);
 function findTool(name){
   const explicit=process.env['AGENT_NOTCH_'+name.toUpperCase()];
@@ -51,4 +51,11 @@ function mediaAction({input,output,action,speed=1,time=0}){
   else return Promise.reject(new Error('Unsupported media action.'));
   return new Promise((resolve,reject)=>{const child=spawn(ffmpeg,args,{windowsHide:true,stdio:['ignore','ignore','pipe']});let error='';child.stderr.on('data',d=>{error+=d;if(error.length>8000)error=error.slice(-8000);});child.on('error',reject);child.on('close',code=>code===0?resolve({output}):reject(new Error('FFmpeg failed: '+(error.trim().split(/\r?\n/).pop()||'unknown error'))));});
 }
-module.exports={probe,buildArgs,transcode,stripMetadata,mediaAction,tools};
+function join(inputs,output){
+  if(!Array.isArray(inputs)||inputs.length<2)throw new Error('Choose at least two videos to join.');
+  const{ffmpeg}=tools();if(!ffmpeg)return Promise.reject(new Error('FFmpeg is not installed.'));
+  const list=path.join(os.tmpdir(),`agent-notch-join-${process.pid}-${Date.now()}.txt`);
+  fs.writeFileSync(list,inputs.map(file=>`file '${file.replace(/'/g,"'\\''")}'`).join('\n'));
+  return new Promise((resolve,reject)=>{const child=spawn(ffmpeg,['-y','-f','concat','-safe','0','-i',list,'-c','copy',output],{windowsHide:true,stdio:['ignore','ignore','pipe']});let error='';child.stderr.on('data',d=>{error+=d;if(error.length>8000)error=error.slice(-8000);});const done=code=>{try{fs.unlinkSync(list);}catch{}code===0?resolve({output}):reject(new Error('FFmpeg failed: '+(error.trim().split(/\r?\n/).pop()||'unknown error')));};child.on('error',reject);child.on('close',done);});
+}
+module.exports={probe,buildArgs,transcode,stripMetadata,mediaAction,join,tools};

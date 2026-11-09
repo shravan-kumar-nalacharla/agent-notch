@@ -1,2 +1,2 @@
-﻿# Agent Notch 0.29.0
-- Change video/audio playback speed locally (0.5x–2x).
+﻿# Agent Notch 0.30.0
+- Join videos locally (FFmpeg concat).

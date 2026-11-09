@@ -1,5 +1,13 @@
 [
   {
+    "version": "0.30.0",
+    "date": "2026-11-09",
+    "title": "Join videos",
+    "notes": [
+      "Join two or more videos locally with FFmpeg concat."
+    ]
+  },
+  {
     "version": "0.29.0",
     "date": "2026-11-09",
     "title": "Change media speed",
