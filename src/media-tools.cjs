@@ -41,4 +41,14 @@ function stripMetadata(input,output){
   if(path.resolve(input).toLowerCase()===path.resolve(output).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
   return new Promise((resolve,reject)=>{const child=spawn(ffmpeg,['-y','-i',input,'-map_metadata','-1','-c','copy',output],{windowsHide:true,stdio:['ignore','ignore','pipe']});let error='';child.stderr.on('data',d=>{error+=d;if(error.length>8000)error=error.slice(-8000);});child.on('error',reject);child.on('close',code=>code===0?resolve({output}):reject(new Error('FFmpeg failed: '+(error.trim().split(/\r?\n/).pop()||'unknown error'))));});
 }
-module.exports={probe,buildArgs,transcode,stripMetadata,tools};
+function mediaAction({input,output,action,speed=1,time=0}){
+  const{ffmpeg}=tools();if(!ffmpeg)return Promise.reject(new Error('FFmpeg is not installed.'));
+  if(path.resolve(input).toLowerCase()===path.resolve(output).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
+  let args;
+  if(action==='mute')args=['-y','-i',input,'-an','-c:v','copy',output];
+  else if(action==='snapshot')args=['-y','-ss',String(Math.max(0,Number(time)||0)),'-i',input,'-frames:v','1',output];
+  else if(action==='speed'){const factor=Math.max(.25,Math.min(4,Number(speed)||1));args=['-y','-i',input,'-filter:v',`setpts=${(1/factor).toFixed(4)}*PTS`,'-filter:a',`atempo=${factor.toFixed(2)}`,output];}
+  else return Promise.reject(new Error('Unsupported media action.'));
+  return new Promise((resolve,reject)=>{const child=spawn(ffmpeg,args,{windowsHide:true,stdio:['ignore','ignore','pipe']});let error='';child.stderr.on('data',d=>{error+=d;if(error.length>8000)error=error.slice(-8000);});child.on('error',reject);child.on('close',code=>code===0?resolve({output}):reject(new Error('FFmpeg failed: '+(error.trim().split(/\r?\n/).pop()||'unknown error'))));});
+}
+module.exports={probe,buildArgs,transcode,stripMetadata,mediaAction,tools};

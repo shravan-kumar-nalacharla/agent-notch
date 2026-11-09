@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.28.0",
+    "date": "2026-11-09",
+    "title": "Mute and snapshot media",
+    "notes": [
+      "Video/audio File Actions can remove the audio track or save a JPG snapshot.",
+      "Original files are never overwritten."
+    ]
+  },
+  {
     "version": "0.27.0",
     "date": "2026-11-09",
     "title": "Remove metadata locally",
