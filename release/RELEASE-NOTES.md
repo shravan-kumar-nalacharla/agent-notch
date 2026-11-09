@@ -1,8 +1,8 @@
-# Agent Notch 0.26.0
+# Agent Notch 0.27.0 — remove metadata
 
-- **Archive extraction**: ZIP, TAR, GZ and TGZ into a chosen folder. Rejects `..` paths, limits to 10,000 entries / 2 GB expanded.
-- **Subtitles**: SRT ↔ VTT conversion, preserving cue text.
-- PDF merge/split/rotate and images → PDF remain from 0.25.0.
-- `src/archive-tools.cjs`, `src/subtitle-tools.cjs`, tests for both.
-
-Remaining Nashi tools: QR, metadata, annotation/redaction, framing/collage, web download, full media suite.
+- File Actions adds **Remove metadata** for images, PDFs, video and audio.
+- Images are decoded and re-encoded, dropping EXIF.
+- Media uses FFmpeg `-map_metadata -1 -c copy`.
+- PDFs clear title, author, subject, keywords and creator.
+- Originals are never overwritten.
+- Unit test confirms PDF title/author removal.

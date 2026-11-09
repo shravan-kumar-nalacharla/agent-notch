@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.27.0",
+    "date": "2026-11-09",
+    "title": "Remove metadata locally",
+    "notes": [
+      "File actions can strip metadata from images, PDFs, video and audio and write a clean copy.",
+      "Image EXIF is removed by decoding and re-encoding; media uses FFmpeg with -map_metadata -1; PDF document info is cleared.",
+      "Original files are never overwritten."
+    ]
+  },
+  {
     "version": "0.26.0",
     "date": "2026-11-09",
     "title": "Archives and subtitle conversion",

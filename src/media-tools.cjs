@@ -36,4 +36,9 @@ function transcode(options){
   const args=buildArgs(options);
   return new Promise((resolve,reject)=>{const child=spawn(ffmpeg,args,{windowsHide:true,stdio:['ignore','ignore','pipe']});let error='';child.stderr.on('data',d=>{error+=d;if(error.length>12000)error=error.slice(-12000);});child.on('error',reject);child.on('close',code=>code===0?resolve({output:options.output}):reject(new Error('FFmpeg failed: '+(error.trim().split(/\r?\n/).pop()||'unknown error'))));});
 }
-module.exports={probe,buildArgs,transcode,tools};
+function stripMetadata(input,output){
+  const{ffmpeg}=tools();if(!ffmpeg)return Promise.reject(new Error('FFmpeg is not installed.'));
+  if(path.resolve(input).toLowerCase()===path.resolve(output).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
+  return new Promise((resolve,reject)=>{const child=spawn(ffmpeg,['-y','-i',input,'-map_metadata','-1','-c','copy',output],{windowsHide:true,stdio:['ignore','ignore','pipe']});let error='';child.stderr.on('data',d=>{error+=d;if(error.length>8000)error=error.slice(-8000);});child.on('error',reject);child.on('close',code=>code===0?resolve({output}):reject(new Error('FFmpeg failed: '+(error.trim().split(/\r?\n/).pop()||'unknown error'))));});
+}
+module.exports={probe,buildArgs,transcode,stripMetadata,tools};

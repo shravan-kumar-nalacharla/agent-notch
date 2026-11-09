@@ -37,4 +37,10 @@ async function imagesToPdf(images,output){
     const page=doc.addPage([embed.width,embed.height]);page.drawImage(embed,{x:0,y:0,width:embed.width,height:embed.height});}
   fs.writeFileSync(output,await doc.save());return{pages:doc.getPageCount(),output};
 }
-module.exports={probe,merge,split,rotate,imagesToPdf};
+async function stripMetadata(file,output){
+  if(path.extname(file).toLowerCase()!=='.pdf'||!fs.existsSync(file))throw new Error('Choose a PDF.');
+  const{PDFDocument}=await load(),doc=await PDFDocument.load(fs.readFileSync(file));
+  doc.setTitle('');doc.setAuthor('');doc.setSubject('');doc.setKeywords([]);doc.setCreator('');doc.setProducer('Agent Notch');
+  fs.writeFileSync(output,await doc.save());return{pages:doc.getPageCount(),output};
+}
+module.exports={probe,merge,split,rotate,imagesToPdf,stripMetadata};
