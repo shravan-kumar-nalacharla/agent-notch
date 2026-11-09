@@ -93,4 +93,4 @@ Voice UI 0.16.4: [implementation and verification](docs/0.16.4-VOICE-UI.md).
 
 Sound/quote update 0.16.5: [behavior and verification](docs/0.16.5-SOUND-AND-THOUGHTS.md).
 
-Automatic updates 0.18.0: [update behavior, public download channel and website](docs/0.18.0-UPDATES.md). Product site and install pitch: [distribution, website and SEO](docs/DISTRIBUTION-AND-WEBSITE.md). Installed builds check shortly after startup, every six hours and manually, download in the background, and restart only after explicit confirmation. Existing 0.17.1 installations need one manual 0.18.0 install because they contain no updater.
+Automatic updates 0.19.0: [file actions, agent face and fixes](docs/0.19.0-UPDATES.md). Product PRD and architecture: [files, agent face and offline voice](docs/0.19.0-PRD.md). Product site and install pitch: [distribution, website and SEO](docs/DISTRIBUTION-AND-WEBSITE.md). Installed builds check shortly after startup, every six hours and manually, download in the background, and restart only after explicit confirmation. Existing 0.17.1 installations need one manual 0.19.0 install because they contain no updater.

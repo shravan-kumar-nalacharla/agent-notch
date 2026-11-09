@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en" data-type="software">
 <head>
 <meta charset="utf-8">
@@ -65,7 +65,8 @@
   <div class="wrap release-layout">
     <aside class="release-aside" aria-label="Release index">
       <h3>Versions</h3>
-      <a href="#v0180">0.18.0 · current</a>
+      <a href="#v0190">0.19.0 · current</a>
+      <a href="#v0180">0.18.0</a>
       <a href="#v0179">0.17.9</a>
       <a href="#v0178">0.17.8</a>
       <a href="#v0177">0.17.7</a>
@@ -76,8 +77,21 @@
     <div class="release-body">
       <p class="lede">Release notes in the app live under <strong>Settings → About → What’s new</strong>. The same history is published here so you can read it before installing, or check what a friend is running.</p>
       <div class="timeline">
-        <article id="v0180">
+        <article id="v0190">
           <div class="when">09 November 2026 <span class="tag">Current</span></div>
+          <h2>0.19.0 — Keys leave, lyrics hold still, agent face</h2>
+          <p>Fixes the post-0.18.0 regressions and starts the file and agent-face work.</p>
+          <ul>
+            <li>Uninstall removes provider keys, integration secrets and the local agent token even when notes and history are kept.</li>
+            <li>Lyrics render only the current and previous full lines; the current line no longer restarts for every word.</li>
+            <li>Appearance gains a deterministic blob companion with five shapes, hue, five expressions, preview and click reaction.</li>
+            <li>File actions: drop or choose an image, inspect it, convert PNG/JPEG and resize to a new file. The original is never overwritten.</li>
+            <li>The PRD covers optional FFmpeg/LibreOffice packs, Handy-style offline speech and the Rune/Astryx evaluation.</li>
+          </ul>
+          <div class="release-note"><strong>Not in this build:</strong> offline Whisper/Parakeet models, video/audio/document conversion and the full crop/trim editor. Those need optional packs so the installer stays under 1 GB.</div>
+        </article>
+        <article id="v0180">
+          <div class="when">09 November 2026 <span class="tag old">Previous</span></div>
           <h2>0.18.0 — Clearer lyrics, a quieter chat, a notch that leaves</h2>
           <p>This release fixes the three visible problems in the island and adds the release-note experience.</p>
           <ul>

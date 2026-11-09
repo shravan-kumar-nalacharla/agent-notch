@@ -151,6 +151,7 @@ document.querySelectorAll('nav [data-tab]').forEach(button => {
 });
 
 $('face').onclick = () => expand(true);
+$('face').addEventListener('pointerdown',()=>{ $('face').classList.remove('face-poke'); void $('face').offsetWidth; $('face').classList.add('face-poke'); setTimeout(()=>$('face').classList.remove('face-poke'),360); });
 $('collapse').onclick = () => {
   if (state?.appearance?.pinned) {
     $('status').textContent = 'Pinned open';
@@ -519,6 +520,7 @@ function applyState(value) {
   document.body.classList.toggle('pinned', !!appearance.pinned);
   document.body.classList.toggle('shape-pill', appearance.shape === 'pill');
   document.body.classList.toggle('shape-line', appearance.shape === 'line');
+  const face=appearance.face||{};document.body.classList.toggle('blob-face',!!face.enabled);window.AgentFace?.apply($('face'),{enabled:!!face.enabled,seed:value.profileName||'Agent Notch',shape:face.shape,hue:face.hue,expression:face.expression,size:64});
   const light = appearance.theme === 'light' ||
     (appearance.theme === 'system' && window.matchMedia?.('(prefers-color-scheme: light)').matches);
   document.body.classList.toggle('theme-light', !!light);

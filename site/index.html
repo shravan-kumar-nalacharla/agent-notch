@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en" data-type="software">
 <head>
 <meta charset="utf-8">
@@ -44,7 +44,7 @@
       "description": "Agent Notch is a compact, always-on-top Windows assistant for dictation, screen questions, media and lyrics, reminders, focus, hydration and reviewed tasks.",
       "url": "https://shravan-kumar-nalacharla.github.io/agent-notch-site/",
       "downloadUrl": "https://github.com/shravan-kumar-nalacharla/agent-notch-releases/releases/latest/download/Agent-Notch-Setup.exe",
-      "softwareVersion": "0.18.0",
+      "softwareVersion": "0.19.0",
       "publisher": { "@id": "https://shravan-kumar-nalacharla.github.io/agent-notch-site/#organization" },
       "featureList": [
         "System-wide voice dictation",
@@ -257,10 +257,25 @@
           </div>
           <span class="fact">Explicit intent</span>
         </article>
+        <article class="feature span-6">
+          <div>
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h9l3 3h4v11H4z"/><path d="M8 13h8M8 16h5"/></svg></div>
+            <h3>Drop a file. Keep the original.</h3>
+            <p>File actions detects an image, shows its size and converts PNG/JPEG or resizes it to a new file. Conversion is local and the source is never overwritten.</p>
+          </div>
+          <span class="fact">Local file actions</span>
+        </article>
+        <article class="feature span-6">
+          <div>
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c4 2 8 5 8 10a8 8 0 0 1-16 0c0-5 4-8 8-10Z"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><path d="M9 16c2 2 4 2 6 0"/></svg></div>
+            <h3>Make the agent yours</h3>
+            <p>Choose a blob shape, hue and expression. It replaces the two eyes, stays inside its stage and reacts when you click it.</p>
+          </div>
+          <span class="fact">Agent Face</span>
+        </article>
       </div>
     </div>
   </section>
-
   <section class="section" id="privacy">
     <div class="wrap split">
       <div class="split-copy">
@@ -270,7 +285,7 @@
         <ul class="checks">
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg> No Agent Notch account, no analytics SDK and no background screen monitoring.</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg> Provider keys are encrypted with Windows secure storage and are never exposed to the UI.</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg> Uninstalling keeps your data by default; erasing it is a separate, explicit choice.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg> Uninstall keeps notes and history by default but always removes saved API keys and integration secrets.</li>
         </ul>
         <a class="btn btn-ghost" href="releases.html">Read the release history</a>
       </div>
@@ -317,6 +332,7 @@
         <div class="hero-actions"><a class="btn btn-ghost" href="releases.html">Open the update catalog</a><a class="btn btn-ghost" href="https://github.com/shravan-kumar-nalacharla/agent-notch-releases/releases">GitHub releases</a></div>
       </div>
       <div class="release-list">
+        <a class="release-row" href="releases.html#v0190"><span class="v">v0.19.0</span><div><h4>Keys leave, lyrics hold still</h4><p>Uninstall scrub, stable lyrics, Agent Face, file actions.</p></div><span class="d">09 Nov 2026</span><span class="arrow">↗</span></a>
         <a class="release-row" href="releases.html#v0180"><span class="v">v0.18.0</span><div><h4>Clearer lyrics, quieter chat</h4><p>Two-line lyrics, no chat intro, reliable auto-close.</p></div><span class="d">09 Nov 2026</span><span class="arrow">↗</span></a>
         <a class="release-row" href="releases.html#v0179"><span class="v">v0.17.9</span><div><h4>Automatic updates are live</h4><p>Background download, explicit restart, data preserved.</p></div><span class="d">09 Nov 2026</span><span class="arrow">↗</span></a>
         <a class="release-row" href="releases.html#v0178"><span class="v">v0.17.8</span><div><h4>Installer hand-off hardening</h4><p>The install helper survives the app process ending.</p></div><span class="d">08 Nov 2026</span><span class="arrow">↗</span></a>

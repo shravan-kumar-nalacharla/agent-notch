@@ -48,3 +48,5 @@ button.mic-muted{color:#ffb2bc;border-color:#b94557;background:#3c1522}
 @media(max-width:700px){.window-rule-row{grid-template-columns:1fr 1fr}.window-rule-row input{grid-column:1/-1}}
 
 .release-notes details{margin:8px 0}.release-notes ul{margin:8px 0 0 18px;padding:0;color:var(--settings-muted);font-size:12px;line-height:1.55}.release-notes summary small{float:right;font-weight:400;color:var(--settings-muted)}
+
+.face-preview{width:104px;height:104px;margin:12px 0 4px;border:1px solid #303641;border-radius:16px;background:#0d1116;display:grid;place-items:center;overflow:hidden}.face-preview svg{width:92px;height:92px}

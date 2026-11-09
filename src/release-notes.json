@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.19.0",
+    "date": "2026-11-09",
+    "title": "Keys leave with the app, lyrics hold still, and the agent gets a face",
+    "notes": [
+      "Uninstall now removes saved API keys, integration secrets and the local agent token even when notes and history are kept.",
+      "Lyrics render only the current and previous full lines. The current line no longer restarts its slide for every word.",
+      "Settings > Appearance adds a customizable blob companion with shape, hue, expression and a click reaction.",
+      "All Tools adds File actions: drop or choose an image, inspect it, convert PNG/JPEG and resize to a new file.",
+      "The 0.19.0 PRD covers file editing, offline speech, and the Rune/Astryx evaluations."
+    ]
+  },
+  {
     "version": "0.18.0",
     "date": "2026-11-09",
     "title": "Clearer lyrics, a quieter chat, and a notch that leaves",

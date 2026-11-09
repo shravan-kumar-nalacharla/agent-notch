@@ -1,8 +1,8 @@
 # Release checklist
 
-## Current — 0.18.0
+## Current — 0.19.0
 
-Public Windows release with the Huygen Studios website, install pitch and update catalog. See [0.18.0 update notes](0.18.0-UPDATES.md) and [distribution and website](DISTRIBUTION-AND-WEBSITE.md). Source stays private; release binaries and metadata are public. The installer is unsigned, so SmartScreen can warn; the release workflow requires a certificate for normal releases and fails closed otherwise.
+Fixes uninstall key retention and lyric re-animation; adds Agent Face and the first local image File Actions slice. See [0.19.0 notes](0.19.0-UPDATES.md) and the [0.19.0 PRD](0.19.0-PRD.md). Offline speech, video/audio/document packs and full editors remain phased work, not claims. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
 
 ## Previous — 0.6.2
 

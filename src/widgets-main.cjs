@@ -26,6 +26,27 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
     if(op==='media:select'){if(typeof v.appId!=='string')throw new Error('Choose a media player.');const current=await native.request('media');if(v.sessionId!==undefined&&(typeof v.sessionId!=='string'||v.sessionId&&!current.sources?.some(source=>source.sessionId===v.sessionId&&source.appId===v.appId)))throw new Error('That media session is no longer available. Refresh the list.');if(v.appId&&!current.sources?.some(source=>source.appId===v.appId))throw new Error('That media player is no longer available. Refresh the list.');library.action('config',{mediaAppId:v.appId});return native.request('media',{appId:v.appId,...(v.sessionId!==undefined?{sessionId:v.sessionId}:{})});}
     if(['media.control','volume','brightness','devices','system'].includes(op)){const response=await native.request(op,v);if(op==='media.control'&&response===false)throw new Error('This media player does not support that control.');return response;}
     if(op==='shelf:choose'){const r=await dialog.showOpenDialog({properties:['openFile','multiSelections']});return r.canceled?library.view():library.action('shelf:add',{paths:r.filePaths});}
+    if(op==='files:choose'||op==='files:inspect'){
+      let file=v.path;
+      if(op==='files:choose'){const r=await dialog.showOpenDialog({properties:['openFile'],filters:[{name:'Images',extensions:['png','jpg','jpeg','webp','bmp','gif']},{name:'All files',extensions:['*']}]});if(r.canceled)return null;file=r.filePaths[0];}
+      if(typeof file!=='string'||file.length>32767)throw new Error('Choose a file.');
+      const stat=fs.statSync(file);if(!stat.isFile())throw new Error('That path is not a file.');if(stat.size>2*1024*1024*1024)throw new Error('Files are limited to 2 GB.');
+      const image=nativeImage.createFromPath(file),size=image.isEmpty()?null:image.getSize();
+      return{path:file,name:path.basename(file),ext:path.extname(file).slice(1).toLowerCase(),bytes:stat.size,kind:size?'image':'unsupported',width:size?.width,height:size?.height,message:size?'':'This is not an image. Video, audio and document tools need the optional pack.'};
+    }
+    if(op==='files:convert'){
+      if(typeof v.path!=='string'||v.path.length>32767)throw new Error('Choose an image first.');
+      const image=nativeImage.createFromPath(v.path);if(image.isEmpty())throw new Error('This build can convert images only.');
+      const format=['png','jpeg'].includes(v.format)?v.format:'png',ext=format==='jpeg'?'jpg':'png',width=Number(v.width)||0;
+      if(width&&(!Number.isInteger(width)||width<16||width>8000))throw new Error('Width must be 16–8,000 pixels.');
+      const source=image.getSize(),targetWidth=width||source.width,targetHeight=width?Math.max(1,Math.round(source.height*width/source.width)):source.height;
+      if(targetWidth*targetHeight>40000000)throw new Error('That output is too large.');
+      const r=await dialog.showSaveDialog({defaultPath:path.join(path.dirname(v.path),path.basename(v.path,path.extname(v.path))+'-agent-notch.'+ext),filters:[{name:format==='jpeg'?'JPEG image':'PNG image',extensions:[ext]}]});if(r.canceled)return false;
+      if(path.resolve(r.filePath).toLowerCase()===path.resolve(v.path).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
+      const output=width||targetHeight!==source.height?image.resize({width:targetWidth,height:targetHeight,quality:'best'}):image;
+      fs.writeFileSync(r.filePath,format==='jpeg'?output.toJPEG(92):output.toPNG());
+      return{path:r.filePath,name:path.basename(r.filePath),bytes:fs.statSync(r.filePath).size};
+    }
     if(op==='shelf:open'){if(!library.view().shelf.includes(v.path))throw new Error('File is not in the shelf.');const error=await shell.openPath(v.path);if(error)throw new Error(error);return true;}
     if(op==='shelf:reveal'){if(!library.view().shelf.includes(v.path))throw new Error('File is not in the shelf.');shell.showItemInFolder(v.path);return true;}
     if(op==='shelf:icons'){const files=library.view().shelf;return Promise.all(files.map(async file=>{let icon=icons.get(file);if(!icon){try{icon=(await app.getFileIcon(file,{size:'normal'})).toDataURL();icons.set(file,icon);}catch{}}let size=0;try{size=fs.statSync(file).size;}catch{}return{path:file,name:path.basename(file),size,icon};}));}
