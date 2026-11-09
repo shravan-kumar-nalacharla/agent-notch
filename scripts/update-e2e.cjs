@@ -59,9 +59,11 @@ async function pageWithBridge(browser){
 }
 (async()=>{
   if(!installer||!fs.existsSync(installer))fail('pass --installer with the built 0.17.2 setup file.');
-  if(fs.existsSync(installDir))fs.rmSync(installDir,{recursive:true,force:true});
-  console.log('INSTALL',installer,'->',installDir);
-  execFileSync(installer,['/S',`/D=${installDir}`],{windowsHide:false,timeout:900000});
+  if(!process.argv.includes('--no-install')){
+    if(fs.existsSync(installDir))fs.rmSync(installDir,{recursive:true,force:true});
+    console.log('INSTALL',installer,'->',installDir);
+    execFileSync(installer,['/S',`/D=${installDir}`],{windowsHide:false,timeout:900000});
+  }
   for(let i=0;i<120&&!fs.existsSync(exe);i++)await sleep(1000);
   if(!fs.existsSync(exe))fail('the installer did not produce Agent Notch.exe');
   const base=versionFromAsar();

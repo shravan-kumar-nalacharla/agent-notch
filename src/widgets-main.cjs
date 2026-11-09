@@ -36,7 +36,8 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
     }
     if(op==='files:convert'){
       if(typeof v.path!=='string'||v.path.length>32767)throw new Error('Choose an image first.');
-      const image=nativeImage.createFromPath(v.path);if(image.isEmpty())throw new Error('This build can convert images only.');
+      let image=nativeImage.createFromPath(v.path);if(image.isEmpty())throw new Error('This build can convert images only.');
+      if(v.crop==='square'){const size=image.getSize(),side=Math.min(size.width,size.height);if(side<16)throw new Error('Image is too small to crop.');image=image.crop({x:Math.floor((size.width-side)/2),y:Math.floor((size.height-side)/2),width:side,height:side});}
       const format=['png','jpeg'].includes(v.format)?v.format:'png',ext=format==='jpeg'?'jpg':'png',width=Number(v.width)||0;
       if(width&&(!Number.isInteger(width)||width<16||width>8000))throw new Error('Width must be 16–8,000 pixels.');
       const source=image.getSize(),targetWidth=width||source.width,targetHeight=width?Math.max(1,Math.round(source.height*width/source.width)):source.height;
@@ -45,7 +46,7 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
       if(path.resolve(r.filePath).toLowerCase()===path.resolve(v.path).toLowerCase())throw new Error('Choose a new output file; the original is never overwritten.');
       const output=width||targetHeight!==source.height?image.resize({width:targetWidth,height:targetHeight,quality:'best'}):image;
       fs.writeFileSync(r.filePath,format==='jpeg'?output.toJPEG(92):output.toPNG());
-      return{path:r.filePath,name:path.basename(r.filePath),bytes:fs.statSync(r.filePath).size};
+      return{path:r.filePath,name:path.basename(r.filePath),bytes:fs.statSync(r.filePath).size,width:targetWidth,height:targetHeight};
     }
     if(op==='shelf:open'){if(!library.view().shelf.includes(v.path))throw new Error('File is not in the shelf.');const error=await shell.openPath(v.path);if(error)throw new Error(error);return true;}
     if(op==='shelf:reveal'){if(!library.view().shelf.includes(v.path))throw new Error('File is not in the shelf.');shell.showItemInFolder(v.path);return true;}

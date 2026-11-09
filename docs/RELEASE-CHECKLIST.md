@@ -1,8 +1,8 @@
 # Release checklist
 
-## Current — 0.20.0
+## Current — 0.20.1
 
-Adds optional **Local (Windows, offline)** dictation using the installed Windows speech recognizer; no API key or cloud-audio consent. The 0.19.0 key scrub, two-line lyrics, Agent Face and image File Actions remain. See [0.20.0 notes](0.20.0-UPDATES.md). Offline Whisper/Parakeet model packs and video/audio/document editors remain phased work. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
+Adds square crop to image File Actions. **Groq remains the default** assistant/transcription provider; **Local (Windows, offline)** is an explicit no-key alternative. 0.20.0's local speech, key scrub, two-line lyrics, Agent Face and image File Actions remain. See [0.20.1 notes](0.20.1-UPDATES.md). Offline Whisper/Parakeet model packs and video/audio/document editors remain phased work. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
 
 ## Previous — 0.6.2
 

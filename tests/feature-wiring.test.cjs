@@ -20,3 +20,10 @@ test('the agent face is bundled and persisted in the appearance settings',()=>{
   assert.match(prefs,/face:\{enabled/);
   assert.match(main,/face:\{enabled:false/);
 });
+
+test('Groq remains the default assistant and transcription provider',()=>{
+  const main=read('src/main.cjs'),renderer=read('src/renderer.js');
+  assert.match(main,/assistant: 'groq', speech: 'groq'/);
+  assert.match(renderer,/Local \(Windows, offline\)/);
+});
+

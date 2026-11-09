@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.20.1",
+    "date": "2026-11-09",
+    "title": "Square crop and the Groq/local voice split",
+    "notes": [
+      "File actions can center-crop an image to a square before converting or resizing.",
+      "Groq remains the default assistant and transcription provider; Local (Windows, offline) remains an explicit alternative.",
+      "Added regression coverage for the Groq default and the local option."
+    ]
+  },
+  {
     "version": "0.20.0",
     "date": "2026-11-09",
     "title": "An offline speech option that needs no API key",
