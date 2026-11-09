@@ -1,13 +1,8 @@
-# Agent Notch 0.25.0 — Nashi PDF actions
+# Agent Notch 0.26.0
 
-- File actions accepts PDFs and shows the page count.
-- **Merge PDFs**: choose multiple PDFs, save one merged document.
-- **Split pages**: write one PDF per page into a chosen folder.
-- **Rotate PDF**: 90°/180°/270° into a new file.
-- **Images → PDF**: choose PNG/JPEG images and create one PDF.
-- All operations use `pdf-lib` locally; originals are not overwritten.
-- Added `src/pdf-tools.cjs` and `tests/pdf-tools.test.cjs`.
+- **Archive extraction**: ZIP, TAR, GZ and TGZ into a chosen folder. Rejects `..` paths, limits to 10,000 entries / 2 GB expanded.
+- **Subtitles**: SRT ↔ VTT conversion, preserving cue text.
+- PDF merge/split/rotate and images → PDF remain from 0.25.0.
+- `src/archive-tools.cjs`, `src/subtitle-tools.cjs`, tests for both.
 
-Verified locally: two one-page PDFs merged to two pages, split back into two files, and rotated to 90°.
-
-This continues the Nashi port. Archive extraction, QR, metadata, annotation/redaction, collage/framing, web download and the full media suite remain.
+Remaining Nashi tools: QR, metadata, annotation/redaction, framing/collage, web download, full media suite.

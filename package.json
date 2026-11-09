@@ -1,6 +1,6 @@
 {
   "name": "agent-notch",
-  "version": "0.25.0",
+  "version": "0.26.0",
   "private": true,
   "description": "Agent Notch - a voice and screen assistant for Windows",
   "author": "Shravan Kumar",
@@ -115,6 +115,7 @@
     "electron-updater": "6.8.11",
     "ical.js": "2.2.1",
     "pdf-lib": "^1.17.1",
-    "playwright-core": "1.64.1"
+    "playwright-core": "1.64.1",
+    "unzipper": "^0.12.5"
   }
 }

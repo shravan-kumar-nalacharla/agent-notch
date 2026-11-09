@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.26.0",
+    "date": "2026-11-09",
+    "title": "Archives and subtitle conversion",
+    "notes": [
+      "File actions now extracts ZIP, TAR, GZ and TGZ archives into a chosen folder with path-traversal and size guards.",
+      "SRT and VTT subtitles convert locally in either direction, preserving cue text.",
+      "PDF merge/split/rotate and images-to-PDF remain from 0.25.0."
+    ]
+  },
+  {
     "version": "0.25.0",
     "date": "2026-11-09",
     "title": "Nashi PDF actions in the notch",
