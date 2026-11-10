@@ -1,5 +1,4 @@
-﻿# Agent Notch 0.33.0
-- Splits mixed browser + Windows requests into separate workflows.
-- Executes each branch and verifies each result; reports partial completion.
-- Task panel shows branch status.
-- Existing Playwright browser and Windows UI task systems are reused.
+﻿# Agent Notch 0.33.1
+- Small update-channel verification release.
+- Confirms installed 0.33.0 builds detect, download and install 0.33.1.
+- No workflow behavior changed.

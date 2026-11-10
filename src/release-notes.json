@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.33.1",
+    "date": "2026-11-10",
+    "title": "Update channel verification",
+    "notes": [
+      "A small signed-channel verification update. This confirms installed 0.33.0 builds discover, download and install the next published version.",
+      "No workflow behavior changed."
+    ]
+  },
+  {
     "version": "0.33.0",
     "date": "2026-11-09",
     "title": "Cross-application task workflows",
