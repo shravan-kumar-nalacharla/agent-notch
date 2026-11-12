@@ -1,0 +1,9 @@
+id = "file-drop-example"
+name = "File Drop Example"
+version = "0.1.0"
+description = "Receives explicitly dropped files"
+run = ["python", "main.py"]
+mode = "live"
+size = "wide"
+accepts_files = true
+permissions = ["files:dropped"]

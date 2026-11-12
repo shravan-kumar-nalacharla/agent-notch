@@ -1,0 +1,8 @@
+id = "hello-world"
+name = "Hello World"
+version = "0.1.0"
+description = "Minimal live Agent Notch plugin"
+run = ["node", "main.js"]
+mode = "live"
+size = "small"
+permissions = []

@@ -1,0 +1,75 @@
+/* Shared presentation layer, loaded after legacy component skins. Geometry stays in IslandGeometry. */
+:root{--pulse-surface:#08090b;--pulse-card:#141518;--pulse-raised:#222327;--pulse-ink:#f8f8fa;--pulse-dim:#a0a0a6;--pulse-line:rgba(255,255,255,.08);--pulse-radius:28px;--pulse-inner:16px}
+body.theme-light{--pulse-surface:#fafafa;--pulse-card:#f0f0f0;--pulse-raised:#e5e5e7;--pulse-ink:#141414;--pulse-dim:#707070;--pulse-line:rgba(0,0,0,.08)}
+body:not(.settings-window){--panel:var(--pulse-card);--panel-2:var(--pulse-raised);--text:var(--pulse-ink);--muted:var(--pulse-dim);--line:var(--pulse-line);--accent:#0a84ff;font-family:"Segoe UI Variable Text","Segoe UI",sans-serif}
+body:not(.settings-window) #island{background:var(--pulse-surface);border:0;border-radius:0 0 var(--pulse-radius) var(--pulse-radius);box-shadow:0 6px 20px #0004}
+body:not(.settings-window) #companionGlow{display:none}
+body:not(.settings-window) #island::before,body:not(.settings-window) #island::after{display:none}
+body.expanded:not(.settings-window) header{height:36px;padding:0 20px;gap:8px;justify-content:space-between}
+body.expanded #greeting{position:static;display:flex;gap:7px;max-width:40%;margin:0;height:auto}
+body.expanded #date{font-size:10px;color:var(--muted);font-weight:500}
+body.expanded #time{font-size:12px;font-weight:650;color:var(--text);font-variant-numeric:tabular-nums}
+body.expanded #status{display:none}
+body.expanded #face{position:absolute;left:50%;top:5px;width:32px;height:25px;transform:translateX(-50%);gap:6px;pointer-events:auto}
+body.expanded .eye,body.expanded .eye-lid{width:6px;height:8px!important;box-shadow:none}
+body.no-mascot #face{visibility:hidden}
+body.expanded .audio-bars{display:none}
+body.expanded .header-actions{display:flex;gap:4px;margin-left:auto;align-items:center}
+body.expanded .header-actions button{width:26px;height:26px;border-radius:50%;background:transparent;color:var(--muted)}
+body.expanded .header-actions button:hover{background:var(--panel-2);color:var(--text)}
+body.expanded #microphonePrivacy{width:29px;min-width:29px;padding:5px;border:0}
+body.expanded #microphonePrivacy span{display:none}
+body.expanded:not(.settings-window) #body{height:calc(100% - 36px);padding:4px 20px 40px}
+body:not(.settings-window) nav{left:20px;right:20px;bottom:7px;height:28px;padding:0;border:0;border-radius:999px;background:var(--pulse-card);gap:2px;align-items:center}
+body:not(.settings-window) nav button{height:26px;width:32px;border-radius:999px;background:transparent;color:var(--muted)}
+body:not(.settings-window) nav button.active{background:var(--pulse-raised);color:var(--text);box-shadow:none}
+body:not(.settings-window) nav button svg{width:15px;height:15px}
+body:not(.settings-window) button:hover:not(:disabled){box-shadow:none}
+body:not(.settings-window) .carousel-head{height:26px;display:flex;gap:8px;align-items:center}
+body:not(.settings-window) .carousel-title{font-size:12px;font-weight:700;flex:1}
+body:not(.settings-window) .carousel-state{display:none}
+body:not(.settings-window) .carousel-arrow{width:24px;height:24px;border-radius:50%;background:var(--panel);color:var(--muted)}
+body:not(.settings-window) .carousel-body{padding-top:8px}
+body:not(.settings-window) .widget-heading{height:28px;margin-bottom:8px}
+body:not(.settings-window) .widget-heading b{font-size:12px}
+body:not(.settings-window) .widget-content{max-height:none;height:calc(100% - 36px);font-size:12px;overscroll-behavior:contain}
+body:not(.settings-window) .widget-row{font-size:12px;padding:9px 0;border-color:var(--line)}
+body:not(.settings-window) .widget-row small{font-size:10px;color:var(--muted)}
+body:not(.settings-window) .widget-actions button{border-radius:999px;font-size:10px;padding:5px 8px;background:var(--panel)}
+body:not(.settings-window) .widget-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+body:not(.settings-window) .widget-grid button{height:62px;border-radius:16px;background:var(--panel);color:var(--muted);font-size:10px;gap:7px}
+body:not(.settings-window) .widget-grid i{font-size:18px;color:var(--text)}
+body:not(.settings-window) .utility-nav button{font-size:10px;border-radius:999px;padding:5px 9px;height:auto}
+body:not(.settings-window) input:not([type=range]):not([type=checkbox]),body:not(.settings-window) textarea,body:not(.settings-window) select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;font-size:12px}
+body:not(.settings-window) #home .home-live{display:flex!important;margin-top:12px;padding:10px 12px;min-height:48px;border:0;border-radius:16px;background:var(--panel)}
+body:not(.settings-window) #home .home-line{display:block!important;font-size:11px;color:var(--muted);margin:10px 1px 0;line-height:1.5}
+body:not(.settings-window) .live-primary b{font-size:12px;max-width:190px}.live-primary small{font-size:10px}.live-metrics{gap:8px}.live-metrics span{font-size:9px}.live-metrics b{font-size:12px;font-variant-numeric:tabular-nums}
+body:not(.settings-window) .quick-cell,body:not(.settings-window) .quick-icon{width:52px;height:52px;flex-basis:52px;border-radius:16px;background:var(--panel)}
+body:not(.settings-window) .quick-adds{width:94px;flex-basis:94px;grid-template-columns:repeat(3,28px);justify-content:center;border-radius:16px;height:52px;background:var(--panel)}
+body:not(.settings-window) .quick-add{position:static;width:28px;height:36px;background:transparent;font-size:16px}
+body:not(.settings-window) .shelf-cards{grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
+body:not(.settings-window) .shelf-card{height:84px;border:0;border-radius:16px;background:var(--panel);padding:10px 6px}
+body:not(.settings-window) .shelf-card span{font-size:10px}.shelf-card i{border-radius:10px}
+body:not(.settings-window) .shelf-empty{border:1px dashed var(--line);border-radius:16px;background:var(--panel)}
+body:not(.settings-window) .focus-heading b{font-size:12px}.timer-top strong{font-variant-numeric:tabular-nums}
+body:not(.settings-window) .timer-main p{font-size:10px;color:var(--muted)}
+body:not(.settings-window) .timer-actions button,body:not(.settings-window) .timer-mode button{font-size:11px;border-radius:999px}
+body:not(.settings-window) .el-player:not(.has-lyrics){gap:3px}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-track{min-height:64px;gap:12px}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-art{width:64px;height:64px;border-radius:16px}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-track h2{font-size:15px;font-weight:650}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-track p{font-size:12px}
+body:not(.settings-window) .el-player [data-slot=select-trigger]{border:0;background:transparent;padding:0;font-size:10px;color:var(--muted)}
+body:not(.settings-window) .el-player .el-player-controls #mediaPlayPause{background:var(--text);color:var(--pulse-surface)}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-player-controls{height:32px}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-player-controls #mediaPlayPause{height:32px;width:32px;min-height:32px;padding:7px}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-volume-row{height:18px;min-height:18px}
+body:not(.settings-window) .el-player.has-lyrics{grid-template-rows:24px 24px 28px 28px minmax(0,1fr)}
+body.theme-light.expanded .header-actions button,body.theme-light.expanded #microphonePrivacy{background:var(--pulse-card);color:var(--pulse-dim)}
+.pulse-stats+.pulse-stat-caption{margin:6px 0}
+body:not(.settings-window) .el-timeline [data-slot=scrub-bar-track]{height:4px;border-radius:99px;background:var(--panel-2)}
+body:not(.settings-window) .el-timeline [data-slot=scrub-bar-progress]>div{background:#80b8aa}
+.pulse-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}.pulse-stat{min-width:0;background:var(--panel);padding:12px;border-radius:16px}.pulse-stat small{display:block;color:var(--muted);font-size:10px}.pulse-stat strong{display:block;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.4}.pulse-stat progress{width:100%;height:4px;accent-color:#80b8aa}.pulse-stat[data-unavailable=true]{opacity:.6}.pulse-stat-caption{font-size:10px;color:var(--muted)}
+body.shape-corner.expanded:not(.settings-window) #island,body.shape-pill.expanded:not(.settings-window) #island{border-radius:var(--pulse-radius)}
+@media(max-width:460px){.pulse-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.live-metrics span:nth-child(-n+2){display:none}body.expanded #date{display:none}body:not(.settings-window) .widget-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){body:not(.settings-window) *{animation:none!important;transition:none!important}}

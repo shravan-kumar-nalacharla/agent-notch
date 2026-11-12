@@ -1,5 +1,16 @@
 [
   {
+    "version": "0.35.0",
+    "date": "2026-11-13",
+    "title": "Refined island UI and plugin workspace",
+    "notes": [
+      "Shared dark and light island surfaces, compact navigation, larger media artwork and stable system metric tiles.",
+      "Home restores live context alongside Quick Access, with file, folder and application actions and reordering.",
+      "Plugin marketplace, review and lifecycle controls, JSON-lines runtime, starter creator and SDK examples.",
+      "Staggered content entrances and header scrolling for expanded tool sizes."
+    ]
+  },
+  {
     "version": "0.34.3",
     "date": "2026-11-12",
     "title": "Compact home icons",

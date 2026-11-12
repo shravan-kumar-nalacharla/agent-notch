@@ -20,7 +20,9 @@
     return animation.finished.catch(()=>{}).finally(()=>{if(running.get(el)===animation){running.delete(el);animation.cancel();}});
   }
   function animatePage(el,direction=1,mode='standard'){
-    if(mode==='off')return;return el.animate([{opacity:.1,transform:`translateX(${direction*32}px) scale(.98)`},{opacity:1,transform:'translateX(0) scale(1)'}],{duration:mode==='subtle'?160:360,easing:'cubic-bezier(.22,1,.36,1)'});
+    if(mode==='off'||typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;return el.animate([{opacity:.1,transform:`translateX(${direction*32}px) scale(.98)`},{opacity:1,transform:'translateX(0) scale(1)'}],{duration:mode==='subtle'?160:320,easing:'cubic-bezier(.22,1,.36,1)'});
   }
-  const api={PRESETS,spring,frames,animateSurface,animatePage};if(typeof module!=='undefined')module.exports=api;else root.IslandSurface=api;
+  function cascade(el,mode='standard'){if(mode==='off'||typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;const nodes=[...el.querySelectorAll('.page:not([hidden]) > *, .pulse-stat')].filter(node=>node.getClientRects().length).slice(0,6);return nodes.map((node,index)=>node.animate([{opacity:0,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:mode==='subtle'?160:280,delay:mode==='subtle'?0:index*55,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}));}
+  function fromRestY(from,to=0,duration=750,preset=PRESETS.y){return Array.from({length:61},(_,i)=>{const offset=i/60,p=i===60?1:spring(offset*duration/1000,preset);return{offset,opacity:Math.min(1,offset*3),transform:`translateY(${from+(to-from)*p}px)`};});}
+  const api={PRESETS,spring,frames,fromRestY,animateSurface,animatePage,cascade};if(typeof module!=='undefined')module.exports=api;else root.IslandSurface=api;
 })(globalThis);

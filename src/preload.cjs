@@ -62,6 +62,8 @@ if(!studioMode)contextBridge.exposeInMainWorld('island', {
   onProductivityDiagnostic:callback=>listen('productivity:diagnostic',callback),
   save: value => ipcRenderer.invoke('state:save', value),
   quick: (op,value={}) => ipcRenderer.invoke('quick:'+op,value),
+  plugins: (op,value={}) => ipcRenderer.invoke('plugins:action',{op,value}),
+  onPlugins: callback => listen('plugins:changed',callback),
   savedProviderKeys:()=>ipcRenderer.invoke('settings:keys'),
   testProvider: value => ipcRenderer.invoke('provider:test', value),
   cancelAsk:id=>ipcRenderer.invoke('assistant:cancel',id),
