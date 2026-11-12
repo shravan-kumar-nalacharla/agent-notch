@@ -1,4 +1,4 @@
-﻿# Agent Notch 0.34.2
-- Minimal Quick Access homepage: icons plus add tile only.
-- Quick Access is separate from Shelf.
-- Full Shelf page remains unchanged.
+﻿# Agent Notch 0.34.3
+- Compact home icons and add control only.
+- Horizontal wheel scrolling for more than four items.
+- Larger date and time.

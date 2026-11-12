@@ -541,6 +541,7 @@ async function renderHomeQuick(){
 $('homeQuick')?.addEventListener('dragover',event=>{if(event.dataTransfer?.types?.includes('Files')){event.preventDefault();$('homeQuick').classList.add('drag-over');}});
 $('homeQuick')?.addEventListener('dragleave',()=>$('homeQuick').classList.remove('drag-over'));
 $('homeQuick')?.addEventListener('drop',()=>$('homeQuick').classList.remove('drag-over'));
+$('homeQuickGrid')?.addEventListener('wheel',event=>{const grid=$('homeQuickGrid');if(grid.scrollWidth<=grid.clientWidth+1)return;if(Math.abs(event.deltaY)<Math.abs(event.deltaX))return;event.preventDefault();grid.scrollLeft+=event.deltaY;},{passive:false});
 function applyState(value) {
   state = value;
   const appearance = value.appearance || {};
@@ -558,7 +559,6 @@ function applyState(value) {
   document.body.classList.toggle('theme-light', !!light);
   $('pin').classList.toggle('active', !!appearance.pinned);
   $('pin').title = appearance.pinned ? 'Unpin island' : 'Pin island open';
-  $('homeTitle').textContent = 'Shelf has quick access.';
   window.islandUpdateDock?.(appearance.favorites || []);
   if (!busy && !nativeRecording) $('status').textContent = value.profileName ? `Ready, ${value.profileName}` : 'Ready';
   document.body.classList.toggle('shape-corner', appearance.shape === 'corner');

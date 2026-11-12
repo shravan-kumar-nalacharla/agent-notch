@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.34.3",
+    "date": "2026-11-12",
+    "title": "Compact home icons",
+    "notes": [
+      "Home shows only compact item icons and the add control.",
+      "More than four items stay in one row and scroll horizontally with the wheel.",
+      "Date and time are larger in the expanded header."
+    ]
+  },
+  {
     "version": "0.34.2",
     "date": "2026-11-12",
     "title": "Minimal Quick Access home",

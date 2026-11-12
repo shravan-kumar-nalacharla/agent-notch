@@ -63,10 +63,8 @@
       <aside id="quietMoment" role="status" aria-live="polite" aria-atomic="true" hidden><span id="quietText" dir="auto"></span><button id="quietPin" aria-label="Pin this thought" aria-pressed="false">⌖</button><button id="quietSkip" aria-label="Skip this thought">›</button><button id="quoteMore" aria-label="Read more in quote library">↗</button><button id="quietFavorite" aria-label="Favorite this thought">♡</button><button id="quietDismiss" aria-label="Dismiss thought">×</button></aside>
       <div class="view-stack">
         <section id="home" class="page" hidden>
-          <div class="home-intro">
-            <div>
-              <h1 id="homeTitle">Shelf has quick access.</h1>
-            </div>
+          <div class="home-intro" aria-hidden="true">
+            <div></div>
             <div class="home-actions">
               <button class="round-action primary" id="homeAsk" title="Ask assistant" aria-label="Ask assistant">
                 <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.5 9.7 9.7 0 0 1-3.7-.7L3 21l1.6-4.6A8.2 8.2 0 0 1 3 11.5a8.4 8.4 0 0 1 9-8.5 8.4 8.4 0 0 1 9 8.5Z"/></svg>
@@ -82,7 +80,7 @@
               </button>
             </div>
           </div>
-          <section id="homeQuick" class="home-quick" aria-label="Quick access">
+          <section id="homeQuick" class="home-quick">
             <div id="homeQuickGrid" class="home-quick-grid"></div>
           </section>
           <div class="home-live" id="homeLive" aria-live="polite">
