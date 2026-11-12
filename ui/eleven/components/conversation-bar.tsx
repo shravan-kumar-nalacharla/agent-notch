@@ -149,7 +149,7 @@ export const ConversationBar = React.forwardRef<
           <div>
             {keyboardOpen && <Separator />}
             <div className="flex items-center justify-between gap-2 p-2">
-              <div className="h-8 w-[120px] md:h-10">
+              <div className={cn("h-8 w-[120px] md:h-10", (status === "disconnected" || status === "error") && "hidden")}>
                 <div
                   className={cn(
                     "flex h-full items-center gap-2 rounded-md py-1",
@@ -186,13 +186,6 @@ export const ConversationBar = React.forwardRef<
                             "opacity-0"
                         )}
                       />
-                      {(status === "disconnected" || status === "error") && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-foreground/50 text-[10px] font-medium">
-                            Agent Notch
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -251,7 +244,7 @@ export const ConversationBar = React.forwardRef<
               keyboardOpen ? "max-h-[120px]" : "max-h-0"
             )}
           >
-            <div className="relative px-2 pt-2 pb-2">
+            <div className="chat-input-row relative px-2 pt-2 pb-2">
               <Textarea id="chatQuestion" aria-label="Chat message"
                 value={textInput}
                 onChange={handleTextChange}

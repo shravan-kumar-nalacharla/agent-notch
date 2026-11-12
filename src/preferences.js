@@ -31,6 +31,7 @@
       <label>Your name<input id="profileName" maxlength="50" placeholder="How should Agent Notch address you?"></label>
       ${choose('islandShape', 'Shape', [['notch', 'Dynamic Notch'], ['corner', 'Corner Island'], ['pill', 'Floating pill'], ['line', 'Minimal line']])}
       ${choose('islandTheme', 'Theme', [['system', 'Follow Windows'], ['dark', 'Dark'], ['light', 'Light']])}
+      <div class="settings-card"><h4>Colors and typography</h4><label>Accent color<input id="islandAccentColor" type="color" value="#d6ed83"></label>${choose('islandUIFont','Interface font',[['system','Segoe UI — Windows default'],['arial','Arial — clean sans serif'],['serif','Georgia — serif'],['mono','Cascadia / Consolas — monospace']])}<small>The accent colors panel lighting, timer controls and selected actions.</small></div>
       ${check('pinIsland', 'Keep the island fully open')}
       ${choose('islandDisplay', 'Screen', [['primary', 'Primary screen'], ['cursor', 'Screen under pointer']])}
       ${check('islandMinimal', 'Use a thin line when closed')}
@@ -206,6 +207,7 @@
     $('profileName').value = state.profileName || '';
     $('islandShape').value = appearance.shape || 'notch';
     $('islandTheme').value = appearance.theme || 'system';
+    $('islandAccentColor').value=appearance.accentColor||'#d6ed83';$('islandUIFont').value=appearance.uiFont||'system';
     $('pinIsland').checked = !!appearance.pinned;
     $('islandMinimal').checked = !!appearance.minimal;
     $('islandMascot').checked = appearance.mascot !== false;
@@ -244,6 +246,7 @@
       display: $('islandDisplay').value,
       shape: $('islandShape').value,
       theme: $('islandTheme').value,
+      accentColor:$('islandAccentColor').value,uiFont:$('islandUIFont').value,
       pinned: $('pinIsland').checked,
       minimal: $('islandMinimal').checked,
       mascot: $('islandMascot').checked,

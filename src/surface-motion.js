@@ -12,7 +12,7 @@
   const running=new WeakMap();
   function animateSurface(el,on,{width=470,height=250,mode='standard',floating=false,initial=null}={}){
     const old=running.get(el),r=el.getBoundingClientRect(),current=old?{width:r.width,height:r.height,y:r.top,scale:1,opacity:+getComputedStyle(el).opacity,radius:25}:null;old?.cancel();
-    const small={width:Math.min(174,width),height:26,y:-32,scale:.94,opacity:0,radius:14},large={width,height,y:0,scale:1,opacity:1,radius:25};
+    const small={width:Math.min(174,width),height:26,y:-32,scale:.94,opacity:0,radius:14},large={width,height,y:0,scale:1,opacity:1,radius:36};
     if(floating){small.y=-20;large.y=0;}
     const duration=mode==='off'?0:mode==='subtle'?180:on?700:440;
     const keyframes=mode==='subtle'?[{opacity:on?0:1},{opacity:on?1:0}]:frames(initial||current||(on?small:large),on?large:small,duration);

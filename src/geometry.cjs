@@ -1,10 +1,11 @@
 'use strict';
 const DENSITIES={compact:{width:410,height:230},default:{width:470,height:250},roomy:{width:540,height:280}};
 const TOOL_SIZES={compact:{width:410,height:230},standard:{width:470,height:250},spacious:{width:640,height:440}};
+const TOOL_HEIGHTS={tools:380,timer:330,water:290,shelf:300,todo:310,system:340,reminders:360,clips:340,history:380,plugins:440};
 function layoutFor(display,appearance={}){
   const choice=appearance.toolSizes?.[appearance.activeTool],toolSize=Object.hasOwn(TOOL_SIZES,choice)?choice:appearance.activeTool==='terminal'?'spacious':'auto';
   const size=TOOL_SIZES[toolSize]||DENSITIES[appearance.density]||DENSITIES.default,area=display.workArea,bounds=display.bounds;
-  const panelWidth=Math.min(size.width,area.width-48),panelHeight=Math.min(size.height,area.height-40),richHeight=Math.min(315,area.height-40);
+  const panelWidth=Math.min(size.width,area.width-48),panelHeight=Math.min(toolSize==='auto'?(TOOL_HEIGHTS[appearance.activeTool]||size.height):size.height,area.height-40),richHeight=Math.min(315,area.height-40);
   const width=Math.round(panelWidth+48),height=Math.round(Math.max(panelHeight,richHeight)+24),floating=appearance.shape==='pill'||appearance.shape==='corner',corner=appearance.shape==='corner';
   let center=area.x+area.width/2,y=area.y;
   if(corner){center=area.x+area.width-width/2-12;y=area.y+10;}else if(floating){const saved=appearance.float||{};center=area.x+Number(saved.centerXDIP??area.width/2);center=Math.max(area.x+width/2,Math.min(area.x+area.width-width/2,center));y=Math.max(area.y,Math.min(area.y+area.height-height,area.y+Number(saved.yDIP||12)));}
@@ -23,7 +24,7 @@ class IslandGeometry{
     if(JSON.stringify(current)!==JSON.stringify(this.layout.bounds)){
       const target=this.layout.bounds,hold=this.expanded&&a.motion!=='off'&&previous?.displayId===this.layout.displayId&&(previous.bounds.width>target.width||previous.bounds.height>target.height),bounds=hold?{x:Math.round(this.layout.centerX-Math.max(current.width,target.width)/2),y:target.y,width:Math.max(current.width,target.width),height:Math.max(current.height,target.height)}:target;
       this.programmaticUntil=performance.now()+240;this.win.setBounds(bounds);this.trace({event:'setBounds',at:performance.now(),bounds,display:{id:display.id,bounds:display.bounds,workArea:display.workArea,scaleFactor:display.scaleFactor}});
-      if(hold){const layout=this.layout;this.shrinkTimer=setTimeout(()=>{if(this.layout===layout&&!this.win.isDestroyed?.())this.win.setBounds(target);},220);this.shrinkTimer.unref?.();}
+      if(hold){const layout=this.layout;this.shrinkTimer=setTimeout(()=>{if(this.layout===layout&&!this.win.isDestroyed?.())this.win.setBounds(target);},520);this.shrinkTimer.unref?.();}
     }
     this.win.webContents.send('window:layout',this.layout);return this.layout;
   }

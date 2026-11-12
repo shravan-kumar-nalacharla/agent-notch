@@ -1,0 +1,2 @@
+const{test}=require('node:test'),assert=require('node:assert/strict');const{validateVisualStyle}=require('../src/appearance-style.cjs');
+test('appearance colors and fonts only accept supported values',()=>{assert.deepEqual(validateVisualStyle({accentColor:'#ABCDEF',uiFont:'serif'}),{accentColor:'#abcdef',uiFont:'serif'});assert.deepEqual(validateVisualStyle({theme:'dark'}),{});assert.throws(()=>validateVisualStyle({accentColor:'url(secret)'}));assert.throws(()=>validateVisualStyle({uiFont:'external-font'}));});

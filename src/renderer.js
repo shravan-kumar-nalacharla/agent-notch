@@ -103,7 +103,7 @@ window.island.onLayout?.(layout=>{
   document.body.style.setProperty('--island-width',layout.panelWidth+'px');document.body.style.setProperty('--compact-height',layout.panelHeight+'px');document.body.style.setProperty('--rich-height',layout.richHeight+'px');
   const height=document.body.classList.contains('rich-media')?layout.richHeight:layout.panelHeight;
   if(expanded&&!document.body.classList.contains('surface-animating')&&state?.appearance?.motion!=='off'&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&(Math.abs(before.width-layout.panelWidth)>1||Math.abs(before.height-height)>1)){
-    const animation=panel.animate([{width:before.width+'px',height:before.height+'px'},{width:layout.panelWidth+'px',height:height+'px'}],{duration:180,easing:'ease-out',fill:'both'});panelResize=animation;animation.finished.catch(()=>{}).finally(()=>{animation.cancel();if(panelResize===animation)panelResize=null;sendHitbox();});
+    const frames=Array.from({length:46},(_,index)=>{const t=index/45,p=index===45?1:IslandSurface.spring(t*.48,{stiffness:230,damping:30});return{offset:t,width:before.width+(layout.panelWidth-before.width)*p+'px',height:before.height+(height-before.height)*p+'px'};});const animation=panel.animate(frames,{duration:480,easing:'linear',fill:'both'});panelResize=animation;animation.finished.catch(()=>{}).finally(()=>{animation.cancel();if(panelResize===animation)panelResize=null;sendHitbox();});
   }
   requestAnimationFrame(sendHitbox);
 });
@@ -111,7 +111,8 @@ window.island.layout?.().then(r=>{if(r.ok){document.body.style.setProperty('--is
 $('activationTarget').onclick=async()=>{window.islandVoiceDismissed=false;if(window.island.save&&!state?.appearance?.pinned)await window.island.save({appearance:{pinned:true}});return window.island.activate?window.island.activate({revealOnly:true}).then(result).catch(showError):expand(true);};
 $('activationTarget').addEventListener('wheel',event=>{if(event.deltaY<=0)return;event.preventDefault();window.islandVoiceDismissed=false;window.island.activate?.({revealOnly:true}).catch(showError);},{passive:false});
 $('island').querySelector('header').addEventListener('click',event=>{if(!expanded||event.target.closest('button,input,select,textarea,a'))return;if(event.target.closest('header'))window.island.save?.({appearance:{pinned:!state?.appearance?.pinned}}).catch(showError);});
-window.addEventListener('wheel',event=>{if(!expanded||Math.abs(event.deltaX)<8&&(!event.shiftKey||Math.abs(event.deltaY)<8)||event.target.closest('input,textarea,select,.home-quick-grid'))return;window.dispatchEvent(new CustomEvent('island:horizontal-scroll',{detail:{direction:(event.deltaX||event.deltaY)>0?1:-1}}));},{passive:true});
+let horizontalTravel=0,horizontalAt=0,horizontalSwitchAt=0;
+window.addEventListener('wheel',event=>{if(!expanded||event.defaultPrevented||Math.abs(event.deltaX)<8&&(!event.shiftKey||Math.abs(event.deltaY)<8)||event.target.closest('input,textarea,select,.home-quick-grid,.shelf-cards,.widget-grid'))return;const now=performance.now();if(now-horizontalAt>180)horizontalTravel=0;horizontalAt=now;horizontalTravel+=event.deltaX||event.deltaY;if(Math.abs(horizontalTravel)<70||now-horizontalSwitchAt<500)return;horizontalSwitchAt=now;window.dispatchEvent(new CustomEvent('island:horizontal-scroll',{detail:{direction:horizontalTravel>0?1:-1}}));horizontalTravel=0;},{passive:true});
 function tab(name) {
   if (name === 'focus') { window.islandOpenTool?.('timer'); return; }
   if (name === 'settings' && !settingsMode) {
@@ -193,12 +194,12 @@ document.addEventListener('keydown',()=>{lastInteractionAt=Date.now();});
 document.documentElement.addEventListener('mouseleave',()=>{motion.inside=false;if(!settingsMode&&expanded)scheduleAutoClose();});
 window.addEventListener('blur',()=>setTimeout(()=>{if(!motion.inside&&expanded&&!settingsMode)scheduleAutoClose();},150));
 setInterval(()=>{if(settingsMode||!expanded||motion.inside||document.body.classList.contains('surface-animating')||['CLOSING_GRACE','COLLAPSING'].includes(motion.state))return;if(canAutoClose())scheduleAutoClose();},1000);
-window.addEventListener('dragenter', () => { motion.cancel('leave'); document.body.classList.add('is-dragging'); });
+window.addEventListener('dragenter', event => { if(!event.dataTransfer?.types?.includes('Files'))return;motion.cancel('leave'); document.body.classList.add('is-dragging');if(!expanded)expand(true).catch(showError); });
 window.addEventListener('dragend', () => document.body.classList.remove('is-dragging'));
 window.addEventListener('drop', () => document.body.classList.remove('is-dragging'));
 window.addEventListener('dragover', event => {if(event.dataTransfer?.types?.includes('Files')){event.preventDefault();document.body.classList.add('file-dragging');}});
 window.addEventListener('dragleave', event => {if(!event.relatedTarget)document.body.classList.remove('file-dragging');});
-document.addEventListener('drop', async event => {const files=[...event.dataTransfer?.files||[]];if(!files.length)return;event.preventDefault();event.stopPropagation();document.body.classList.remove('file-dragging');const paths=files.map(file=>window.island.filePath?.(file)).filter(Boolean);if(!paths.length)return;if(event.target.closest('#homeQuick')){const reply=await window.island.quick('addPaths',{paths});if(!reply.ok)showError(reply);else renderHomeQuick();return;}await openFileActions(paths);},true);
+document.addEventListener('drop', async event => {const files=[...event.dataTransfer?.files||[]];if(!files.length)return;event.preventDefault();event.stopImmediatePropagation();document.body.classList.remove('file-dragging','is-dragging');$('homeQuick')?.classList.remove('drag-over');const paths=files.map(file=>window.island.filePath?.(file)).filter(Boolean);if(!paths.length)return;try{if(event.target.closest('#homeQuick')||activeView==='home'){await result(window.island.quick('addPaths',{paths}));await renderHomeQuick();}else{await result(window.island.library('shelf:add',{paths}));window.islandOpenTool?.('shelf');}}catch(error){showError(error);}},true);
 document.addEventListener('contextmenu', event => {
   event.preventDefault();
   window.island.settings();
@@ -541,7 +542,7 @@ async function renderHomeQuick(){
       cell.ondragstart=event=>{event.dataTransfer.setData('text/x-agent-notch-quick-index',String(index));event.dataTransfer.effectAllowed='move';};cell.ondragover=event=>{if(event.dataTransfer.types.includes('text/x-agent-notch-quick-index'))event.preventDefault();};cell.ondrop=async event=>{const from=Number(event.dataTransfer.getData('text/x-agent-notch-quick-index'));if(Number.isInteger(from)){event.preventDefault();await window.island.quick('reorder',{from,to:index});renderHomeQuick();}};
       cell.append(button,remove);grid.append(cell);
     }
-    const adds=document.createElement('div');adds.className='quick-adds';for(const [op,label,glyph] of [['add','Add files','+'],['addFolder','Add folders','▱'],['addApp','Add apps','◆']]){const add=document.createElement('button');add.type='button';add.className='quick-add';add.title=label;add.setAttribute('aria-label',label);add.textContent=glyph;add.onclick=async()=>{const reply=await window.island.quick(op);if(!reply.ok)showError(reply);else renderHomeQuick();};adds.append(add);}grid.append(adds);
+    const add=document.createElement('button');add.type='button';add.className='quick-drop-add'+(icons.length?'':' is-empty');add.title='Add files, folders or apps';add.setAttribute('aria-label',icons.length?'Add to Quick Access':'Add to Quick Access or drop your files here');const plus=document.createElement('span');plus.textContent='+';plus.setAttribute('aria-hidden','true');add.append(plus);if(!icons.length){const hint=document.createElement('small');hint.textContent='Drop your files here';add.append(hint);}add.onclick=()=>window.island.quick('menuAdd').then(reply=>{if(!reply.ok)showError(reply);});grid.append(add);
   }catch(error){if(serial===homeQuickSeq)grid.replaceChildren();}
 }
 $('homeQuick')?.addEventListener('dragover',event=>{if(event.dataTransfer?.types?.includes('Files')){event.preventDefault();$('homeQuick').classList.add('drag-over');}});
@@ -600,9 +601,9 @@ $('askTranscript').onclick = () => ask($('transcript').value);
 
 const screenButton = document.createElement('button');
 screenButton.className = 'screen-guide';
-screenButton.textContent = 'Screen guidance';
+screenButton.textContent = 'Ask about screen';
 screenButton.title = 'Uses a screenshot for grounded instructions.';
-$('assistant').insertBefore(screenButton, $('screenGuide') || null);
+$('assistant').querySelector('.page-head').append(screenButton);
 
 $('chatVoiceInput').onclick=async()=>{try{if(nativeRecording)await result(window.island.nativeVoice('finish'));else{tab('assistant');await startNativeVoice('chat_input');}}catch(e){showError(e);}};
 

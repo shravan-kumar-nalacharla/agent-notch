@@ -18,7 +18,7 @@
 </head>
 <body>
   <button id="activationTarget" aria-label="Open Agent Notch" title="Open Agent Notch"></button>
-  <div id="fileDropOverlay" aria-hidden="true"><b>Drop a file to convert or edit</b><small>Image · video · audio · document</small></div>
+  <div id="fileDropOverlay" aria-hidden="true"><b>Drop to keep it close</b><small>Quick Access on Home · Shelf in tools</small></div>
   <main id="island">
     <div id="companionGlow" aria-hidden="true"><i></i><i></i><i></i></div>
     <header>
@@ -103,7 +103,8 @@
             <button class="soft-chip" id="openSettings" title="Provider settings">Providers</button>
           </div>
           <div id="messages" role="log" aria-live="polite"></div>
-          <details id="transcriptBox" hidden><summary>Last transcript</summary>
+          <button id="chatHistory" type="button" class="chat-history" title="Open dictation history">History</button>
+          <details id="transcriptBox" hidden><summary>Review dictation draft</summary>
             <label for="transcript">Dictation</label>
             <textarea id="transcript" rows="2"></textarea>
             <div class="row">
@@ -119,7 +120,7 @@
             </button>
           </form>
           <div class="row hint">
-            <span>Hold Ctrl + Shift + Windows to type in other apps</span>
+            <span></span>
             <span id="providerLabel"></span>
           </div>
         </section>
@@ -275,5 +276,7 @@
   <link rel="stylesheet" href="eleven-panels.css">
   <script src="vendor/eleven-components.js"></script>
   <link rel="stylesheet" href="pulse.css">
+  <link rel="stylesheet" href="vendor/phosphor/style.css">
+  <script src="refinement-ui.js"></script>
 </body>
 </html>

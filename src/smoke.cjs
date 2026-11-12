@@ -24,6 +24,7 @@ exports.run=async function({app,win,screen,getSettingsWindow,native,widgets,geom
   if(process.argv.includes('--plugins-check'))return require('./smoke-plugins.cjs')({win,out,saveSnapshot});
   if(process.argv.includes('--render-gallery'))return require('./smoke-render-gallery.cjs')({win,getSettingsWindow,out,saveSnapshot});
   if(process.argv.includes('--pulse-check'))return require('./smoke-pulse.cjs')({win,out,saveSnapshot});
+  if(process.argv.includes('--refinement-check'))return require('./smoke-refinement.cjs')({win,out,saveSnapshot});
   if(process.argv.includes('--notch-reminder-check'))return require('./smoke-notch.cjs')({win,widgets,getSettingsWindow,out,saveSnapshot});
   if(process.argv.includes('--notch-pointer-check'))return require('./smoke-notch-pointer.cjs')({app,win,screen,widgets,geometry,out,saveSnapshot});
   if(process.argv.includes('--privacy-check'))return require('./smoke-privacy.cjs')({app,win,getSettingsWindow,native,state,out,saveSnapshot});

@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.35.1",
+    "date": "2026-11-13",
+    "title": "Clearer drops and a softer workspace",
+    "notes": [
+      "Quick Access shows a dotted drop target while empty; drops go to Quick Access or Shelf without opening File Studio.",
+      "Tool names scroll in a wheel-style list, with slower scrolling and smooth panel resizing.",
+      "Soft accent lighting across panels, improved timer spacing, and saved accent color and font choices in Appearance.",
+      "Aligned chat input controls, an existing-history shortcut, and progressive assistant replies that respect reduced motion.",
+      "Phosphor menu and header icons are bundled for offline use."
+    ]
+  },
+  {
     "version": "0.35.0",
     "date": "2026-11-13",
     "title": "Refined island UI and plugin workspace",
