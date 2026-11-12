@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.34.2",
+    "date": "2026-11-12",
+    "title": "Minimal Quick Access home",
+    "notes": [
+      "The home page now shows only the Quick Access icons and an add tile.",
+      "Quick Access is a separate path store from Shelf; the full Shelf page is unchanged.",
+      "Removed the home shelf labels, subtitle and drop hint."
+    ]
+  },
+  {
     "version": "0.34.1",
     "date": "2026-11-12",
     "title": "Homepage Shelf and native icons",

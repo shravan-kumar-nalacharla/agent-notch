@@ -195,7 +195,7 @@ window.addEventListener('dragend', () => document.body.classList.remove('is-drag
 window.addEventListener('drop', () => document.body.classList.remove('is-dragging'));
 window.addEventListener('dragover', event => {if(event.dataTransfer?.types?.includes('Files')){event.preventDefault();document.body.classList.add('file-dragging');}});
 window.addEventListener('dragleave', event => {if(!event.relatedTarget)document.body.classList.remove('file-dragging');});
-document.addEventListener('drop', async event => {const files=[...event.dataTransfer?.files||[]];if(!files.length)return;event.preventDefault();event.stopPropagation();document.body.classList.remove('file-dragging');const paths=files.map(file=>window.island.filePath?.(file)).filter(Boolean);if(!paths.length)return;if(event.target.closest('#homeShelf')){try{const lib=await window.island.library('shelf:add',{paths});renderHomeShelf();}catch(error){showError(error);}return;}await openFileActions(paths);},true);
+document.addEventListener('drop', async event => {const files=[...event.dataTransfer?.files||[]];if(!files.length)return;event.preventDefault();event.stopPropagation();document.body.classList.remove('file-dragging');const paths=files.map(file=>window.island.filePath?.(file)).filter(Boolean);if(!paths.length)return;if(event.target.closest('#homeQuick')){const reply=await window.island.quick('addPaths',{paths});if(!reply.ok)showError(reply);else renderHomeQuick();return;}await openFileActions(paths);},true);
 document.addEventListener('contextmenu', event => {
   event.preventDefault();
   window.island.settings();
@@ -519,37 +519,28 @@ window.island.onVoice?.(event => {
   }
 });
 
-let homeShelfSeq=0;
-function shelfName(value){return String(value||'').split(/[\\/]/).pop()||'Item';}
-async function renderHomeShelf(){
-  const mount=$('homeShelfItems'),count=$('homeShelfCount'),more=$('homeShelfMore');if(!mount)return;
-  const serial=++homeShelfSeq;
+let homeQuickSeq=0;
+function quickName(path){return String(path||'').split(/[\\/]/).filter(Boolean).pop()||'Item';}
+async function renderHomeQuick(){
+  const grid=$('homeQuickGrid');if(!grid)return;const serial=++homeQuickSeq;
   try{
-    const libReply=await window.island.library(),lib=libReply?.ok===false?null:(libReply?.value??libReply);const paths=Array.isArray(lib?.shelf)?lib.shelf:[];
-    count.textContent=paths.length+' item'+(paths.length===1?'':'s');
-    const iconsReply=paths.length?await window.island.desktop('shelf:icons'):null,icons=iconsReply?.ok===false?[]:(iconsReply?.value??iconsReply??[]);
-    if(serial!==homeShelfSeq)return;
-    const items=(icons||[]).slice(0,4);mount.replaceChildren();
-    if(!paths.length){const empty=document.createElement('button');empty.className='shelf-widget-empty';empty.type='button';empty.innerHTML='<b>Your shelf is empty</b><small>Add files or drop them here for quick access.</small>';empty.onclick=()=>chooseShelfFiles();mount.append(empty);more.hidden=true;return;}
-    for(const item of items){
-      const button=document.createElement('button');button.className='shelf-widget-item';button.type='button';button.title=item.path;
-      if(item.icon){const image=document.createElement('img');image.src=item.icon;image.alt='';button.append(image);}else{const fallback=document.createElement('i');fallback.className='shelf-fallback';fallback.textContent='▤';button.append(fallback);}
-      const label=document.createElement('span');label.textContent=item.name||shelfName(item.path);button.append(label);
-      button.onclick=()=>window.island.desktop('shelf:open',{path:item.path}).then(r=>{if(!r.ok)showError(r);});
-      button.ondragover=event=>{event.preventDefault();button.classList.add('drag-over');};
-      button.ondragleave=()=>button.classList.remove('drag-over');
-      button.ondrop=event=>event.preventDefault();
-      mount.append(button);
+    const listReply=await window.island.quick('get');const paths=listReply?.ok===false?[]:(listReply?.value??listReply??[]);
+    const iconReply=paths.length?await window.island.quick('icons'):null;const icons=iconReply?.ok===false?[]:(iconReply?.value??iconReply??[]);
+    if(serial!==homeQuickSeq)return;grid.replaceChildren();
+    for(const item of icons){
+      const cell=document.createElement('div');cell.className='quick-cell';cell.title=item.path;
+      const button=document.createElement('button');button.type='button';button.className='quick-icon';button.setAttribute('aria-label',item.name||quickName(item.path));
+      if(item.icon){const image=document.createElement('img');image.src=item.icon;image.alt='';button.append(image);}else{const fallback=document.createElement('span');fallback.textContent='▤';button.append(fallback);}
+      button.onclick=()=>window.island.quick('open',{path:item.path}).then(reply=>{if(!reply.ok)showError(reply);});
+      const remove=document.createElement('button');remove.type='button';remove.className='quick-remove';remove.textContent='×';remove.title='Remove';remove.onclick=async event=>{event.stopPropagation();const reply=await window.island.quick('remove',{path:item.path});if(reply.ok)renderHomeQuick();};
+      cell.append(button,remove);grid.append(cell);
     }
-    more.hidden=paths.length<=4;more.textContent=paths.length>4?`+${paths.length-4}`:'';
-  }catch(error){if(serial===homeShelfSeq){mount.replaceChildren();count.textContent='Shelf unavailable';}}
+    const add=document.createElement('button');add.type='button';add.className='quick-add';add.title='Add files';add.setAttribute('aria-label','Add files');add.textContent='+';add.onclick=async()=>{const reply=await window.island.quick('add');if(!reply.ok)showError(reply);else renderHomeQuick();};grid.append(add);
+  }catch(error){if(serial===homeQuickSeq)grid.replaceChildren();}
 }
-async function chooseShelfFiles(){try{const reply=await window.island.desktop('shelf:choose');if(reply?.ok===false)throw reply.error;if(reply)renderHomeShelf();}catch(error){showError(error);}}
-$('homeShelf')?.addEventListener('dragover',event=>{if(event.dataTransfer?.types?.includes('Files')){event.preventDefault();$('homeShelf').classList.add('drag-over');}});
-$('homeShelf')?.addEventListener('dragleave',()=>$('homeShelf').classList.remove('drag-over'));
-$('homeShelf')?.addEventListener('drop',()=>$('homeShelf').classList.remove('drag-over'));
-$('homeShelf')?.addEventListener('click',event=>{const add=event.target.closest('[data-shelf-add]'),open=event.target.closest('[data-shelf-open]');if(add)chooseShelfFiles();else if(open)window.islandOpenTool?.('shelf');});
-window.island.onLibrary?.(()=>renderHomeShelf());
+$('homeQuick')?.addEventListener('dragover',event=>{if(event.dataTransfer?.types?.includes('Files')){event.preventDefault();$('homeQuick').classList.add('drag-over');}});
+$('homeQuick')?.addEventListener('dragleave',()=>$('homeQuick').classList.remove('drag-over'));
+$('homeQuick')?.addEventListener('drop',()=>$('homeQuick').classList.remove('drag-over'));
 function applyState(value) {
   state = value;
   const appearance = value.appearance || {};
@@ -567,11 +558,11 @@ function applyState(value) {
   document.body.classList.toggle('theme-light', !!light);
   $('pin').classList.toggle('active', !!appearance.pinned);
   $('pin').title = appearance.pinned ? 'Unpin island' : 'Pin island open';
-  $('homeTitle').textContent = value.profileName ? `Hi, ${value.profileName}.` : "Hey, I'm here.";
+  $('homeTitle').textContent = 'Shelf has quick access.';
   window.islandUpdateDock?.(appearance.favorites || []);
   if (!busy && !nativeRecording) $('status').textContent = value.profileName ? `Ready, ${value.profileName}` : 'Ready';
   document.body.classList.toggle('shape-corner', appearance.shape === 'corner');
-  renderHomeShelf();
+  renderHomeQuick();
   if (appearance.pinned && !window.islandVoiceDismissed && !expanded && !settingsMode) expand(true).catch(showError);
   else if (!appearance.pinned && expanded && !settingsMode && !motion.inside) scheduleAutoClose();
 }
@@ -823,4 +814,5 @@ result(window.island.get()).then(value => {
     tab('home');
   }
 }).catch(showError);
+
 

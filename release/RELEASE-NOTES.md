@@ -1,5 +1,4 @@
-﻿# Agent Notch 0.34.1
-- Homepage Shelf widget, backed by the existing Shelf store.
-- Full Shelf page remains available.
-- Legacy Quick Access entries migrate into Shelf once.
-- Centralized Windows icon resolver for apps, shortcuts, images and folders.
+﻿# Agent Notch 0.34.2
+- Minimal Quick Access homepage: icons plus add tile only.
+- Quick Access is separate from Shelf.
+- Full Shelf page remains unchanged.
