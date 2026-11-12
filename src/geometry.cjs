@@ -5,9 +5,9 @@ function layoutFor(display,appearance={}){
   const choice=appearance.toolSizes?.[appearance.activeTool],toolSize=Object.hasOwn(TOOL_SIZES,choice)?choice:appearance.activeTool==='terminal'?'spacious':'auto';
   const size=TOOL_SIZES[toolSize]||DENSITIES[appearance.density]||DENSITIES.default,area=display.workArea,bounds=display.bounds;
   const panelWidth=Math.min(size.width,area.width-48),panelHeight=Math.min(size.height,area.height-40),richHeight=Math.min(315,area.height-40);
-  const width=Math.round(panelWidth+48),height=Math.round(Math.max(panelHeight,richHeight)+24),floating=appearance.shape==='pill';
+  const width=Math.round(panelWidth+48),height=Math.round(Math.max(panelHeight,richHeight)+24),floating=appearance.shape==='pill'||appearance.shape==='corner',corner=appearance.shape==='corner';
   let center=area.x+area.width/2,y=area.y;
-  if(floating){const saved=appearance.float||{};center=area.x+Number(saved.centerXDIP??area.width/2);center=Math.max(area.x+width/2,Math.min(area.x+area.width-width/2,center));y=Math.max(area.y,Math.min(area.y+area.height-height,area.y+Number(saved.yDIP||12)));}
+  if(corner){center=area.x+area.width-width/2-12;y=area.y+10;}else if(floating){const saved=appearance.float||{};center=area.x+Number(saved.centerXDIP??area.width/2);center=Math.max(area.x+width/2,Math.min(area.x+area.width-width/2,center));y=Math.max(area.y,Math.min(area.y+area.height-height,area.y+Number(saved.yDIP||12)));}
   return{bounds:{x:Math.round(center-width/2),y:Math.round(y),width,height},panelWidth,panelHeight,richHeight,centerX:center,displayId:String(display.id),scaleFactor:display.scaleFactor,toolSize:choice||'auto'};
 }
 class IslandGeometry{
@@ -34,7 +34,7 @@ class IslandGeometry{
     const a=this.getAppearance();
     if(a.display==='cursor'&&a.shape!=='pill'&&!this.expanded&&!this.voice&&!this.reminder&&!this.userMove){const id=String(this.screen.getDisplayNearestPoint(point).id);if(id!==this.layout.displayId){if(this.followCandidate?.id!==id)this.followCandidate={id,at:this.now()};if(this.now()-this.followCandidate.at>=650){this.followDisplay=id;this.followCandidate=null;this.reflow();}}else this.followCandidate=null;}else this.followCandidate=null;
     const b=this.win.getBounds();
-    const rect=this.expanded||this.voice?this.rect||{x:24,y:0,width:this.layout.panelWidth,height:this.voice?38:this.layout.panelHeight}:{x:(b.width-(a.lineWidthDip||100))/2-8,y:0,width:(a.lineWidthDip||100)+16,height:12};
+    const rect=this.expanded||this.voice?this.rect||{x:24,y:0,width:this.layout.panelWidth,height:this.voice?38:this.layout.panelHeight}:a.shape==='corner'?{x:b.width-76,y:0,width:76,height:36}:{x:(b.width-(a.lineWidthDip||100))/2-8,y:0,width:(a.lineWidthDip||100)+16,height:12};
     const x=point.x-b.x,y=point.y-b.y,inside=x>=rect.x&&x<=rect.x+rect.width&&y>=rect.y&&y<=rect.y+rect.height;
     const ignored=!inside&&!this.userMove;
     if(ignored!==this.ignored){this.win.setIgnoreMouseEvents(ignored,{forward:true});this.ignored=ignored;}

@@ -29,7 +29,7 @@
     <section class="settings-group" id="islandGroup">
       <div class="group-heading"><h3>Island</h3><small>Appearance and Windows behavior.</small></div>
       <label>Your name<input id="profileName" maxlength="50" placeholder="How should Agent Notch address you?"></label>
-      ${choose('islandShape', 'Shape', [['notch', 'Notch'], ['pill', 'Floating pill'], ['line', 'Minimal line']])}
+      ${choose('islandShape', 'Shape', [['notch', 'Dynamic Notch'], ['corner', 'Corner Island'], ['pill', 'Floating pill'], ['line', 'Minimal line']])}
       ${choose('islandTheme', 'Theme', [['system', 'Follow Windows'], ['dark', 'Dark'], ['light', 'Light']])}
       ${check('pinIsland', 'Keep the island fully open')}
       ${choose('islandDisplay', 'Screen', [['primary', 'Primary screen'], ['cursor', 'Screen under pointer']])}

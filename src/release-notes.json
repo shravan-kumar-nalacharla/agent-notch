@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.34.0",
+    "date": "2026-11-12",
+    "title": "Corner island, quick access and motion",
+    "notes": [
+      "Adds a Corner Island presentation mode with the same hover, pin and expansion behavior.",
+      "Adds a real quick-access shelf for files, folders and applications with native Windows icons and persistence.",
+      "Thought popups now use a seven-second enter/hold/exit cycle."
+    ]
+  },
+  {
     "version": "0.33.1",
     "date": "2026-11-10",
     "title": "Update channel verification",
