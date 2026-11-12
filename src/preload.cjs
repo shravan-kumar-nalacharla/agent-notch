@@ -61,7 +61,6 @@ if(!studioMode)contextBridge.exposeInMainWorld('island', {
   onProductivityOpen:callback=>listen('productivity:open',callback),
   onProductivityDiagnostic:callback=>listen('productivity:diagnostic',callback),
   save: value => ipcRenderer.invoke('state:save', value),
-  quick: (op,value={}) => ipcRenderer.invoke('quick:action',{op,value}),
   savedProviderKeys:()=>ipcRenderer.invoke('settings:keys'),
   testProvider: value => ipcRenderer.invoke('provider:test', value),
   cancelAsk:id=>ipcRenderer.invoke('assistant:cancel',id),
@@ -126,4 +125,5 @@ if(!studioMode)contextBridge.exposeInMainWorld('island', {
   onCollapse: callback => ipcRenderer.on('window:collapse', () => callback()),
   onRestore: callback => listen('window:restore',callback)
 });
+
 

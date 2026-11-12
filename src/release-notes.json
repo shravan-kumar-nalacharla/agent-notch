@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.34.1",
+    "date": "2026-11-12",
+    "title": "Homepage Shelf and native icons",
+    "notes": [
+      "The homepage now has a compact Shelf widget backed by the same Shelf store as the full page.",
+      "Quick Access was consolidated into Shelf; legacy entries migrate once into Shelf.",
+      "A centralized icon resolver handles executables, shortcuts, images, folders and cached icons."
+    ]
+  },
+  {
     "version": "0.34.0",
     "date": "2026-11-12",
     "title": "Corner island, quick access and motion",

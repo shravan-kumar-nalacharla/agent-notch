@@ -84,10 +84,10 @@
               </button>
             </div>
           </div>
-          <section id="quickAccess" class="quick-access" aria-label="Quick access">
-            <div class="qa-head"><span>QUICK ACCESS</span><div class="qa-actions"><button type="button" data-quick-add="file">+ File</button><button type="button" data-quick-add="folder">+ Folder</button><button type="button" data-quick-add="app">+ App</button></div></div>
-            <div id="quickGrid" class="quick-grid"></div>
-            <div id="quickEmpty" class="quick-empty">Pin files, folders and apps here, or drop them onto this area.</div>
+          <section id="homeShelf" class="home-shelf" aria-label="Shelf preview">
+            <div class="shelf-widget-head"><span class="shelf-widget-title"><span class="shelf-mark">▣</span> Shelf</span><span id="homeShelfCount" class="shelf-widget-count">0 items</span><button type="button" class="shelf-open-link" data-shelf-open>Open Shelf</button></div>
+            <div id="homeShelfItems" class="shelf-widget-items"></div>
+            <div class="shelf-widget-foot"><button type="button" class="shelf-add-button" data-shelf-add>+ Add files</button><span id="homeShelfMore" class="shelf-more" hidden></span><span class="shelf-drop-hint">Drop files here</span></div>
           </section>
           <div class="home-live" id="homeLive" aria-live="polite">
             <div class="live-primary">

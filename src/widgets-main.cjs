@@ -1,6 +1,6 @@
 'use strict';
 const path=require('node:path');const fs=require('node:fs');const os=require('node:os');const{createLibrary}=require('./library.cjs');const{transformBitmap}=require('./image-transform.cjs');const mediaTools=require('./media-tools.cjs');const documentTools=require('./document-tools.cjs');const pdfTools=require('./pdf-tools.cjs');const archiveTools=require('./archive-tools.cjs');const subtitleTools=require('./subtitle-tools.cjs');
-const{calendarDate,parseCalendar,readCalendar}=require('./calendar.cjs');
+const{calendarDate,parseCalendar,readCalendar}=require('./calendar.cjs');const{createIconResolver}=require('./icon-resolver.cjs');
 const{createLyricsClient}=require('./lyrics.cjs');
 function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,powerMonitor,safeStorage,screen,nativeImage,native,handle,mainWindow,canRestore=()=>true,getProviderKey=()=>'',getState=()=>({}),onFunctionalNotification=()=>{},onSystem=()=>{},onTransition=()=>{}}){
   const legacyLibrary=createLibrary(app.getPath('userData'));let productivity;
@@ -9,7 +9,7 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
     if(op.startsWith('reminder:')){const store=productivity.store,row=value.id?store.db.prepare('SELECT * FROM reminder_rules WHERE id=?').get(value.id):null,rule=store.ruleView(row);if(op==='reminder:remove')store.db.prepare('UPDATE reminder_rules SET deleted_at=?,next_at=NULL WHERE id=?').run(store.now(),String(value.id));else if(op==='reminder:add'||op==='reminder:edit'||op==='reminder:snooze'){if(op!=='reminder:add'&&!rule)throw new Error('Reminder not found.');const at=op==='reminder:snooze'?Date.now()+Math.max(1,Math.min(1440,Number(value.minutes)||10))*60000:value.at??rule?.at;if(!Number.isSafeInteger(at)||at<=Date.now())throw new Error('Choose a future reminder time.');store.saveRule({...rule,id:rule?.id,kind:'general',enabled:true,mode:'one-off',timezone:store.timezone(),at,title:require('./productivity-store.cjs').requiredText(value.text??rule?.title,2000)});}else throw new Error('Unsupported reminder action.');return library.view();}
     if(op==='config'&&Object.hasOwn(value,'calendarUrl'))throw new Error('Use the Calendar tool to manage encrypted feeds.');legacyLibrary.action(op,value);return library.view();
   }};
-  const lookupLyrics=createLyricsClient();let lyricsAbort;let systemPending=false;let lastClip='',weatherCache=null,calendarCache=null,media=null,lastSystem=null;const icons=new Map();
+  const iconResolver=createIconResolver({app,shell,nativeImage,cacheDir:path.join(app.getPath('userData'),'icon-cache')});const lookupLyrics=createLyricsClient();let lyricsAbort;let systemPending=false;let lastClip='',weatherCache=null,calendarCache=null,media=null,lastSystem=null;const icons=new Map();
   function emit(channel,value){for(const win of BrowserWindow.getAllWindows()){const contents=require('./window-lifecycle.cjs').liveContents(win);if(contents)contents.send(channel,value);}}
   productivity=require('./productivity-main.cjs').setupProductivity({app,BrowserWindow,Notification,powerMonitor,safeStorage,screen,native,handle,emit,shell,dialog,getState,getLibrary:()=>library.view(),getTimer:()=>legacyLibrary.view().timer,mainWindow,onFunctionalNotification});
   const calendar=require('./secure-calendar.cjs').createSecureCalendar({secrets:productivity.secrets,legacyLibrary,shell});
@@ -86,7 +86,7 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
     if(op==='files:toPdf'){const r=await dialog.showOpenDialog({properties:['openFile','multiSelections'],filters:[{name:'PNG or JPEG images',extensions:['png','jpg','jpeg']}]});if(r.canceled||!r.filePaths.length)return false;const s=await dialog.showSaveDialog({defaultPath:'images-agent-notch.pdf',filters:[{name:'PDF document',extensions:['pdf']}]});if(s.canceled)return false;const result=await pdfTools.imagesToPdf(r.filePaths,s.filePath);return{...result,path:s.filePath,name:path.basename(s.filePath),bytes:fs.statSync(s.filePath).size,kind:'pdf'};}
     if(op==='shelf:open'){if(!library.view().shelf.includes(v.path))throw new Error('File is not in the shelf.');const error=await shell.openPath(v.path);if(error)throw new Error(error);return true;}
     if(op==='shelf:reveal'){if(!library.view().shelf.includes(v.path))throw new Error('File is not in the shelf.');shell.showItemInFolder(v.path);return true;}
-    if(op==='shelf:icons'){const files=library.view().shelf;return Promise.all(files.map(async file=>{let icon=icons.get(file);if(!icon){try{icon=(await app.getFileIcon(file,{size:'normal'})).toDataURL();icons.set(file,icon);}catch{}}let size=0;try{size=fs.statSync(file).size;}catch{}return{path:file,name:path.basename(file),size,icon};}));}
+    if(op==='shelf:icons'){const files=library.view().shelf;return Promise.all(files.map(file=>iconResolver.resolve(file)));}
     if(op==='project:choose'){const r=await dialog.showOpenDialog({properties:['openDirectory']});return r.canceled?library.view():library.action('project:add',{path:r.filePaths[0]});}
     if(op==='project:open'){const project=library.view().projects.find(p=>p.id===v.id);if(!project)throw new Error('Project not found.');if(v.editor){const{spawn}=require('node:child_process');const vscode=path.join(process.env.LOCALAPPDATA||'','Programs','Microsoft VS Code','Code.exe');if(!fs.existsSync(vscode))throw new Error('VS Code is not installed at its usual location.');spawn(vscode,[project.path],{windowsHide:true,shell:false,detached:true,stdio:'ignore'}).unref();}else{const error=await shell.openPath(project.path);if(error)throw new Error(error);}return true;}
     if(op==='copy'){if(typeof v.text!=='string'||v.text.length>400000)throw new Error('Invalid text.');clipboard.writeText(v.text);return true;}
@@ -109,7 +109,7 @@ function setupWidgets({app,BrowserWindow,clipboard,dialog,shell,Notification,pow
   const systemTimer=setInterval(async()=>{if(systemPending)return;systemPending=true;try{lastSystem=await native.request('system',{},3000);productivity.setSystem(lastSystem);emit('desktop:system',lastSystem);onSystem(lastSystem);}catch{}finally{systemPending=false;}},3000);systemTimer.unref();
   app.on('before-quit',()=>closeWidgets());
   function closeWidgets(){clearInterval(timer);clearInterval(systemTimer);productivity.close();}
-  return{library,productivity,workspace,captures,emit,notify,getSystem:()=>lastSystem,close:closeWidgets};
+  return{library,productivity,workspace,captures,emit,notify,getSystem:()=>lastSystem,resolveIcon:file=>iconResolver.resolve(file),close:closeWidgets};
 }
 async function getJSON(url){const response=await fetch(url,{signal:AbortSignal.timeout(12000)});if(!response.ok)throw new Error(`Service HTTP ${response.status}`);return response.json();}
 const{parseLyrics}=require('./lrc.cjs');

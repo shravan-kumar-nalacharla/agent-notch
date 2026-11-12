@@ -1,5 +1,5 @@
-﻿# Agent Notch 0.34.0
-- Corner Island presentation mode.
-- Quick-access shelf for files, folders and applications.
-- Native application/file icons with persistence.
-- Seven-second thought-popup cycle.
+﻿# Agent Notch 0.34.1
+- Homepage Shelf widget, backed by the existing Shelf store.
+- Full Shelf page remains available.
+- Legacy Quick Access entries migrate into Shelf once.
+- Centralized Windows icon resolver for apps, shortcuts, images and folders.
