@@ -80,13 +80,13 @@ async function setExpanded(on){
   if(settingsMode||expanded===on)return;
   const peek=on&&document.body.classList.contains('has-quote-hud')?$('island').getBoundingClientRect():null;
   if(on)document.body.classList.remove('has-quote-hud');
-  const serial=++surfaceSerial;expanded=on;setMascot(on?'open':'closed');document.body.classList.add('surface-animating');document.body.classList.toggle('expanded',on);if(on)$('body').hidden=false;
+  const serial=++surfaceSerial;expanded=on;setMascot(on?'open':'closed');document.body.classList.add('surface-animating');if(on){document.body.classList.add('expanded');$('body').hidden=false;}
   if(on){syncViewClass(activeView);startBlink();maybeQuietMoment();}else{stopBlink();hideQuietMoment();}
   result(window.island.expand({on,view:activeView})).catch(showError);
   const style=getComputedStyle(document.body),animation=IslandSurface.animateSurface($('island'),on,{width:parseFloat(style.getPropertyValue('--island-width'))||470,height:parseFloat(style.getPropertyValue(document.body.classList.contains('rich-media')?'--rich-height':'--compact-height'))||250,mode:state?.appearance?.motion||'standard',floating:document.body.classList.contains('shape-pill'),initial:peek?{width:peek.width,height:peek.height,y:peek.y,scale:1,opacity:1,radius:22}:null});
   if(on)IslandSurface.cascade($('body'),state?.appearance?.motion||'standard');
   const start=performance.now();function frame(){sendHitbox();if(performance.now()-start<750)requestAnimationFrame(frame);}requestAnimationFrame(frame);
-  animation.then(()=>{if(surfaceSerial===serial&&expanded===on){document.body.classList.remove('surface-animating');if(!on)$('body').hidden=true;sendHitbox();}});
+  animation.then(()=>{if(surfaceSerial===serial&&expanded===on){document.body.classList.remove('surface-animating');if(!on){document.body.classList.remove('expanded');$('body').hidden=true;}sendHitbox();}});
   window.dispatchEvent(new CustomEvent('island:expanded',{detail:on}));
 }
 function canAutoClose(){return !window.islandVoiceHold?.()&&!document.body.classList.contains('is-capturing')&&!document.body.classList.contains('has-windows-task')&&!document.body.classList.contains('has-reminder-hud')&&!captureOverlayActive&&!state?.appearance?.pinned&&state?.appearance?.autoClose!==false&&!nativeRecording&&!nativeProcessing&&recorder?.state!=='recording'&&!document.body.classList.contains('is-dragging')&&!(document.hasFocus()&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||'')&&Date.now()-lastInteractionAt<8000);}
@@ -102,7 +102,7 @@ window.island.onLayout?.(layout=>{
   const panel=$('island'),before=panel.getBoundingClientRect();panelResize?.cancel();
   document.body.style.setProperty('--island-width',layout.panelWidth+'px');document.body.style.setProperty('--compact-height',layout.panelHeight+'px');document.body.style.setProperty('--rich-height',layout.richHeight+'px');
   const height=document.body.classList.contains('rich-media')?layout.richHeight:layout.panelHeight;
-  if(expanded&&!document.body.classList.contains('surface-animating')&&state?.appearance?.motion!=='off'&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&(Math.abs(before.width-layout.panelWidth)>1||Math.abs(before.height-height)>1)){
+  if(expanded&&!document.body.classList.contains('surface-animating')&&state?.appearance?.motion!=='off'&&(Math.abs(before.width-layout.panelWidth)>1||Math.abs(before.height-height)>1)){
     const frames=Array.from({length:46},(_,index)=>{const t=index/45,p=index===45?1:IslandSurface.spring(t*.48,{stiffness:230,damping:30});return{offset:t,width:before.width+(layout.panelWidth-before.width)*p+'px',height:before.height+(height-before.height)*p+'px'};});const animation=panel.animate(frames,{duration:480,easing:'linear',fill:'both'});panelResize=animation;animation.finished.catch(()=>{}).finally(()=>{animation.cancel();if(panelResize===animation)panelResize=null;sendHitbox();});
   }
   requestAnimationFrame(sendHitbox);
@@ -121,7 +121,7 @@ function tab(name) {
   }
   const page = $(name);
   if (!page) return;
-  activeView = name;
+  const previousView=activeView;activeView = name;
   if(name!=='tools'){document.body.classList.toggle('rich-media',name==='voiceAssistant'||name==='assistant');window.island.toolSurface?.({id:''}).catch(showError);}
   if(name!=='home')hideQuietMoment();
   syncViewClass(name);
@@ -133,7 +133,7 @@ function tab(name) {
   });
   if(name!=='home')hideQuietMoment();
   if (expanded && !settingsMode) syncSurfaceHeight(true).catch(showError);
-  window.dispatchEvent(new CustomEvent('island:view', { detail: name }));if(!settingsMode&&expanded)IslandSurface.animatePage(page,1,state?.appearance?.motion);
+  window.dispatchEvent(new CustomEvent('island:view', { detail: name }));if(!settingsMode&&expanded&&previousView!==name){const order=['home','assistant','voiceAssistant','notes','tools','agents'];IslandSurface.animatePage(page,order.indexOf(name)>=order.indexOf(previousView)?1:-1,state?.appearance?.motion);}
 }
 
 function showError(value) {
@@ -560,11 +560,11 @@ function applyState(value) {
   document.body.classList.toggle('pinned', !!appearance.pinned);
   document.body.classList.toggle('shape-pill', appearance.shape === 'pill');
   document.body.classList.toggle('shape-line', appearance.shape === 'line');
-  const face=appearance.face||{};document.body.classList.toggle('blob-face',!!face.enabled);window.AgentFace?.apply($('face'),{enabled:!!face.enabled,seed:value.profileName||'Agent Notch',shape:face.shape,hue:face.hue,expression:face.expression,size:64});
+  document.body.classList.remove('blob-face');
   const light = appearance.theme === 'light' ||
     (appearance.theme === 'system' && window.matchMedia?.('(prefers-color-scheme: light)').matches);
   document.body.classList.toggle('theme-light', !!light);
-  $('pin').classList.toggle('active', !!appearance.pinned);
+  $('pin').classList.toggle('active', !!appearance.pinned);$('pin').setAttribute('aria-pressed',String(!!appearance.pinned));
   $('pin').title = appearance.pinned ? 'Unpin island' : 'Pin island open';
   window.islandUpdateDock?.(appearance.favorites || []);
   if (!busy && !nativeRecording) $('status').textContent = value.profileName ? `Ready, ${value.profileName}` : 'Ready';

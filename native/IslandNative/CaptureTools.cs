@@ -12,6 +12,11 @@ internal static partial class Program
         var id=S(v,"source");var selected=Screen.AllScreens.FirstOrDefault(s=>s.DeviceName==id);
         if(id!="all"&&selected==null)throw new Exception("Choose a connected display.");
         var bounds=id=="all"?SystemInformation.VirtualScreen:selected!.Bounds;
+        if(v.TryGetProperty("region",out var region)){
+            var x=region.GetProperty("x").GetInt32();var y=region.GetProperty("y").GetInt32();var width=region.GetProperty("width").GetInt32();var height=region.GetProperty("height").GetInt32();
+            if(x<0||y<0||width<1||height<1||(long)x+width>bounds.Width||(long)y+height>bounds.Height)throw new Exception("Select an area within the display.");
+            bounds=new Rectangle(bounds.X+x,bounds.Y+y,width,height);
+        }
         if(bounds.Width<=0||bounds.Height<=0||(long)bounds.Width*bounds.Height>64000000)throw new Exception("Capture exceeds the 64 megapixel limit. Choose one display.");
         using var image=new Bitmap(bounds.Width,bounds.Height);using(var graphics=Graphics.FromImage(image))graphics.CopyFromScreen(bounds.Left,bounds.Top,0,0,bounds.Size);
         using var memory=new MemoryStream();image.Save(memory,ImageFormat.Png);var bytes=memory.ToArray();

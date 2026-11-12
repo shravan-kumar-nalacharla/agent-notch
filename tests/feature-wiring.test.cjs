@@ -12,14 +12,14 @@ test('file actions are wired through the notch, main process and uninstaller',()
   assert.match(nsh,/ExecWait.*scrub-keys/);
 });
 
-test('the agent face is bundled and persisted in the appearance settings',()=>{
+test('the default eyes are configured without the retired avatar UI',()=>{
   const html=read('src/index.html'),prefs=read('src/preferences.js'),main=read('src/main.cjs');
-  assert.match(html,/agent-face\.js/);
+  assert.doesNotMatch(html,/agent-face\.js/);
   assert.match(html,/agent-face-slot/);
-  assert.match(html,/vendor\/blobatar\.js/);
+  assert.doesNotMatch(html,/vendor\/blobatar\.js/);
   assert.match(html,/openFileActions/);
-  assert.match(prefs,/facePreview/);
-  assert.match(prefs,/face:\{enabled/);
+  assert.doesNotMatch(prefs,/facePreview/);
+  assert.match(prefs,/Show the eyes companion/);
   assert.match(main,/face:\{enabled:false/);
   assert.match(main,/handle\('files:open'/);
 });

@@ -31,19 +31,12 @@
       <label>Your name<input id="profileName" maxlength="50" placeholder="How should Agent Notch address you?"></label>
       ${choose('islandShape', 'Shape', [['notch', 'Dynamic Notch'], ['corner', 'Corner Island'], ['pill', 'Floating pill'], ['line', 'Minimal line']])}
       ${choose('islandTheme', 'Theme', [['system', 'Follow Windows'], ['dark', 'Dark'], ['light', 'Light']])}
-      <div class="settings-card"><h4>Colors and typography</h4><label>Accent color<input id="islandAccentColor" type="color" value="#d6ed83"></label>${choose('islandUIFont','Interface font',[['system','Segoe UI — Windows default'],['arial','Arial — clean sans serif'],['serif','Georgia — serif'],['mono','Cascadia / Consolas — monospace']])}<small>The accent colors panel lighting, timer controls and selected actions.</small></div>
+      <div class="settings-card"><h4>Colors and typography</h4><div class="row"><label>Panel width (0 = automatic)<input id="islandPanelWidth" type="number" min="0" max="800" step="10" value="0"></label><label>Panel height (0 = automatic)<input id="islandPanelHeight" type="number" min="0" max="650" step="10" value="0"></label></div><label>Accent color<input id="islandAccentColor" type="color" value="#d6ed83"></label>${choose('islandUIFont','Interface font',[['system','Segoe UI — Windows default'],['arial','Arial — clean sans serif'],['serif','Georgia — serif'],['mono','Cascadia / Consolas — monospace']])}<small>The accent colors panel lighting, timer controls and selected actions.</small></div>
       ${check('pinIsland', 'Keep the island fully open')}
       ${choose('islandDisplay', 'Screen', [['primary', 'Primary screen'], ['cursor', 'Screen under pointer']])}
       ${check('islandMinimal', 'Use a thin line when closed')}
       ${check('islandMascot', 'Show the eyes companion')}
-      <h3 class="dock-heading">Agent face</h3>
-      ${check('faceEnabled', 'Show a blob companion instead of the eyes')}
-      <label>Blob seed<input id="faceSeed" maxlength="80" placeholder="Any name or phrase"></label>
-      ${choose('faceShape', 'Blob shape', [['organic', 'Organic'], ['round', 'Round'], ['boxy', 'Boxy'], ['capsule', 'Capsule'], ['nub', 'Nub'], ['cloud', 'Cloud'], ['droplet', 'Droplet'], ['hexagon', 'Hexagon'], ['sun', 'Sun'], ['triangle', 'Triangle']])}
-      <label>Hue <span id="faceHueValue">165</span><input id="faceHue" type="range" min="0" max="360" step="1" value="165"></label>
-      ${choose('faceExpression', 'Expression', [['idle', 'Idle'], ['happy', 'Happy'], ['sad', 'Sad'], ['mad', 'Mad'], ['surprised', 'Surprised'], ['wink', 'Wink'], ['sleepy', 'Sleepy'], ['smug', 'Smug'], ['unsure', 'Unsure'], ['scared', 'Scared'], ['love', 'Love'], ['shy', 'Shy'], ['sick', 'Sick'], ['thinking', 'Thinking']])}
-      <div id="facePreview" class="face-preview" aria-label="Agent face preview"></div>
-      <small class="settings-hint">The blob replaces the two eyes in the notch. Click it for a small reaction. It never covers the status text or buttons.</small>
+
       ${check('islandFullscreen', 'Hide while another app is full screen')}
       ${check('islandAutoClose', 'Close when the pointer leaves')}
       ${check('islandStartup', 'Start with Windows')}
@@ -176,13 +169,6 @@
     }
   }
 
-  function facePreview(){
-    const el=$('facePreview');if(!el)return;
-    if(!window.AgentFace){el.textContent='Face preview is unavailable.';return;}
-    el.innerHTML=window.AgentFace.svg({seed:$('faceSeed')?.value||$('profileName')?.value||'Agent Notch',shape:$('faceShape').value,hue:+$('faceHue').value,expression:$('faceExpression').value,size:104});
-    $('faceHueValue').textContent=$('faceHue').value;
-  }
-  ['faceShape','faceHue','faceExpression','faceEnabled','faceSeed','profileName'].forEach(id=>$(id)?.addEventListener('input',facePreview));
   function load(state) {
     if (!state) return;
     const voice = state.voice || {};
@@ -207,11 +193,10 @@
     $('profileName').value = state.profileName || '';
     $('islandShape').value = appearance.shape || 'notch';
     $('islandTheme').value = appearance.theme || 'system';
-    $('islandAccentColor').value=appearance.accentColor||'#d6ed83';$('islandUIFont').value=appearance.uiFont||'system';
+    $('islandPanelWidth').value=appearance.panelWidth||0;$('islandPanelHeight').value=appearance.panelHeight||0;$('islandAccentColor').value=appearance.accentColor||'#d6ed83';$('islandUIFont').value=appearance.uiFont||'system';
     $('pinIsland').checked = !!appearance.pinned;
     $('islandMinimal').checked = !!appearance.minimal;
     $('islandMascot').checked = appearance.mascot !== false;
-    const face=appearance.face||{};$('faceEnabled').checked=!!face.enabled;const legacyShape={'squircle':'organic'}[face.shape]||face.shape,legacyExpression={'curious':'thinking'}[face.expression]||face.expression;$('faceSeed').value=face.seed||$('profileName')?.value||'Agent Notch';$('faceShape').value=legacyShape||'organic';$('faceHue').value=face.hue??165;$('faceExpression').value=legacyExpression||'idle';facePreview();
     $('islandFullscreen').checked = appearance.hideFullscreen !== false;
     $('islandAutoClose').checked = appearance.autoClose !== false;
     $('islandStartup').checked = !!state.autostart;
@@ -246,13 +231,12 @@
       display: $('islandDisplay').value,
       shape: $('islandShape').value,
       theme: $('islandTheme').value,
-      accentColor:$('islandAccentColor').value,uiFont:$('islandUIFont').value,
+      accentColor:$('islandAccentColor').value,uiFont:$('islandUIFont').value,panelWidth:+$('islandPanelWidth').value,panelHeight:+$('islandPanelHeight').value,
       pinned: $('pinIsland').checked,
       minimal: $('islandMinimal').checked,
       mascot: $('islandMascot').checked,
       hideFullscreen: $('islandFullscreen').checked,
-      autoClose: $('islandAutoClose').checked,
-      face:{enabled:$('faceEnabled').checked,seed:$('faceSeed').value.slice(0,80),shape:$('faceShape').value,hue:+$('faceHue').value,expression:$('faceExpression').value}
+      autoClose: $('islandAutoClose').checked
     },
     autostart: $('islandStartup').checked
     ,

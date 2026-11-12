@@ -1,5 +1,18 @@
 [
   {
+    "version": "0.36.0",
+    "date": "2026-11-13",
+    "title": "Astryx controls and a smoother island",
+    "notes": [
+      "Actual Astryx switches, text and number fields, date/time pickers, selectors and form buttons replace native controls.",
+      "All tools share looping previous/next navigation, including enabled plugins; the separate carousel entry is removed.",
+      "Visible closing morph, directional page transitions, fixed timer controls, compact voice layout, square mirror and colored weather scenes.",
+      "Settings open fully assembled, with saved width, height, accent color and font options. Default mouse-following eyes replace Blobatar.",
+      "Clipboard history shows square text and image previews and uses Electron's asynchronous clipboard API.",
+      "Select a screen area to extract text with Windows OCR and copy it immediately. Hydration offers five- and ten-minute schedules."
+    ]
+  },
+  {
     "version": "0.35.1",
     "date": "2026-11-13",
     "title": "Clearer drops and a softer workspace",

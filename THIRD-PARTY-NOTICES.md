@@ -61,9 +61,9 @@ bundler license notices are included in `src/vendor/eleven-components.js.LEGAL.t
 
 Short UI sound excerpts were provided by the application owner from their local editing pack. Redistribution rights for that pack must be confirmed by the owner before public distribution.
 
-## Blobatar
+## Astryx
 
-Vendored at vendor/blobatar and bundled from packages/blobatar/src. MIT License. Copyright (c) 2026 Alain. https://github.com/Alain00/blobatar
+Actual controls use @astryxdesign/core and @astryxdesign/theme-neutral 0.7.15, published by Meta under the MIT license: https://github.com/meta/astryx. StyleX retains its upstream MIT license. Package licenses and bundled notices accompany the application.
 
 ## Nashi
 

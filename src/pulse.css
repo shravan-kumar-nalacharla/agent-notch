@@ -72,7 +72,7 @@ body:not(.settings-window) .el-timeline [data-slot=scrub-bar-progress]>div{backg
 .pulse-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}.pulse-stat{min-width:0;background:var(--panel);padding:12px;border-radius:16px}.pulse-stat small{display:block;color:var(--muted);font-size:10px}.pulse-stat strong{display:block;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.4}.pulse-stat progress{width:100%;height:4px;accent-color:#80b8aa}.pulse-stat[data-unavailable=true]{opacity:.6}.pulse-stat-caption{font-size:10px;color:var(--muted)}
 body.shape-corner.expanded:not(.settings-window) #island,body.shape-pill.expanded:not(.settings-window) #island{border-radius:var(--pulse-radius)}
 @media(max-width:460px){.pulse-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.live-metrics span:nth-child(-n+2){display:none}body.expanded #date{display:none}body:not(.settings-window) .widget-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(prefers-reduced-motion:reduce){body:not(.settings-window) *{animation:none!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){body:not(.settings-window):not([data-motion=standard]):not([data-motion=subtle]) *{animation:none!important;transition:none!important}}
 .ph{font-size:19px;display:inline-block;vertical-align:middle}nav .ph{font-size:19px}
 .quick-drop-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:0 0 54px;width:54px;height:54px;border:1px dashed color-mix(in srgb,var(--muted) 42%,transparent);border-radius:19px;background:transparent;color:var(--muted)}
 .quick-drop-add>span{font-size:24px;font-weight:300;line-height:1}.quick-drop-add.is-empty{flex-basis:190px;width:190px;height:76px}.quick-drop-add small{font-size:12px}.home-quick.drag-over .quick-drop-add{background:var(--accent-tint);border-color:var(--accent);color:var(--text)}
@@ -124,3 +124,91 @@ body:not(.settings-window) .el-composer [data-slot=card],body:not(.settings-wind
 .response-typing::after{content:'';display:inline-block;width:5px;height:13px;margin-left:3px;background:var(--user-accent,#d6ed83);border-radius:3px;animation:typing-caret .8s ease-in-out infinite alternate}
 @keyframes typing-caret{to{opacity:.2}}
 body:not(.settings-window) .widget-grid{padding:12px 0 36px}.chat-history{position:static;align-self:flex-end;margin-top:-3px}
+
+/* Astryx surfaces preserve the compact island's shared spacing and color tokens. */
+.astryx-control{min-width:0;flex:1 1 140px;max-width:100%;font-family:inherit}
+.astryx-field{width:100%;min-width:0;color-scheme:dark}
+.astryx-field :is(input,button,select){font:inherit}
+body .astryx-field input:not([type=checkbox]){background:transparent!important;border:0!important;font-size:13px!important;min-width:0;box-shadow:none}
+body .astryx-field [role=switch]{cursor:pointer}
+body .astryx-field [role=combobox]{min-height:36px;border:0;border-radius:13px;background:var(--panel-2,#222327);color:var(--text,#f8f8fa)}
+body .astryx-field label{font-size:12px}
+body .astryx-field [data-astryx-native]{display:none!important}
+body:not(.settings-window) .widget-heading{display:flex;align-items:center;gap:7px;height:34px;flex-shrink:0}
+body:not(.settings-window) .widget-heading>b{flex:1;font-size:13px}
+body:not(.settings-window) .widget-heading>button{height:28px;width:28px;flex:0 0 28px;border-radius:50%;font-size:20px;background:var(--panel)}
+.widget-heading>.astryx-control{flex:0 1 115px}
+body:not(.settings-window) .widget-content>form{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+body:not(.settings-window) .widget-content>form>button{min-height:36px;border-radius:13px;padding:8px 14px;background:var(--user-accent,#d6ed83);color:var(--on-user-accent,#17200c)}
+body:not(.settings-window) :is(.todo-editor,.water-settings){gap:10px}
+body:not(.settings-window) .todo-module{grid-template-columns:110px minmax(0,1fr);gap:16px}
+body:not(.settings-window) .todo-editor{padding:0;border:0;background:none;display:grid;grid-template-columns:1fr 1fr}
+body:not(.settings-window) .todo-editor>.astryx-control:first-child{grid-column:1/-1}
+body:not(.settings-window) .timer-actions{display:grid;grid-template-columns:minmax(68px,1fr) 44px minmax(68px,1fr);align-items:center;min-height:34px;gap:8px}
+body:not(.settings-window) .timer-actions[data-mode=stopwatch] .timer-primary{grid-column:2}
+body:not(.settings-window) .pomodoro{min-height:224px;align-items:start;grid-template-columns:88px minmax(0,1fr)}
+body:not(.settings-window) .timer-ring-button{align-self:center}
+body:not(.settings-window) .timer-main{display:grid;grid-template-rows:32px 49px 21px 34px minmax(32px,auto);align-items:start}
+body:not(.settings-window) .timer-mode{justify-self:start}
+body:not(.settings-window) .timer-duration{margin-top:8px;flex-wrap:nowrap}
+.timer-duration .astryx-control{flex:0 0 66px}
+body:not(.settings-window) .timer-duration button{flex-shrink:0}
+body:not(.settings-window) #mic{display:none!important}
+body:not(.settings-window) #pin{opacity:.35;transition:opacity .25s,background .25s}
+body:not(.settings-window) #pin[aria-pressed=true],body.pinned #pin{opacity:1;background:color-mix(in srgb,var(--user-accent,#d6ed83) 25%,var(--panel))}
+body:not(.settings-window) #mirrorVideo{display:block;width:min(100%,290px);height:auto;aspect-ratio:1;object-fit:cover;object-position:center;border-radius:26px;margin:0 auto 10px;transform:scaleX(-1);background:var(--panel-2)}
+body:not(.settings-window) #tools[data-tool=mirror] .widget-content{padding:0;background:transparent;display:flex;align-items:center;flex-direction:column}
+body:not(.settings-window) #tools[data-tool=mirror] small{font-size:10px}
+.weather-scene{display:flex;align-items:center;gap:18px;min-height:130px}
+.weather-art{font-size:82px;filter:drop-shadow(0 8px 18px #f7bc4e30);line-height:1.2}
+.weather-scene h2{font-size:22px;margin:0 0 7px}.weather-scene p{margin:0;color:var(--muted)}
+.clipboard-toolbar{display:flex;gap:12px;align-items:center;margin-bottom:8px}.clipboard-toolbar>label{flex:1}
+.clipboard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin-top:12px}
+.clipboard-card{position:relative;aspect-ratio:1;border-radius:18px;background:color-mix(in srgb,var(--panel-2) 80%,transparent);overflow:hidden}
+.clipboard-card>button:first-child{display:flex;flex-direction:column;align-items:stretch;width:100%;height:100%;padding:13px;text-align:left;background:none}
+.clipboard-card p{font-size:12px;line-height:1.5;margin:0;overflow:hidden;flex:1;word-break:break-word}
+.clipboard-card img{width:100%;min-height:0;flex:1;object-fit:contain;border-radius:9px}
+.clipboard-card small{font-size:9px;color:var(--muted);margin-top:7px}
+.clipboard-card>button:last-child{position:absolute;bottom:6px;right:6px;border-radius:50%;background:var(--panel)}
+.water-frequency{display:flex;gap:8px;margin-top:8px}.water-frequency button{padding:7px 10px;border-radius:20px;background:var(--panel-2);font-size:11px}
+body:not(.settings-window) .el-voice{gap:7px}
+body:not(.settings-window) .el-voice-stage{display:flex;justify-content:center;align-items:center;position:relative;min-height:66px;gap:12px;padding:0}
+body:not(.settings-window) .el-voice-stage>[data-component=orb],body:not(.settings-window) .el-voice-stage canvas{width:66px!important;height:66px!important}
+body:not(.settings-window) .el-voice-labels{position:absolute;left:0;max-width:34%;font-size:11px}
+body:not(.settings-window) .el-voice-labels small{display:none}
+body:not(.settings-window) .el-bars{position:absolute;right:0;width:60px;max-height:35px}
+body:not(.settings-window) .el-voice-conversation{min-height:0;max-height:110px}
+body:not(.settings-window) .el-voice-conversation:has(.el-response:empty){display:none}
+body:not(.settings-window) .el-voice-actions{justify-content:center;gap:8px;flex-wrap:nowrap}
+body:not(.settings-window) .el-audio-options{display:flex;align-items:center;gap:12px;border:0;padding:0;margin:0}
+body:not(.settings-window) .el-selector-row{display:flex;gap:6px;flex:1;min-width:0}
+body:not(.settings-window) .el-audio-options button{font-size:10px;min-height:28px;padding:4px 8px}
+body:not(.settings-window) .el-voice-footer{margin:0;min-height:20px}
+body:not(.settings-window) .el-voice-footer>span{font-size:10px;color:var(--muted)}
+body:not(.settings-window) .el-volume-row{min-height:28px!important;height:28px!important}
+body:not(.settings-window) .el-volume-row [role=slider]{min-width:18px;min-height:18px;border:2px solid var(--user-accent,#d6ed83);background:var(--panel-2)}
+@media(max-width:440px){body:not(.settings-window) .pomodoro{gap:10px;padding:14px;grid-template-columns:66px minmax(0,1fr)}body:not(.settings-window) .timer-top strong{font-size:32px}.timer-actions button{font-size:10px!important;padding:5px!important}}
+
+.astryx-native-label{display:none!important}body:not(.settings-window) .region-ocr{display:grid;gap:12px}.region-ocr textarea{width:100%;box-sizing:border-box;resize:vertical;padding:12px;border:0!important}.region-ocr>button{border-radius:18px;padding:12px;background:var(--user-accent,#d6ed83);color:#17200c}
+
+body:not(.settings-window) .widget-heading .astryx-field button{height:30px!important;min-height:30px;padding:4px 9px;font-size:11px}body:not(.settings-window) .timer-duration>.astryx-control{flex:0 0 66px;min-width:0}.timer-duration .astryx-field{height:30px}.timer-duration .astryx-field input{padding:3px 6px!important;height:26px!important}.astryx-button{flex:0 0 auto}
+
+body .astryx-control{flex-basis:auto}
+body:not(.settings-window) .todo-form{gap:10px}
+body:not(.settings-window) .todo-form>.astryx-control{flex:0 0 auto}
+body:not(.settings-window) .todo-form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body:not(.settings-window) .todo-form-actions{margin-top:4px}
+body:not(.settings-window) .todo-pane{background:transparent;border:0;padding:0;overflow:visible}
+body:not(.settings-window) .core-tool .unit-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start;align-items:start}
+body:not(.settings-window) .core-tool .unit-form>.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+body .astryx-field [data-astryx-theme-target=selector-trigger]{border:0!important}
+body .astryx-field label{line-height:1.3;margin:0 0 5px}
+body .astryx-field>div{border-color:transparent!important}
+body:not(.settings-window) .el-voice-labels strong{font-size:12px!important;line-height:1.4}
+body:not(.settings-window) .widget-content .astryx-field>div{border-radius:14px}
+
+body .astryx-field :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector){border-color:transparent!important;box-shadow:none;background:color-mix(in srgb,var(--panel-2,#222327) 82%,transparent)!important;border-radius:13px;min-width:0}
+body .astryx-field :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector):focus-within{box-shadow:0 0 0 2px color-mix(in srgb,var(--user-accent,#d6ed83) 65%,transparent)}
+body .astryx-field .astryx-selector{min-height:34px}
+body:not(.settings-window) button{transition:background .18s,opacity .18s,transform .18s}
+body:not(.settings-window) button:active:not(:disabled){transform:scale(.96)}

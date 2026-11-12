@@ -1,11 +1,11 @@
 'use strict';
 const DENSITIES={compact:{width:410,height:230},default:{width:470,height:250},roomy:{width:540,height:280}};
 const TOOL_SIZES={compact:{width:410,height:230},standard:{width:470,height:250},spacious:{width:640,height:440}};
-const TOOL_HEIGHTS={tools:380,timer:330,water:290,shelf:300,todo:310,system:340,reminders:360,clips:340,history:380,plugins:440};
+const TOOL_HEIGHTS={tools:380,timer:370,water:290,shelf:300,todo:380,converter:370,currency:370,meetings:310,weather:330,screenText:390,system:340,reminders:360,clips:370,mirror:440,history:380,plugins:440};
 function layoutFor(display,appearance={}){
-  const choice=appearance.toolSizes?.[appearance.activeTool],toolSize=Object.hasOwn(TOOL_SIZES,choice)?choice:appearance.activeTool==='terminal'?'spacious':'auto';
+  const choice=appearance.toolSizes?.[appearance.activeTool],toolSize=Object.hasOwn(TOOL_SIZES,choice)?choice:(appearance.activeTool==='terminal'||appearance.activeTool?.startsWith('plugin-'))?'spacious':'auto';
   const size=TOOL_SIZES[toolSize]||DENSITIES[appearance.density]||DENSITIES.default,area=display.workArea,bounds=display.bounds;
-  const panelWidth=Math.min(size.width,area.width-48),panelHeight=Math.min(toolSize==='auto'?(TOOL_HEIGHTS[appearance.activeTool]||size.height):size.height,area.height-40),richHeight=Math.min(315,area.height-40);
+  const panelWidth=Math.min(Math.max(380,Number(appearance.panelWidth)||size.width),area.width-48),panelHeight=Math.min(Math.max(230,Number(appearance.panelHeight)||(toolSize==='auto'?(TOOL_HEIGHTS[appearance.activeTool]||size.height):size.height)),area.height-40),richHeight=Math.min(315,area.height-40);
   const width=Math.round(panelWidth+48),height=Math.round(Math.max(panelHeight,richHeight)+24),floating=appearance.shape==='pill'||appearance.shape==='corner',corner=appearance.shape==='corner';
   let center=area.x+area.width/2,y=area.y;
   if(corner){center=area.x+area.width-width/2-12;y=area.y+10;}else if(floating){const saved=appearance.float||{};center=area.x+Number(saved.centerXDIP??area.width/2);center=Math.max(area.x+width/2,Math.min(area.x+area.width-width/2,center));y=Math.max(area.y,Math.min(area.y+area.height-height,area.y+Number(saved.yDIP||12)));}
