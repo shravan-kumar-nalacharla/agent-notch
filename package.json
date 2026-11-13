@@ -1,6 +1,6 @@
 {
   "name": "agent-notch",
-  "version": "0.39.0",
+  "version": "0.40.0",
   "private": true,
   "description": "Agent Notch - a voice and screen assistant for Windows",
   "author": "Shravan Kumar",

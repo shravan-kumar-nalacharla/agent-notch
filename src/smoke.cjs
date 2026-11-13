@@ -8,6 +8,7 @@ exports.run=async function({app,win,screen,getSettingsWindow,native,widgets,geom
   async function until(code){for(let i=0;i<100;i++){if(await js(code))return;await sleep(100);}throw new Error('Timed out: '+code);}
   await until("!!window.islandOpenTool&&document.getElementById('assistantProvider').options.length>=4");await sleep(400);
   await check(`window.island.version===${JSON.stringify(app.getVersion())}`,'Preload reports the packaged version');
+  if(process.argv.includes('--continuous-voice-check'))return require('./smoke-continuous-voice.cjs')({app,win,native,out,saveSnapshot});
   if(!['--notch-reminder-check','--notch-pointer-check','--background-reminder-check'].some(flag=>process.argv.includes(flag)))await js("window.island.productivity('notifications:settings',{enabled:false})");
   if(process.argv.includes('--player-fixes-check'))return require('./smoke-player-fixes.cjs')({app,win,getSettingsWindow,widgets,state,out,saveSnapshot});
   if(process.argv.includes('--eleven-components-check'))return require('./smoke-eleven-components.cjs')({app,win,native,widgets,state,out,saveSnapshot});

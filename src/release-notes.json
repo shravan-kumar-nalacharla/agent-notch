@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.40.0",
+    "date": "2026-11-13",
+    "title": "Continuous voice and a stable ElevenLabs orb",
+    "notes": [
+      "Start listening stays active across commands and automatically resumes after spoken replies until Stop, Mute or Escape.",
+      "Voice selection uses lightweight icons and preserves the main ElevenLabs orb, with context restoration and cleanup.",
+      "Spoken reply status, Replay and Copy have separate layout slots."
+    ]
+  },
+  {
     "version": "0.39.0",
     "date": "2026-11-13",
     "title": "Independent AI roles and stable voice and media",

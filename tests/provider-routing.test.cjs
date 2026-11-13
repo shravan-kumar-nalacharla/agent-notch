@@ -12,3 +12,13 @@ test('Sarvam voice recognition and answers coordinate actions and speak verified
  await say(utterance,'question');await say('open notepad','action');assert.equal(calls.length,1);assert.equal(calls[0].taskProvider,'openai');assert.match(spoken[1].text,/Verified/);assert.equal(spoken.length,2);assert.equal(history.length,2);engine.stop();
 });
 test('Grok uses its own authenticated endpoint and supported voices are catalogued',async()=>{await chat({provider:'xai',key:'test-xai',text:'Hello'},async(url,request)=>{assert.equal(url,'https://api.x.ai/v1/chat/completions');assert.equal(request.headers.authorization,'Bearer test-xai');return new Response(JSON.stringify({choices:[{message:{content:'Hello'}}]}));});assert.equal(routes.sarvamVoices.length,37);assert.match(routes.sarvamVoices.find(v=>v.id==='priya').label,/Female/);assert.match(routes.sarvamVoices.find(v=>v.id==='shubh').label,/Male/);});
+
+test('continuous voice completion waits for native release acknowledgment, including silence',async()=>{
+ const native=new EventEmitter(),events=[];let release;
+ native.request=async action=>action==='voice.release'?new Promise(resolve=>{release=resolve;}):{};
+ const engine=setupVoice({native,clipboard:{writeText(){}},getState:state,getKey:()=>'',library:{view:()=>({dictionary:[]}),action(){}},emit:(_c,v)=>events.push(v),handle(){},runCommand:async()=>'',speak(){}});
+ native.emit('event',{type:'voice.begin',id:'quiet',kind:'chat'});native.emit('event',{type:'voice.finish',id:'quiet',kind:'chat',count:0});
+ for(let i=0;i<20&&!release;i++)await new Promise(r=>setImmediate(r));
+ assert.ok(events.some(e=>e.code==='no_speech'));assert.equal(events.some(e=>e.phase==='turnComplete'),false);assert.equal(typeof release,'function');
+ release({});await new Promise(r=>setImmediate(r));assert.ok(events.some(e=>e.phase==='turnComplete'&&e.id==='quiet'&&e.kind==='chat'));engine.stop();
+});
