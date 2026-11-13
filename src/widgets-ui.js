@@ -147,7 +147,7 @@
     disposeCore?.();disposeCore=null;
     document.querySelectorAll('nav [data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===selected));
     if(!root.hidden){button.classList.toggle('active',selected!=='timer');document.querySelector('nav [data-tab=focus]').classList.toggle('active',selected==='timer');}
-    if(!selected){root.innerHTML=`<div class="utility-nav"><button type="button" data-do="mainTab" data-page="assistant">Assistant</button><button type="button" data-do="mainTab" data-page="notes">Notes</button><button type="button" data-do="mainTab" data-page="agents">Agents</button><button type="button" data-do="mainTab" data-page="settings">Settings</button></div><div class="widget-grid">${pages.filter(()=>true).map(([id,icon,name])=>btn('page',`<i>${icon}</i><span>${name}</span>`,`data-page="${id}"`)).join('')}</div>`;return;}
+    if(!selected){root.innerHTML=`<div class="widget-grid">${pages.filter(()=>true).map(([id,icon,name])=>btn('page',`<i>${icon}</i><span>${name}</span>`,`data-page="${id}"`)).join('')}</div>`;return;}
     if(selected==='timer'||carouselPages.includes(selected)){renderPrimary();return;}
     if(coreTools.has(selected)){root.innerHTML=heading()+'<div class="widget-content core-tool"></div>';disposeCore=coreTools.get(selected).mount(root.querySelector('.core-tool'));return;}
     let html='';const idAttr=id=>`data-id="${esc(id)}"`;

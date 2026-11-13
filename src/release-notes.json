@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.38.0",
+    "date": "2026-11-13",
+    "title": "Shared themes, readable accents and clear dictation",
+    "notes": [
+      "Settings, thoughts and reminders share your notch colors and fonts. Black and white accents stay readable.",
+      "Global dictation replaces the open notch even when pinned. Thoughts and reminders animate in and out.",
+      "Voice hotkey and cloud audio are enabled for fresh settings. Right-click no longer opens Settings.",
+      "Quick Access scrubs smoothly. More Tools has a clean header. Save messages use clean text.",
+      "The assistant bundle loads when needed instead of at collapsed startup; auxiliary windows can throttle in the background."
+    ]
+  },
+  {
     "version": "0.37.0",
     "date": "2026-11-13",
     "title": "Stable layouts and borderless controls",

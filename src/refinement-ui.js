@@ -8,7 +8,7 @@
   for(const [id,name] of [['pin','push-pin'],['openFileActions','paperclip'],['collapse','caret-up'],['mic','microphone']]){const button=document.getElementById(id);if(button)button.innerHTML=`<i class="ph ph-${name}" aria-hidden="true"></i>`;}
   document.getElementById('chatHistory').onclick=()=>window.islandOpenTool?.('history');
   const reduced=()=>document.body.dataset.motion==='off';
-  function applyStyle(state){const appearance=state.appearance||{},accent=/^#[0-9a-f]{6}$/i.test(appearance.accentColor||'')?appearance.accentColor:'#d6ed83',fonts={system:'"Segoe UI Variable Text","Segoe UI",sans-serif',arial:'Arial,sans-serif',serif:'Georgia,serif',mono:'"Cascadia Code",Consolas,monospace'};window.NotchTheme?.apply(document.body,appearance);document.body.style.setProperty('--user-accent',accent);document.body.style.setProperty('--user-font',fonts[appearance.uiFont]||fonts.system);const rgb=accent.slice(1).match(/../g).map(value=>parseInt(value,16)),luma=rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;document.body.style.setProperty('--on-user-accent',luma>145?'#17200c':'#ffffff');}
+  function applyStyle(state){window.NotchTheme?.apply(document.body,state.appearance||{});}
   window.island.get().then(reply=>{if(reply.ok)applyStyle(reply.value);});window.island.onSettings(applyStyle);
   const targets=new WeakMap();
   document.addEventListener('wheel',event=>{
@@ -23,3 +23,4 @@
   tools?.addEventListener('scroll',()=>{if(!tick)tick=requestAnimationFrame(paintWheel);},{passive:true,capture:true});
   if(tools)new MutationObserver(()=>{if(!tick)tick=requestAnimationFrame(paintWheel);}).observe(tools,{childList:true});
 })();
+

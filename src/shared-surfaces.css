@@ -1,0 +1,41 @@
+/* Auxiliary surfaces use the same saved palette as the notch. */
+body .astryx-field .astryx-switch[data-checked=checked]{background:var(--user-accent)!important}
+body.has-quote-hud #quietMoment[data-mode=automatic] #quietText{color:var(--text)}
+body.settings-window{background:var(--surface);color:var(--text);font-family:var(--user-font);--settings-muted:var(--muted)}
+body.settings-window #island{background:var(--surface);isolation:isolate}
+body.settings-window #island::before{content:'';display:block!important;position:fixed;inset:0;width:auto;height:auto;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 0 100%,color-mix(in srgb,var(--edge-a) 13%,transparent),transparent 42%),radial-gradient(ellipse at 100% 100%,color-mix(in srgb,var(--edge-b) 11%,transparent),transparent 40%)}
+.settings-window .settings-heading,.settings-window .settings-savebar{border:0;background:transparent}
+.settings-window .settings-savebar{background:var(--panel)}
+.settings-window .provider-card,.settings-window .settings-card,.settings-window details,.settings-window .settings-card .settings-card{background:var(--panel);border:0;border-radius:22px}
+.settings-window .settings-nav button{color:var(--muted);border:0;box-shadow:none;transition:background .24s,color .24s}
+.settings-window .settings-nav button.active{background:var(--panel-2);color:var(--user-accent);box-shadow:none}
+.settings-window .provider-card h4,.settings-window .settings-card h4,.settings-window .settings-group label,.settings-window details>summary{color:var(--text)}
+.settings-window .provider-card-heading small{background:var(--panel-2);color:var(--user-accent)!important}
+.settings-window .provider-key-row button{background:var(--panel-2);color:var(--text)}
+.settings-window .provider-card-footer button{color:var(--muted)}
+.settings-window button:focus-visible{outline:0;background:var(--panel-2)}
+.settings-window #saveSettings{background:var(--user-accent);color:var(--on-user-accent)}
+body.has-quote-hud:not(.expanded) #quietMoment,body #quietMoment{background:transparent;color:var(--text);font-family:var(--user-font)}
+body #quietMoment button{color:var(--muted);border:0;background:transparent}
+body #quietMoment button[aria-pressed=true]{color:var(--user-accent)}
+body.has-reminder-hud:not(.settings-window) #island{background:var(--surface)!important}
+body.has-reminder-hud #notchReminder{font-family:var(--user-font);color:var(--text)}
+body #notchReminder button{border:0;background:var(--panel-2);color:var(--text);transition:background .24s,transform .18s}
+body #notchReminder button.primary{background:var(--user-accent);color:var(--on-user-accent);border:0}
+body #notchReminder button:active{transform:scale(.95)}
+body #notchReminder input,body #notchReminder select{border:0;outline:0;background:var(--panel);color:var(--text);transition:background .24s}
+body #notchReminder input:focus,body #notchReminder select:focus{outline:0;background:var(--panel-2)}
+body #notchReminder .reminder-copy small,body #notchReminder .notch-snooze,body #notchReminder .notch-duration,body #notchReminder .notch-pages,body #notchTimerHint{color:var(--muted)}
+body #notchReminder .reminder-art,body #notchTimer{color:var(--user-accent)}
+body #notchReminder .notch-progress{background:var(--panel-2)}body #notchReminder .notch-progress i{background:var(--user-accent)}
+body.has-quote-hud:not(.settings-window) #island::before,body.has-reminder-hud:not(.settings-window) #island::before{opacity:1!important;display:block!important}
+body.has-reminder-hud:not(.settings-window) #island{animation:auxiliary-enter .52s cubic-bezier(.18,.85,.25,1) both}
+body.has-reminder-hud.reminder-leaving:not(.settings-window) #island{animation:auxiliary-leave .32s cubic-bezier(.4,0,.8,.2) both}
+/* A global dictation session replaces the open panel even while pinned. */
+body.has-voice-hud:not(.settings-window) #island>#body{display:none!important}
+body.has-voice-hud:not(.settings-window) #island>header>*:not(#voiceHud){display:none!important}
+body.has-voice-hud:not(.settings-window) #island{height:38px!important;min-height:38px!important;max-height:38px!important}
+@keyframes auxiliary-enter{from{opacity:0;transform:translateX(-50%) translateY(-30px) scale(.94)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+@keyframes auxiliary-leave{from{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}to{opacity:0;transform:translateX(-50%) translateY(-30px) scale(.94)}}
+@media(prefers-reduced-motion:reduce){body.has-reminder-hud:not(.settings-window) #island{animation:none}}
+body[data-motion=off].has-reminder-hud:not(.settings-window) #island{animation:none}
