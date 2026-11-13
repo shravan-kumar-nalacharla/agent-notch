@@ -66,7 +66,7 @@ jobs:
         run: |
           $packageVersion = node -p "require('./package.json').version"
           $requested = "${{ inputs.version }}"
-          if (-not $requested) { $requested = $env:GITHUB_REF_NAME -replace '^v','' }
+          if (-not $requested) { $requested = $packageVersion }
           if ($packageVersion -ne $requested) { throw "package.json is $packageVersion but this release is $requested. Bump the version first." }
 
       - name: Import signing certificate
@@ -102,8 +102,10 @@ jobs:
         shell: pwsh
         run: |
           $exe = Join-Path $PWD 'dist\win-unpacked\Agent Notch.exe'
-          & $exe --smoke-test
-          if ($LASTEXITCODE -ne 0) { throw "Packaged smoke test failed with exit code $LASTEXITCODE." }
+          foreach ($check in @('--continuous-voice-check','--polish-check','--routing-check')) {
+            $process = Start-Process -FilePath $exe -ArgumentList '--smoke-test',$check -WindowStyle Hidden -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "Packaged $check failed with exit code $($process.ExitCode)." }
+          }
 
       - name: Publish tested bytes to the public release-only repository
         shell: pwsh
@@ -126,7 +128,24 @@ jobs:
             (Join-Path $PWD 'THIRD-PARTY-NOTICES.md')
           )
           foreach ($asset in $assets) { if (-not (Test-Path -LiteralPath $asset)) { throw "Missing release asset: $asset" } }
-          $ghArgs = @('release','create',$tag,'--repo',$env:PUBLIC_REPO,'--title',"Agent Notch $version",'--notes-file','release/RELEASE-NOTES.md','--latest') + $assets
+          $ghArgs = @('release','create',$tag,'--repo',$env:PUBLIC_REPO,'--title',"Agent Notch $version",'--notes-file','release/RELEASE-NOTES.md','--draft') + $assets
           gh @ghArgs
+          if ($LASTEXITCODE -ne 0) { throw 'Draft release upload failed; nothing will be published.' }
+          $draft = gh release view $tag --repo $env:PUBLIC_REPO --json assets,isDraft | ConvertFrom-Json
+          if (-not $draft.isDraft) { throw 'Expected an unpublished draft.' }
+          foreach ($asset in $assets) {
+            $name = Split-Path $asset -Leaf
+            $uploaded = $draft.assets | Where-Object name -EQ $name
+            if (-not $uploaded -or $uploaded.size -ne (Get-Item -LiteralPath $asset).Length) { throw "Missing or truncated release asset: $name" }
+          }
+          gh release edit $tag --repo $env:PUBLIC_REPO --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Publishing the complete draft failed.' }
           gh release view $tag --repo $env:PUBLIC_REPO --json url,assets | Out-File -FilePath release\published.json -Encoding utf8
           Get-Content release\published.json
+
+      - name: Verify public update discovery from the previous installed version
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          node scripts/verify-public-update.cjs --from 0.34.3 --expected $version --installer "dist/Agent-Notch-Setup-$version.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'The public update feed failed verification.' }

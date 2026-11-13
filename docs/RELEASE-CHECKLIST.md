@@ -1,5 +1,16 @@
 # Release checklist
 
+## Publishing an update
+
+A source push or portable build does not update installed applications. Installed builds use the latest stable release in `shravan-kumar-nalacharla/agent-notch-releases`.
+
+1. Build and test the versioned NSIS installer, then run `node scripts/verify-release.cjs --dir <build-folder> --version <version>`.
+2. Upload the versioned installer, stable `Agent-Notch-Setup.exe` alias, blockmap, `latest.yml`, checksums, release notes and notices to a draft release. Publish the complete draft as latest, without the prerelease flag.
+3. Run `node scripts/verify-public-update.cjs --from <previous-public-version> --expected <version> --installer <built-installer>`. This uses the production updater's GitHub provider anonymously and checks availability and hashes without installing anything.
+4. Confirm the public latest release, record its URL and evidence, and only then report that users can update.
+
+The release workflow runs on the release branch or manual dispatch. Development pushes do not publish binaries. Signing policy remains enforced by the workflow.
+
 ## Current — 0.25.0
 
 File Actions adds the Nashi PDF core: inspect, merge, split and rotate, plus images → PDF through `pdf-lib`. Actual Blobatar remains the companion; drop-on-notch, image editing, media trim/convert and document → PDF remain. See [0.25.0 notes](0.25.0-UPDATES.md). Archive/QR/metadata/annotation/collage/subtitle/web tools are still outstanding. Source stays private; release binaries and metadata are public. The installer is unsigned; the release workflow requires a certificate for normal releases and fails closed otherwise.
