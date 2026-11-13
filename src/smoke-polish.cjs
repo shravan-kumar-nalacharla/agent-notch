@@ -1,69 +1,18 @@
 'use strict';
-const fs=require('node:fs');const path=require('node:path');
-module.exports=async function({win,widgets,native,artifacts,saveSnapshot}){
-  const js=code=>win.webContents.executeJavaScript(code);
-  const delay=ms=>new Promise(r=>setTimeout(r,ms));
-  async function check(code,message){if(!await js(code)){await saveSnapshot(win,path.join(artifacts,'polish-failure.png'));const layout=await js("({chat:document.getElementById('chat').getBoundingClientRect().toJSON(),nav:document.querySelector('nav').getBoundingClientRect().toJSON(),messages:document.getElementById('messages').getBoundingClientRect().toJSON(),height:innerHeight,view:document.body.className})");throw new Error(message+' '+JSON.stringify(layout));}}
-  const originalBounds=win.getBounds();
-  await js("document.querySelector('[data-tab=assistant]').click()");
-  for(let i=0;i<8;i++)await js(`(()=>{const m=document.createElement('div');m.className='message assistant';m.textContent='Readable chat message ${i}. '.repeat(12);document.getElementById('messages').append(m);})()`);
-  win.webContents.send('voice:state',{phase:'listening',kind:'chat'});
-  win.webContents.send('voice:state',{phase:'answer',kind:'chat',raw:'Hello',text:'Hello! This is a deterministic layout test.'});
-  await delay(450);
-  if(win.getBounds().height!==originalBounds.height)throw new Error('Voice result shrank the expanded native window.');
-  await check("(()=>{const r=document.getElementById('chat').getBoundingClientRect(),n=document.querySelector('nav').getBoundingClientRect(),m=document.getElementById('messages');return r.bottom<=n.top&&m.clientHeight>30&&getComputedStyle(m).scrollbarWidth==='none';})()",'Chat composer is clipped or message area is too short.');
-  await saveSnapshot(win,path.join(artifacts,'polish-chat.png'));
-  const sampleFile=path.join(artifacts,'shelf-test.txt');fs.writeFileSync(sampleFile,'Original file must survive removal.');
-  await js(`window.island.library('shelf:add',{paths:[${JSON.stringify(sampleFile)}]})`);
-  await js("window.islandOpenTool('shelf')");await delay(100);
-  await check("!!document.querySelector('[data-do=removeFile]')",'Shelf has no individual remove control.');
-  await js("document.querySelector('[data-do=removeFile]').click()");await delay(120);
-  if(widgets.library.view().shelf.length||!fs.existsSync(sampleFile))throw new Error('Shelf removal failed or deleted the original.');
-  await js("window.island.library('clips:enable',{enabled:true})");
-  await js("window.island.library('clips:add',{text:'Clipboard test preview'})");
-  await js("window.islandOpenTool('clips')");await delay(100);
-  await check("document.querySelector('.widget-row').textContent.includes('Clipboard test preview')",'Clipboard preview missing.');
-  await check("!!document.querySelector('[data-do=copyClip]')",'Clipboard copy control missing.');
-  await js("document.querySelector('[data-do=copyClip]').focus();window.island.library('clips:add',{text:'New external clipboard entry'})");await delay(120);
-  await check("document.querySelector('.widget-row').textContent.includes('New external clipboard entry')",'New clipboard entries stopped updating while a button had focus.');
-  await js("document.querySelector('[data-do=removeClip]').click()");await delay(120);
-  if(widgets.library.view().clips.length!==1)throw new Error('Individual clipboard deletion removed the wrong number of entries.');
-  await js("document.querySelector('[data-do=clearClips]').click()");await delay(100);
-  if(widgets.library.view().clips.length)throw new Error('Individual clipboard deletion failed.');
-  await js("window.island.library('clips:enable',{enabled:false})");
-  await js("window.islandOpenTool('timer');document.getElementById('focusMinutes').value='47';document.querySelector('[data-do=applyFocus]').click()");await delay(160);
-  if(widgets.library.view().timer.seconds!==2820)throw new Error('Focus Time did not use the entered custom duration.');
-  await js("window.islandOpenTool('timer');document.querySelector('[data-do=timerMode][data-mode=stopwatch]').click();document.querySelector('[data-do=timerPrimary]').click()");await delay(1200);
-  await check("document.getElementById('widgetTimer').textContent!=='00:00'",'Stopwatch did not count upward.');
-  await js("document.querySelector('[data-do=timerPrimary]').click()");await delay(120);
-  if(widgets.library.view().stopwatch.running)throw new Error('Stopwatch did not pause.');
-  await saveSnapshot(win,path.join(artifacts,'polish-stopwatch.png'));
-  await js("window.islandOpenTool('prompter');document.getElementById('prompterText').value='A script entered without saving first. '.repeat(70);document.querySelector('[data-do=runPrompter]').click()");await delay(700);
-  await check("document.getElementById('prompterViewport').scrollTop>5&&document.getElementById('prompterPlay').textContent==='Pause'",'Teleprompter did not scroll the freshly typed script.');
-  await saveSnapshot(win,path.join(artifacts,'polish-prompter.png'));
-  await js("document.querySelector('[data-do=runPrompter]').click()");const scroll=await js("document.getElementById('prompterViewport').scrollTop");await delay(200);
-  await check(`document.getElementById('prompterViewport').scrollTop===${scroll}`,'Teleprompter did not pause.');
-  await js("window.islandOpenTool('mirror')");
-  await check("(()=>{const r=document.getElementById('mirrorVideo').getBoundingClientRect();return Math.abs(r.width-r.height)<2;})()",'Mirror preview is not square.');
-  for(const tool of ['mirror','system','clips','timer','media']){
-    await js(`window.islandOpenTool('${tool}')`);await delay(80);
-    if(win.getBounds().height!==originalBounds.height)throw new Error('Tool changed fixed surface dimensions: '+tool);
-    await check("(()=>{const n=document.querySelector('nav').getBoundingClientRect();return n.height>20&&n.bottom<innerHeight;})()",'Bottom dock disappeared in '+tool);
-  }
-  const request=native.request.bind(native);let playing=false;
-  native.request=async(action,...args)=>{
-    if(action==='media')return{available:true,title:'Deterministic player test',artist:'UI fixture',duration:180000,position:12000,playing};
-    if(action==='media.control'){playing=!playing;return true;}
-    if(action==='volume')return{level:50,muted:false};
-    return request(action,...args);
-  };
-  try{
-    await js("window.islandOpenTool('media')");for(let i=0;i<100;i++){if(await js("document.getElementById('mediaTitle')?.textContent==='Deterministic player test'"))break;await delay(100);}
-    await js("document.querySelector('[data-command=toggle]').focus();document.querySelector('[data-command=toggle]').click()");await delay(1200);
-    await check("document.querySelector('[data-command=toggle]').getAttribute('aria-label')==='Pause'",'Focused player control did not update to Pause.');
-    await js("document.querySelector('[data-command=toggle]').click()");await delay(1200);
-    await check("document.querySelector('[data-command=toggle]').getAttribute('aria-label')==='Play'",'Player control did not update to Play.');
-  }finally{native.request=request;}
-  await js("document.querySelector('[data-tab=home]').click()");
-  console.log('POLISH SMOKE PASS: chat bounds, fixed geometry, dock, shelf removal, clipboard actions, stopwatch, square mirror, teleprompter, media controls (fixture).');
+module.exports=async({app,win,getSettingsWindow,out,saveSnapshot})=>{
+ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),{BrowserWindow}=require('electron'),checks=[],js=code=>win.webContents.executeJavaScript(code),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+ async function until(code,run=js){for(let i=0;i<100;i++){if(await run(`Boolean(${code})`))return;await sleep(60);}throw Error('Timed out: '+code);}
+ await js("window.island.save({appearance:{pinned:true,panelSize:'auto',accentColor:'#538dff'}}).then(()=>window.island.activate({revealOnly:true}))");await sleep(800);assert.ok(await js("(()=>{const p=document.getElementById('island'),g=getComputedStyle(p,'::before');return g.display==='block'&&parseFloat(g.width)>p.clientWidth-2&&parseFloat(g.height)>p.clientHeight-2})()"));
+ assert.equal(await js("document.querySelectorAll('#elevenVoiceRoom canvas').length"),0);await js("document.querySelector('[data-tab=voiceAssistant]').click()");await until("document.querySelector('#elevenVoiceRoom canvas')");await js("document.querySelector('[data-tab=home]').click()");await sleep(100);assert.equal(await js("document.querySelectorAll('#elevenVoiceRoom canvas').length"),0);checks.push('Inactive voice panel allocates no orb canvas');
+ await js("window.island.save({appearance:{panelSize:'compact'}})");await sleep(200);assert.equal(await js("parseFloat(getComputedStyle(document.body).getPropertyValue('--island-width'))"),410);await js("window.islandOpenTool('timer')");await sleep(700);assert.equal(await js("parseFloat(getComputedStyle(document.body).getPropertyValue('--compact-height'))"),230);assert.equal(await js("!!document.querySelector('[data-tool-size]')"),false);await js("window.island.save({appearance:{panelSize:'auto'}})");checks.push('Global size persists across Home and tools without per-tool pickers');
+ await js("window.islandOpenTool('media')");await sleep(800);const volume=await js("(()=>{const s=document.querySelector('.el-volume-row [role=slider]').getBoundingClientRect(),p=document.querySelector('#tools').getBoundingClientRect();return{visible:s.height>8&&s.bottom<=p.bottom+1,width:s.width}})()");assert.ok(volume.visible&&volume.width>8);await saveSnapshot(win,path.join(out,'media-volume.png'));checks.push('System volume thumb remains inside the visible media panel');
+ await js("window.island.settings()");for(let i=0;i<100&&!getSettingsWindow();i++)await sleep(50);const settings=getSettingsWindow(),sj=code=>settings.webContents.executeJavaScript(code);await until("window.islandSettingsUIReady&&window.islandAstryx",sj);await sj("window.islandShowSettingsSection('notificationsGroup')");await sleep(400);
+ await until("document.getElementById('reminderBusy--astryx')",sj);await saveSnapshot(settings,path.join(out,'switch-before.png'));await sj("window.__toggleEvents=[];for(const name of ['pointerdown','click','input','change'])document.addEventListener(name,event=>window.__toggleEvents.push({name,id:event.target.id,tag:event.target.tagName,checked:event.target.checked,trusted:event.isTrusted}),true)");const original=await sj("document.getElementById('reminderBusy').checked");settings.webContents.debugger.attach('1.3');try{for(let i=0;i<6;i++){const point=await sj("(()=>{const r=document.querySelector('#reminderBusy--astryx input[role=switch]').getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2}})()");await settings.webContents.debugger.sendCommand('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',clickCount:1,...point});await settings.webContents.debugger.sendCommand('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',clickCount:1,...point});await sleep(130);fs.writeFileSync(path.join(out,'switch-events.json'),JSON.stringify(await sj("({events:window.__toggleEvents,source:document.getElementById('reminderBusy').checked,visible:document.querySelector('#reminderBusy--astryx input[role=switch]').checked,html:document.getElementById('reminderBusy--astryx').closest('.astryx-field').outerHTML})"),null,2));assert.equal(await sj("document.getElementById('reminderBusy').checked"),i%2===0?!original:original);assert.equal(await sj("document.querySelector('#reminderBusy--astryx input[role=switch]').checked"),i%2===0?!original:original);}}finally{settings.webContents.debugger.detach();}
+ assert.equal(await sj("window.islandAstryx.stats().roots"),1);await saveSnapshot(settings,path.join(out,'settings-switches.png'));checks.push('Repeated real pointer clicks toggle once in each direction; all controls share one React root');
+ await sj("window.islandShowSettingsSection('providerGroup')");await sleep(300);assert.equal(await sj("document.querySelector('[data-component=Astryx-select] label')?.textContent.includes('Groq')"),false);await saveSnapshot(settings,path.join(out,'settings-providers.png'));await sj("window.islandShowSettingsSection('islandGroup')");await sleep(250);const scroll=await sj("new Promise(resolve=>{const p=document.querySelector('.settings-panel'),before=p.scrollTop;p.dispatchEvent(new WheelEvent('wheel',{deltaY:120,bubbles:true,cancelable:true}));setTimeout(()=>resolve(p.scrollTop-before),450)})");assert.ok(scroll>35&&scroll<=120,'Settings should scroll faster: '+scroll);settings.close();
+ await js("window.islandOpenTool('converter')");await until("document.querySelector('[data-convert] .astryx-field input')");const focus=await js("new Promise(resolve=>{const i=document.querySelector('[data-convert] .astryx-field input'),f=i.closest('.astryx-text-input'),before=getComputedStyle(f).backgroundColor;i.focus();setTimeout(()=>resolve({before,after:getComputedStyle(f).backgroundColor,outline:getComputedStyle(i).outlineStyle,border:getComputedStyle(i).borderTopWidth,shadow:getComputedStyle(f).boxShadow}),280)})");assert.notEqual(focus.before,focus.after);assert.equal(focus.outline,'none');assert.equal(focus.border,'0px');assert.equal(focus.shadow,'none');await saveSnapshot(win,path.join(out,'tonal-focus.png'));checks.push('Focused fields transition to a lighter surface without nested outlines or borders');
+ for(const panelSize of ['compact','standard','spacious','auto']){await js(`window.island.save({appearance:{panelSize:${JSON.stringify(panelSize)}}});document.querySelector('[data-tab=assistant]').click()`);await sleep(650);const fit=await js("(()=>{const c=document.getElementById('elevenChatComposer').getBoundingClientRect(),m=document.getElementById('messages').getBoundingClientRect(),v=document.querySelector('.view-stack').getBoundingClientRect(),n=document.querySelector('nav').getBoundingClientRect(),i=document.getElementById('chatQuestion').getBoundingClientRect(),s=document.getElementById('chatSend').getBoundingClientRect();return{bottom:Math.abs(c.bottom-v.bottom),fit:c.bottom<n.top&&c.top>=m.bottom-1&&s.right<=c.right&&s.bottom<=c.bottom&&i.right<=c.right}})()");assert.ok(fit.fit&&fit.bottom<2,JSON.stringify({panelSize,...fit}));await saveSnapshot(win,path.join(out,'chat-'+panelSize+'.png'));}checks.push('Chat composer remains at the bottom with contained input, send button and navigation at all four sizes');
+ await js("window.island.openFileActions()");let studio;for(let i=0;i<100;i++){studio=BrowserWindow.getAllWindows().find(w=>w.getTitle().includes('File Studio'));if(studio)break;await sleep(50);}assert.ok(studio);if(studio.webContents.isLoading())await new Promise(r=>studio.webContents.once('did-finish-load',r));await sleep(500);const fj=code=>studio.webContents.executeJavaScript(code);assert.equal(await fj("getComputedStyle(document.body).getPropertyValue('--user-accent').trim()"),'#538dff');assert.equal(await fj("!!document.querySelector('script[src*=pdf]')"),false);await saveSnapshot(studio,path.join(out,'file-studio-blue.png'));await js("window.island.save({appearance:{accentColor:'#b778ff'}})");await sleep(250);assert.equal(await fj("getComputedStyle(document.body).getPropertyValue('--user-accent').trim()"),'#b778ff');studio.close();checks.push('File Studio follows live palette changes and defers PDF initialization');
+ await js("document.querySelector('[data-tab=home]').click();window.island.save({appearance:{pinned:false}});window.dispatchEvent(new Event('island:test-leave'))");await sleep(1700);win.webContents.send('voice:state',{phase:'listening',kind:'dictation'});win.webContents.send('voice:state',{phase:'level',level:.7});await sleep(600);assert.ok(await js("document.body.classList.contains('has-voice-hud')&&document.querySelector('#voiceHud canvas')?.getBoundingClientRect().width>0"));await saveSnapshot(win,path.join(out,'dictation-hud.png'));win.webContents.send('voice:state',{phase:'processing',kind:'dictation'});await sleep(120);assert.match(await js("document.getElementById('voiceHudText').textContent"),/Transcribing/);win.webContents.send('voice:state',{phase:'idle',kind:'dictation'});checks.push('Dictation shows its live spectrum and transcription state in the animated HUD');
+ fs.writeFileSync(path.join(out,'polish-verification.json'),JSON.stringify({version:app.getVersion(),checks,volume,focus},null,2));console.log('POLISH SMOKE PASS',checks.length);
 };

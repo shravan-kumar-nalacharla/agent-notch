@@ -33,7 +33,7 @@
   function btn(action,label,data=''){return`<button type="button" data-do="${action}" ${data}>${label}</button>`;}
   function row(text,actions='',sub=''){return`<div class="widget-row"><div><span>${esc(text)}</span>${sub?`<small>${esc(sub)}</small>`:''}</div><div class="widget-actions">${actions}</div></div>`;}
   function hidden(name,value){return`<input type="hidden" name="${name}" value="${esc(value)}">`;}
-  function heading(){return `<div class="widget-heading">${btn('back','⌂','aria-label="All tools"')}${btn('carouselPrev','‹','aria-label="Previous tool"')}<b>${esc(pages.find(p=>p[0]===selected)?.[2]||'Tools')}</b>${btn('carouselNext','›','aria-label="Next tool"')}<select data-tool-size aria-label="Panel size"><option value="auto">Auto size</option><option value="compact">Compact</option><option value="standard">Standard</option><option value="spacious">Spacious</option></select></div>`;}
+  function heading(){return `<div class="widget-heading">${btn('back','⌂','aria-label="All tools"')}${btn('carouselPrev','‹','aria-label="Previous tool"')}<b>${esc(pages.find(p=>p[0]===selected)?.[2]||'Tools')}</b>${btn('carouselNext','›','aria-label="Next tool"')}</div>`;}
   const icons={
     previous:'<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
     next:'<svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>',
@@ -142,7 +142,6 @@
   root.addEventListener('click',event=>{const b=event.target.closest('[data-do=page],[data-do=carouselGo]');if(!b)return;event.preventDefault();event.stopImmediatePropagation();slideTo(b.dataset.page).catch(error);},true);
   new MutationObserver(()=>{root.dataset.tool=selected||'all';root.querySelectorAll('.widget-grid [data-page]').forEach(button=>{const icon=button.querySelector('i');if(icon&&!icon.classList.contains('ph'))icon.outerHTML=window.IslandIcons?.markup(button.dataset.page)||icon.outerHTML;});}).observe(root,{childList:true});
   window.addEventListener('island:horizontal-scroll',event=>{if(root.hidden||!selected)return;const ids=toolIds(),direction=event.detail?.direction<0?-1:1,index=ids.indexOf(selected);slideTo(ids[(index+direction+ids.length)%ids.length],direction);});
-  root.addEventListener('wheel',event=>{if(!selected||!event.target.closest('.carousel-head,.widget-heading,.focus-heading')||event.target.closest('select,input,button')||Math.abs(event.deltaY)<20||Math.abs(event.deltaX)>Math.abs(event.deltaY))return;event.preventDefault();api.toolSurface({id:selected,size:event.deltaY>0?'spacious':'auto'}).catch(error);},{passive:false});
   function render(){if(!lib)return;if(selected!=='media'){mediaSurface?.dispose();mediaSurface=null;lyricsWanted=false;stopMediaPolling();document.body.classList.remove('rich-media');}if(selected!=='mirror')stopMirror();if(selected!=='prompter')stopPrompter();
     if(!settingsMode){const id=selected||'tools';api.toolSurface({id}).then(reply=>{const select=root.querySelector('[data-tool-size]');if(reply.ok&&selected===id&&select)select.value=reply.value.toolSize||'auto';}).catch(error);}
     disposeCore?.();disposeCore=null;

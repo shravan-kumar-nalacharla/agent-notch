@@ -1,0 +1,2 @@
+const{test}=require('node:test'),assert=require('node:assert/strict'),{palette}=require('../src/theme-palette.js');
+test('accent palettes derive adjacent edge hues and reject arbitrary CSS',()=>{const blue=palette('#538dff'),green=palette('#38bb70');assert.notEqual(blue.edgeA,blue.edgeB);assert.notEqual(blue.edgeB,green.edgeB);assert.equal(blue.accent,'#538dff');assert.equal(palette('url(secret)').accent,'#d6ed83');for(const hex of ['#000000','#ffffff','#ff0000','#00ff00','#0000ff'])assert.doesNotMatch(JSON.stringify(palette(hex)),/NaN|Infinity/);});

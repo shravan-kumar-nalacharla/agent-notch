@@ -97,9 +97,9 @@ async function expand(on=true){if(settingsMode)return;return on?motion.open():mo
 window.island.onCaptureOverlay?.(({active})=>{captureOverlayActive=active;if(active){motion.cancel('leave');}else if(!motion.inside&&expanded)motion.leave();});
 window.island.onVisibility?.(visible=>{if(!visible&&expanded)expand(false).catch(showError);});
 window.island.onHover?.(({inside})=>{if(settingsMode||!hoverEnabled||windowPolicy!=='normal')return;inside?motion.enter():motion.leave();});
-let panelResize;
+let panelResize,panelTarget='';
 window.island.onLayout?.(layout=>{
-  const panel=$('island'),before=panel.getBoundingClientRect();panelResize?.cancel();
+  const target=layout.panelWidth+'x'+(document.body.classList.contains('rich-media')?layout.richHeight:layout.panelHeight);if(panelTarget===target){requestAnimationFrame(sendHitbox);return;}panelTarget=target;const panel=$('island'),before=panel.getBoundingClientRect();panelResize?.cancel();
   document.body.style.setProperty('--island-width',layout.panelWidth+'px');document.body.style.setProperty('--compact-height',layout.panelHeight+'px');document.body.style.setProperty('--rich-height',layout.richHeight+'px');
   const height=document.body.classList.contains('rich-media')?layout.richHeight:layout.panelHeight;
   if(expanded&&!document.body.classList.contains('surface-animating')&&state?.appearance?.motion!=='off'&&(Math.abs(before.width-layout.panelWidth)>1||Math.abs(before.height-height)>1)){
@@ -442,6 +442,7 @@ document.addEventListener('keydown', event => {
   } else if (!state?.appearance?.pinned) expand(false);
 });
 
+let hudCloseTimer;function dismissVoiceHud(){if(!document.body.classList.contains('has-voice-hud'))return;document.body.classList.add('hud-leaving');clearTimeout(hudCloseTimer);hudCloseTimer=setTimeout(()=>{document.body.classList.remove('has-voice-hud','hud-leaving');window.island.setVoiceHud?.(false);},state?.appearance?.motion==='off'?0:240);}
 window.island.onVoice?.(event => {
   if(event.phase==='listening'){currentVoiceKind=event.kind;window.islandVoiceSession=['chat','command','ptt','live'].includes(event.kind);}
   if(event.phase==='partial'&&!settingsMode){if(currentVoiceKind==='chat_input')$('question').value=event.text;else if(currentVoiceKind==='dictation'){$('transcript').value=event.text;rawTranscript=event.text;$('transcriptBox').hidden=false;}return;}
@@ -459,8 +460,8 @@ window.island.onVoice?.(event => {
     $('mic').classList.add('recording');
     $('mic').title = 'Stop recording';
     $('status').textContent = event.kind==='live'?'Gemini Live Â· listening Â· mic to stop':'Listening...';
-    if (!expanded && ['dictation','ptt'].includes(event.kind)) {
-      document.body.classList.add('has-voice-hud');
+    if (['dictation','ptt'].includes(event.kind)) {
+      clearTimeout(hudCloseTimer);document.body.classList.remove('hud-leaving');document.body.classList.add('has-voice-hud');window.dispatchEvent(new Event('island:hud-start'));
       $('voiceHudText').textContent = 'Listening...';
       window.island.setVoiceHud?.(true);
     }
@@ -483,8 +484,7 @@ window.island.onVoice?.(event => {
     $('mic').style.opacity = '';
     document.querySelectorAll('.voice-wave i').forEach(bar => bar.style.transform = 'scaleY(.18)');
     document.querySelectorAll('.audio-bars i').forEach(bar => bar.style.transform = 'scaleY(.18)');
-    document.body.classList.remove('has-voice-hud');
-    window.island.setVoiceHud?.(false);
+    dismissVoiceHud();
     if(event.phase==='draft'){pendingDraftId=event.id;$('insertDraft').hidden=false;$('transcriptBox').open=true;tab('assistant');expand(true);}else{pendingDraftId='';$('insertDraft').hidden=true;}
     if(event.phase==='done'&&event.kind==='chat_input'){$('question').value=event.text||'';tab('assistant');$('question').focus();}
     else if(event.phase==='answer'){

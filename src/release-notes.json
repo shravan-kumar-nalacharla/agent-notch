@@ -1,5 +1,18 @@
 [
   {
+    "version": "0.37.0",
+    "date": "2026-11-13",
+    "title": "Stable layouts and borderless controls",
+    "notes": [
+      "Chat keeps its rounded composer at the bottom across all panel sizes, with conversation scrolling above it.",
+      "Switches respond reliably to pointer input, labels exclude hidden option text, and focus uses a subtle tonal transition instead of borders.",
+      "One global size setting replaces the temporary tool-size picker. Settings and the tools list scroll faster.",
+      "The notch and File Studio share accent-derived corner colors; dictation animates in and out with its spectrum and transcription state.",
+      "Media volume stays visible. Repeated layout notifications no longer restart the same resize animation.",
+      "Controls share one React root; the hidden voice orb and PDF viewer load on demand. UI build dependencies and source maps are excluded from the runtime package."
+    ]
+  },
+  {
     "version": "0.36.0",
     "date": "2026-11-13",
     "title": "Astryx controls and a smoother island",

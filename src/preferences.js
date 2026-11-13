@@ -31,7 +31,7 @@
       <label>Your name<input id="profileName" maxlength="50" placeholder="How should Agent Notch address you?"></label>
       ${choose('islandShape', 'Shape', [['notch', 'Dynamic Notch'], ['corner', 'Corner Island'], ['pill', 'Floating pill'], ['line', 'Minimal line']])}
       ${choose('islandTheme', 'Theme', [['system', 'Follow Windows'], ['dark', 'Dark'], ['light', 'Light']])}
-      <div class="settings-card"><h4>Colors and typography</h4><div class="row"><label>Panel width (0 = automatic)<input id="islandPanelWidth" type="number" min="0" max="800" step="10" value="0"></label><label>Panel height (0 = automatic)<input id="islandPanelHeight" type="number" min="0" max="650" step="10" value="0"></label></div><label>Accent color<input id="islandAccentColor" type="color" value="#d6ed83"></label>${choose('islandUIFont','Interface font',[['system','Segoe UI — Windows default'],['arial','Arial — clean sans serif'],['serif','Georgia — serif'],['mono','Cascadia / Consolas — monospace']])}<small>The accent colors panel lighting, timer controls and selected actions.</small></div>
+      <div class="settings-card"><h4>Size, colors and typography</h4>${choose('islandPanelSize','Application size',[['auto','Automatic — fit each panel'],['compact','Compact'],['standard','Medium'],['spacious','Large']])}<div class="row"><label>Panel width (0 = automatic)<input id="islandPanelWidth" type="number" min="0" max="800" step="10" value="0"></label><label>Panel height (0 = automatic)<input id="islandPanelHeight" type="number" min="0" max="650" step="10" value="0"></label></div><label>Accent color<input id="islandAccentColor" type="color" value="#d6ed83"></label>${choose('islandUIFont','Interface font',[['system','Segoe UI — Windows default'],['arial','Arial — clean sans serif'],['serif','Georgia — serif'],['mono','Cascadia / Consolas — monospace']])}<small>The accent colors panel lighting, timer controls and selected actions.</small></div>
       ${check('pinIsland', 'Keep the island fully open')}
       ${choose('islandDisplay', 'Screen', [['primary', 'Primary screen'], ['cursor', 'Screen under pointer']])}
       ${check('islandMinimal', 'Use a thin line when closed')}
@@ -70,6 +70,7 @@
   $('islandGroup').addEventListener('change', event => {if(event.target.matches('[data-favorite]') && document.querySelectorAll('[data-favorite]:checked').length>8){event.target.checked=false;$('settingsSaveStatus').textContent='Choose up to eight extra shortcuts.';}});
   window.islandSettingsDirty=false;window.islandSettingsRevision=0;
   $('settings').addEventListener('input', () => {window.islandSettingsDirty=true;window.islandSettingsRevision++;$('settingsSaveStatus').textContent = 'Unsaved changes';savebar.classList.remove('saved');window.islandUpdateVoiceReadiness?.();});
+  $('islandPanelSize').addEventListener('change',()=>{$('islandPanelWidth').value=0;$('islandPanelHeight').value=0;window.islandAstryx?.scan();});
   const favoriteTools = [['media','Media'],['water','Water'],['shelf','Shelf'],['todo','Tasks'],['clips','Clipboard'],['reminders','Reminders'],['mirror','Mirror'],['prompter','Teleprompter'],['system','System'],['dictionary','Dictionary'],['snippets','Snippets'],['history','History'],['meetings','Meetings'],['projects','Projects'],['weather','Weather'],['calendar','Calendar']];
   $('islandGroup').insertAdjacentHTML('beforeend', '<h3 class="dock-heading">Bottom menu shortcuts</h3><small>Home, chat, notes, Focus Time, Agents and Settings stay available. All features stays last. Choose up to eight extra shortcuts.</small><div class="favorite-options">' + favoriteTools.map(([id,label]) => `<label class="check"><input type="checkbox" data-favorite="${id}">${label}</label>`).join('') + '</div>');
 
@@ -193,7 +194,7 @@
     $('profileName').value = state.profileName || '';
     $('islandShape').value = appearance.shape || 'notch';
     $('islandTheme').value = appearance.theme || 'system';
-    $('islandPanelWidth').value=appearance.panelWidth||0;$('islandPanelHeight').value=appearance.panelHeight||0;$('islandAccentColor').value=appearance.accentColor||'#d6ed83';$('islandUIFont').value=appearance.uiFont||'system';
+    $('islandPanelSize').value=appearance.panelSize||'auto';$('islandPanelWidth').value=appearance.panelWidth||0;$('islandPanelHeight').value=appearance.panelHeight||0;$('islandAccentColor').value=appearance.accentColor||'#d6ed83';$('islandUIFont').value=appearance.uiFont||'system';
     $('pinIsland').checked = !!appearance.pinned;
     $('islandMinimal').checked = !!appearance.minimal;
     $('islandMascot').checked = appearance.mascot !== false;
@@ -231,7 +232,7 @@
       display: $('islandDisplay').value,
       shape: $('islandShape').value,
       theme: $('islandTheme').value,
-      accentColor:$('islandAccentColor').value,uiFont:$('islandUIFont').value,panelWidth:+$('islandPanelWidth').value,panelHeight:+$('islandPanelHeight').value,
+      accentColor:$('islandAccentColor').value,uiFont:$('islandUIFont').value,panelSize:$('islandPanelSize').value,panelWidth:+$('islandPanelWidth').value,panelHeight:+$('islandPanelHeight').value,
       pinned: $('pinIsland').checked,
       minimal: $('islandMinimal').checked,
       mascot: $('islandMascot').checked,

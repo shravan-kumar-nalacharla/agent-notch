@@ -5,6 +5,8 @@ const eventPools=new Map();
 function listen(channel,callback){let pool=eventPools.get(channel);if(!pool){pool=new Set();eventPools.set(channel,pool);ipcRenderer.on(channel,(_event,value)=>{for(const cb of [...pool])try{const pending=cb(value);pending?.catch?.(e=>console.error('UI event handler:',e.message));}catch(e){console.error('UI event handler:',e.message);}});}const entry=value=>callback(value);pool.add(entry);return()=>pool.delete(entry);}
 const studioMode=typeof location!=='undefined'&&(location.pathname.endsWith('/file-studio.html')||location.pathname.endsWith('file-studio.html'));
 contextBridge.exposeInMainWorld('studio', {
+  appearance:()=>ipcRenderer.invoke('studio:appearance'),
+  onAppearance:callback=>listen('settings:changed',value=>callback(value.appearance||{})),
   inspect:paths=>ipcRenderer.invoke('studio:inspect',{paths}),
   choose:()=>ipcRenderer.invoke('studio:choose'),
   metadata:options=>ipcRenderer.invoke('studio:metadata',options),

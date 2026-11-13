@@ -212,3 +212,78 @@ body .astryx-field :is(.astryx-text-input,.astryx-number-input,.astryx-date-inpu
 body .astryx-field .astryx-selector{min-height:34px}
 body:not(.settings-window) button{transition:background .18s,opacity .18s,transform .18s}
 body:not(.settings-window) button:active:not(:disabled){transform:scale(.96)}
+
+/* Borderless Astryx fields: one animated tonal surface owns focus. */
+[data-astryx-native]{display:none!important}
+.astryx-theme-root{display:contents}.astryx-action-host{flex:0 0 auto}
+body .astryx-control :is(input,select,textarea,button),body [data-astryx-theme] :is(.astryx-selector,.astryx-date-input,.astryx-time-input){outline:none!important;outline-offset:0!important;box-shadow:none!important}
+body .astryx-control :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector){border:0!important;box-shadow:none!important;outline:none!important;background:#1c1d21!important;transition:background-color .24s ease!important}
+body .astryx-control :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector):is(:focus,:focus-visible,:focus-within,[data-state=expanded]){background:#27282d!important;box-shadow:none!important;outline:none!important}
+body.theme-light .astryx-control :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector){background:#ededf0!important}
+body.theme-light .astryx-control :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector):focus-within{background:#e2e2e7!important}
+body .astryx-control input:not([type=checkbox]){border:0!important;outline:none!important;box-shadow:none!important;background:transparent!important}
+body [data-astryx-theme] :is([role=listbox],[role=option],.astryx-selector-option-row){border:0!important;outline:none!important;box-shadow:none!important}
+body [data-astryx-theme] [role=option]:is([aria-selected=true],:focus-visible){background:#ffffff0b!important}
+body .astryx-field input[type=checkbox][role=switch]{appearance:none!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;opacity:0!important;z-index:2;cursor:pointer}
+body .astryx-field input[type=checkbox][role=switch]::after{display:none!important}
+body .astryx-switch-track{transition:background-color .2s,transform .16s!important}
+body .astryx-switch-thumb{transition:transform .22s cubic-bezier(.22,1,.36,1),background-color .2s!important}
+body .astryx-switch-field:active .astryx-switch-track{transform:scale(.96)}
+/* The glow stays at the edges and fades in after the black surface arrives. */
+body:not(.settings-window) #island::before{display:block;content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 0 100%,color-mix(in srgb,var(--edge-a,var(--user-accent)) 21%,transparent),transparent 48%),radial-gradient(ellipse at 100% 0,color-mix(in srgb,var(--edge-b,var(--user-accent)) 15%,transparent),transparent 42%);opacity:0}
+body.expanded:not(.settings-window) #island::before,body.has-voice-hud:not(.settings-window) #island::before{animation:edge-arrive .75s .08s cubic-bezier(.22,1,.36,1) both}
+@keyframes edge-arrive{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+body:not(.settings-window) :is(.pomodoro,.widget-content,.water-module,.todo-module,.el-player,.home-live){background:radial-gradient(ellipse at 0 100%,color-mix(in srgb,var(--edge-a,var(--user-accent)) 12%,transparent),transparent 48%),radial-gradient(ellipse at 100% 0,color-mix(in srgb,var(--edge-b,var(--user-accent)) 8%,transparent),transparent 40%),var(--panel)}
+body.has-voice-hud:not(.expanded):not(.settings-window) #island{background:var(--pulse-surface)!important;animation:hud-arrive .48s cubic-bezier(.22,1,.36,1) both}
+@keyframes hud-arrive{from{opacity:0;transform:translateX(-50%) translateY(-30px) scale(.92)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+body.has-voice-hud #voiceHud{display:flex!important;align-items:center;gap:8px}
+body.has-voice-hud.expanded #voiceHud{position:absolute;top:38px;left:50%;transform:translateX(-50%);width:220px;padding:8px 12px;z-index:5;background:var(--panel);border-radius:18px;animation:hud-expanded-arrive .3s ease both}
+@keyframes hud-expanded-arrive{from{opacity:0;translate:0 -8px}to{opacity:1;translate:0 0}}
+#voiceHud>.eleven-ui{display:block!important;flex:1;min-width:64px;height:24px}
+#voiceHudText{flex-shrink:0;white-space:nowrap;font-size:11px}
+body:not(.settings-window) .el-player:not(.has-lyrics){display:grid;grid-template-rows:26px minmax(40px,1fr) 30px 36px 30px;gap:4px;overflow-y:auto}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-track{min-height:0}
+body:not(.settings-window) .el-volume-row{width:100%;min-width:0;max-width:none;min-height:30px!important;height:30px!important;padding:0 2px 2px;box-sizing:border-box}
+body:not(.settings-window) .el-volume-row [data-slot=slider-track]{height:6px;background:#ffffff18;border:0}
+body:not(.settings-window) .el-volume-row [data-slot=slider-range]{background:var(--user-accent)}
+body:not(.settings-window) .el-volume-row [data-slot=slider-thumb]{width:13px;height:13px;border:0;box-shadow:none;background:var(--user-accent)}
+body:not(.settings-window) .el-player.has-lyrics .el-volume-row{width:25%;min-width:100px;max-width:calc(50% - 58px)}
+
+body .astryx-field input[type=checkbox][role=switch]{transform:none!important}body .astryx-field .astryx-switch{background:#36373c!important;border:0!important;box-shadow:none!important;transition:background-color .22s,transform .16s!important}body .astryx-field .astryx-switch[data-checked=checked]{background:color-mix(in srgb,var(--user-accent,#d6ed83) 70%,#34353a)!important}body .astryx-field .astryx-switch-thumb{background:#b6b7be!important}body .astryx-field .astryx-switch-thumb[data-checked=checked]{background:var(--on-user-accent,#17200c)!important}
+
+body.hud-leaving.has-voice-hud:not(.expanded):not(.settings-window) #island{animation:hud-leave .24s ease both}body.hud-leaving.expanded #voiceHud{animation:hud-leave-expanded .24s ease both}@keyframes hud-leave{from{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}to{opacity:0;transform:translateX(-50%) translateY(-28px) scale(.94)}}@keyframes hud-leave-expanded{to{opacity:0;translate:0 -8px}}
+
+/* Stable content rows keep chat and navigation anchored at every size. */
+body.expanded:not(.settings-window) #island{display:flex;flex-direction:column}
+body.expanded:not(.settings-window) #island>header{flex:0 0 36px}
+body.expanded:not(.settings-window) #body{height:auto;flex:1;min-height:0;box-sizing:border-box}
+body:not(.settings-window) .view-stack{flex:1;min-height:0;height:auto}
+body:not(.settings-window) #assistant:not([hidden]){height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:8px;overflow:hidden}
+body:not(.settings-window) #assistant .page-head{grid-row:1;min-height:25px}
+body:not(.settings-window) #assistant #chatHistory{grid-row:1;justify-self:end;align-self:center;margin:0}
+body:not(.settings-window) #assistant #messages{grid-row:2;min-height:0;max-height:none;height:100%;margin:0;overflow:hidden}
+body:not(.settings-window) #assistant #elevenChatComposer{grid-row:3;min-width:0;margin:0}
+body:not(.settings-window) #assistant:has(#windowsTask:not([hidden])){display:flex;flex-direction:column}
+body:not(.settings-window) #assistant:has(#windowsTask:not([hidden])) #messages,body:not(.settings-window) #assistant:has(#windowsTask:not([hidden])) #elevenChatComposer{display:none}
+body:not(.settings-window) .chatgpt-composer{padding:10px 12px!important;gap:6px;display:flex;flex-direction:column;border:0!important;box-shadow:none!important;border-radius:23px!important;background:var(--panel-2)!important}
+body:not(.settings-window) .chatgpt-composer .chat-input-row{padding:0!important;min-height:34px;display:block}
+body:not(.settings-window) .chatgpt-composer .chat-input-row textarea{field-sizing:content;width:100%;box-sizing:border-box;min-height:34px!important;height:auto!important;max-height:min(96px,25vh)!important;padding:6px 3px!important;line-height:22px;font-size:14px;outline:none!important;border:0!important;box-shadow:none!important;background:transparent!important;resize:none}
+body:not(.settings-window) .chat-composer-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;height:30px}
+body:not(.settings-window) .chat-composer-actions #chatSend{position:static!important;display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;min-height:30px;border:0;border-radius:50%;padding:6px;background:var(--user-accent);color:var(--on-user-accent)}
+body:not(.settings-window) .chat-composer-actions #chatSend svg{width:17px;height:17px}
+body:not(.settings-window) .chat-composer-voice{display:flex;align-items:center}
+body:not(.settings-window) .chat-composer-voice button{background:transparent;border:0}
+body:not(.settings-window) .el-chat-thread .message{line-height:1.65}
+
+body:not(.settings-window) #assistant:not([hidden]){grid-template-columns:minmax(0,1fr) auto}body:not(.settings-window) #assistant #messages,body:not(.settings-window) #assistant #elevenChatComposer{grid-column:1/-1}body:not(.settings-window) .chatgpt-composer .chat-input-row textarea{max-height:clamp(34px,calc(var(--rich-height,315px) - 205px),96px)!important}
+
+body:not(.settings-window) #companionGlow{display:none!important}
+body.has-voice-hud:not(.expanded):not(.settings-window) #island>header{height:38px;padding:0 14px;box-sizing:border-box}
+body.has-voice-hud:not(.expanded):not(.settings-window) #voiceHud{box-sizing:border-box;width:100%;gap:8px;justify-content:space-between;overflow:hidden}
+body.has-voice-hud:not(.expanded) #voiceHudText{font-weight:500;font-size:11px}
+body:not(.settings-window) #tools:not([hidden]){height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+body:not(.settings-window) #tools>.widget-heading{flex:0 0 34px}
+body:not(.settings-window) #tools>:is(.carousel-body,.widget-content){flex:1;min-height:0;height:auto;overflow:auto}
+body:not(.settings-window) #tools>.widget-grid{flex:1;min-height:0;overflow:auto}
+
+body:not(.settings-window) #island::before{display:block!important;width:auto!important;height:auto!important}

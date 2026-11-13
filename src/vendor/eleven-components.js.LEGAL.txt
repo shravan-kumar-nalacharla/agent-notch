@@ -91,12 +91,10 @@ lucide-react/dist/esm/icons/external-link.mjs:
 lucide-react/dist/esm/icons/eye-off.mjs:
 lucide-react/dist/esm/icons/funnel.mjs:
 lucide-react/dist/esm/icons/info.mjs:
-lucide-react/dist/esm/icons/keyboard.mjs:
 lucide-react/dist/esm/icons/menu.mjs:
 lucide-react/dist/esm/icons/mic-off.mjs:
 lucide-react/dist/esm/icons/mic.mjs:
 lucide-react/dist/esm/icons/pause.mjs:
-lucide-react/dist/esm/icons/phone.mjs:
 lucide-react/dist/esm/icons/play.mjs:
 lucide-react/dist/esm/icons/rotate-ccw.mjs:
 lucide-react/dist/esm/icons/search.mjs:

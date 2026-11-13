@@ -1,4 +1,5 @@
 const{test}=require('node:test'),assert=require('node:assert/strict');const{validateVisualStyle}=require('../src/appearance-style.cjs');
+test('global size accepts only supported presets',()=>{assert.deepEqual(validateVisualStyle({panelSize:'compact'}),{panelSize:'compact'});assert.throws(()=>validateVisualStyle({panelSize:'huge'}));});
 test('appearance colors and fonts only accept supported values',()=>{assert.deepEqual(validateVisualStyle({accentColor:'#ABCDEF',uiFont:'serif'}),{accentColor:'#abcdef',uiFont:'serif'});assert.deepEqual(validateVisualStyle({theme:'dark'}),{});assert.throws(()=>validateVisualStyle({accentColor:'url(secret)'}));assert.throws(()=>validateVisualStyle({uiFont:'external-font'}));});
 
 test('custom panel dimensions clamp to usable limits and support automatic sizing',()=>{assert.deepEqual(validateVisualStyle({panelWidth:100,panelHeight:999}),{panelWidth:380,panelHeight:650});assert.deepEqual(validateVisualStyle({panelWidth:0,panelHeight:0}),{panelWidth:0,panelHeight:0});assert.throws(()=>validateVisualStyle({panelWidth:'invalid'}));});

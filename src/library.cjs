@@ -103,7 +103,7 @@ function createLibrary(folder, now = Date.now, monotonic = now===Date.now?()=>pe
     for(const item of [...data.snippets].sort((a,b)=>b.trigger.length-a.trigger.length))output=output.replace(new RegExp(`(?<![\\p{L}\\p{N}_])${esc(item.trigger)}(?![\\p{L}\\p{N}_])`,'giu'),()=>item.expansion);
     return output;
   }
-  return {view,action,tick,transform,save,quoteState:()=>structuredClone({quiet:data.quiet,focus:!!(data.timer&&!data.timer.paused||data.stopwatch?.running)})};
+  return {view,action,tick,transform,save,clock:clockSnapshot,preferences:()=>({clipboardEnabled:data.clipboardEnabled,mediaAppId:data.mediaAppId,city:data.city}),quoteState:()=>structuredClone({quiet:data.quiet,focus:!!(data.timer&&!data.timer.paused||data.stopwatch?.running)})};
 }
 function stats(history) {
   const dict=history.filter(x=>x.kind==='dictation');const words=dict.reduce((n,x)=>n+(x.text.trim()?x.text.trim().split(/\s+/).length:0),0);const seconds=dict.reduce((n,x)=>n+x.seconds,0);
