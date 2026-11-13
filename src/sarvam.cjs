@@ -1,5 +1,5 @@
 'use strict';
-const BASE='https://api.sarvam.ai',STT_MODEL='saaras:v4',TTS_MODEL='bulbul:v3',VOICES=['priya','shubh','ishita','ratan','neha','ritu'];
+const BASE='https://api.sarvam.ai',STT_MODEL='saaras:v4',TTS_MODEL='bulbul:v3',VOICES=require('./provider-routing.js').sarvamVoices.map(v=>v.id);
 const LANGUAGES=['en','hi','te','ta','kn','ml','mr','bn','gu','pa','od'];
 function headers(key){if(typeof key!=='string'||!key.trim())throw new Error('Save your Sarvam API key in AI & API keys.');return{'api-subscription-key':key.trim()};}
 async function readJson(response,max=12*1024*1024){if(Number(response.headers?.get('content-length')||0)>max)throw new Error('Sarvam response exceeded its limit.');if(!response.body?.[Symbol.asyncIterator])return response.json();const parts=[];let size=0;for await(const part of response.body){size+=part.length;if(size>max)throw new Error('Sarvam response exceeded its limit.');parts.push(Buffer.from(part));}return JSON.parse(Buffer.concat(parts).toString('utf8'));}

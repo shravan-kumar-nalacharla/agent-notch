@@ -1,4 +1,14 @@
 /* Auxiliary surfaces use the same saved palette as the notch. */
+.eleven-ui{--el-primary:var(--user-accent);--primary:var(--user-accent);--color-primary:var(--user-accent);--color-primary-foreground:var(--on-user-accent);--color-ring:var(--user-accent)}
+body .el-player [data-slot=slider-range],body .el-player [data-slot=scrub-bar-progress]>div{background:var(--user-accent)!important}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-volume-row{width:150px;min-width:120px;max-width:40%;height:22px!important;min-height:22px!important}
+body:not(.settings-window) .el-player .el-volume-row [data-slot=slider-thumb]{width:9px;height:9px;min-width:9px;min-height:9px;border:0;box-shadow:none;outline:0;background:var(--user-accent)}
+body:not(.settings-window) .el-player .el-volume-row [data-slot=slider-track]{height:4px}
+body .el-lyric-line.current{animation:none}
+.role-routing p{font-size:12px;color:var(--muted);margin:6px 0 12px}.role-routing small{display:block;color:var(--muted);line-height:1.6}
+.el-voice-footer>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.el-voice-footer button{flex-shrink:0;font-size:11px}
+.settings-window .settings-savebar .astryx-action-host,.settings-window .settings-savebar .astryx-action-host span{max-width:none}
+.settings-window .settings-savebar .astryx-action-host button{min-width:120px;background:var(--user-accent);color:var(--on-user-accent)}
 body #homeQuick{display:flex;align-items:center;gap:10px}
 body #homeQuickGrid{flex:1;min-width:0;scroll-snap-type:none;scroll-behavior:auto;overflow-anchor:none}
 body #homeQuickGrid .quick-cell{scroll-snap-align:none}

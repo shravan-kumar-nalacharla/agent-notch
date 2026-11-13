@@ -48,7 +48,7 @@ export function installAstryx(){
  type Item={host:HTMLElement,owner:HTMLElement|null,key:number,label:string,signature:string};
  const fields=new Map<Native,Item>(),buttons=new Map<HTMLButtonElement,Item>();let sequence=0,scheduled=0,firstPaint=true;
  const signature=(source:Native)=>String(valueOf(source))+'|'+source.disabled+'|'+(source instanceof HTMLSelectElement?source.innerHTML:'');
- function render(){const tree=<Theme theme={neutralTheme} mode={document.body.classList.contains('theme-light')?'light':'dark'}>{[...fields].map(([source,item])=>createPortal(<Control source={source} label={item.label}/>,item.host,String(item.key)))}{[...buttons].map(([source,item])=>createPortal(<Action source={source}/>,item.host,String(item.key)))}</Theme>;if(firstPaint){firstPaint=false;flushSync(()=>root.render(tree));}else root.render(tree);}
+ function render(sync=false){const tree=<Theme theme={neutralTheme} mode={document.body.classList.contains('theme-light')?'light':'dark'}>{[...fields].map(([source,item])=>createPortal(<Control source={source} label={item.label}/>,item.host,String(item.key)))}{[...buttons].map(([source,item])=>createPortal(<Action source={source}/>,item.host,String(item.key)))}</Theme>;if(firstPaint||sync){firstPaint=false;flushSync(()=>root.render(tree));}else root.render(tree);}
  function scan(force=false){
   scheduled=0;let changed=force;
   for(const [source,item] of fields){
@@ -70,7 +70,7 @@ export function installAstryx(){
    if(buttons.has(source)||source.hidden||source.closest('.astryx-control')||!source.getClientRects().length)return;
    const host=document.createElement('span');host.className='astryx-control astryx-action-host';host.dataset.component='Astryx-button';source.after(host);source.hidden=true;source.dataset.astryxNative='true';buttons.set(source,{host,owner:null,label:'',key:++sequence,signature:source.innerHTML+'|'+source.disabled});changed=true;
   });
-  if(changed)render();
+  if(changed)render(force);
   window.dispatchEvent(new Event('island:controls-ready'));
  }
  const schedule=()=>{if(!scheduled)scheduled=requestAnimationFrame(()=>scan());};

@@ -99,6 +99,7 @@ if(!studioMode)contextBridge.exposeInMainWorld('island', {
   onLayout:callback=>listen('window:layout',callback),
   expand: on => ipcRenderer.invoke('window:expand', on),
   settings: target => ipcRenderer.invoke('window:settings',target),
+  settingsReady:()=>ipcRenderer.send('settings:ready'),
   onSettingsSection:callback=>listen('settings:section',callback),
   closeWindow: () => ipcRenderer.invoke('window:close'),
   library: (op,value={}) => op ? ipcRenderer.invoke('library:action',{op,value}) : ipcRenderer.invoke('library:get'),

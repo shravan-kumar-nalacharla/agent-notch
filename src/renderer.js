@@ -310,7 +310,7 @@ $('homeAsk').onclick = () => {
 
 async function startNativeVoice(kind = 'chat') {
   state = await result(window.island.get());
-  const conversation=['chat','command','ptt'].includes(kind),provider=conversation&&state.companion?.chatEngine==='gemini_live'?'gemini':conversation&&state.companion?.chatEngine==='sarvam'?'sarvam':state.speech,offline=provider==='local'||provider==='whisper';
+  const conversation=['chat','command','ptt'].includes(kind),provider=conversation&&state.companion?.chatEngine==='gemini_live'?'gemini':conversation?window.NotchProviders.speech(state,true).provider:state.speech,offline=provider==='local'||provider==='whisper';
   if (!offline&&!state.configured[provider]) {
     $('status').textContent = 'API key needed';
     await result(window.island.settings());
@@ -349,7 +349,7 @@ async function toggleChatVoice() {
     error();
     cancelled = false;
     state = await result(window.island.get());
-    const provider=state.companion?.chatEngine === 'gemini_live' ? 'gemini' : state.companion?.chatEngine === 'sarvam' ? 'sarvam' : state.speech,offline=provider==='local'||provider==='whisper';
+    const provider=state.companion?.chatEngine === 'gemini_live' ? 'gemini' : window.NotchProviders.speech(state,true).provider,offline=provider==='local'||provider==='whisper';
     if (!offline&&!state.configured[provider]) {
       $('status').textContent = 'API key needed';
       await result(window.island.settings());
@@ -561,7 +561,7 @@ const quickScroller=window.createQuickAccessScroll($('homeQuickGrid'),{reduced:(
 function applyState(value) {
   state = value;
   const appearance = value.appearance || {};
-  motion.intent=appearance.hoverIntentMs??100;motion.grace=appearance.mouseleaveGraceMs??1000;motion.pinned=!!appearance.pinned;
+  motion.intent=appearance.hoverIntentMs??100;motion.grace=appearance.mouseleaveGraceMs??300;motion.pinned=!!appearance.pinned;
   document.body.dataset.density=appearance.density||'default';document.body.dataset.motion=appearance.motion||'standard';
   document.body.style.setProperty('--line-width',(appearance.lineWidthDip||100)+'px');document.body.style.setProperty('--line-height',(appearance.lineHeightDip||2)+'px');document.body.style.setProperty('--line-opacity',appearance.lineOpacity??.35);
   document.body.classList.toggle('minimal', !!appearance.minimal);

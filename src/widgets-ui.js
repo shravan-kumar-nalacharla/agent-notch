@@ -93,7 +93,7 @@
     return carouselFrame('Shelf',`<div class="shelf-module">${files.length?`<div class="shelf-cards">${files.map(path=>`<div class="shelf-item"><button class="shelf-card" draggable="true" data-path="${esc(path)}" data-do="openFile"><i data-icon-path="${esc(path)}"></i><span>${esc(path.split(/[\\/]/).pop())}</span></button>${btn('removeFile',icons.trash,`data-path="${esc(path)}" class="shelf-remove" aria-label="Remove from shelf" title="Remove from shelf"`)}</div>`).join('')}</div>`:`<button type="button" class="shelf-empty" data-do="chooseFiles"><span class="shelf-illustration">${icons.upload}</span><b>Drop files here</b><small>Drag out anytime / click to open</small></button>`}<div class="shelf-footer">${btn('chooseFiles','Add files')}<span>${files.length} item${files.length===1?'':'s'}</span>${files.length?btn('clearShelf','Clear shelf'):''}</div></div>`);
   }
   function renderPrimary(){
-    if(selected==='media'){mediaSurface?.dispose();mediaSurface=null;document.body.classList.add('rich-media');root.innerHTML=renderMediaCarousel();mountMedia();loadCarouselMedia();}
+    if(selected==='media'){if(mediaSurface&&$('elevenMediaSurface')){document.body.classList.add('rich-media');updateMediaControls();loadCarouselMedia();return;}mediaSurface?.dispose();mediaSurface=null;document.body.classList.add('rich-media');root.innerHTML=renderMediaCarousel();mountMedia();loadCarouselMedia();}
     if(selected==='timer')root.innerHTML=renderTimerCarousel();
     if(selected==='water')root.innerHTML=waterSettings?renderWaterSettings():renderWaterCarousel();
     if(selected==='shelf'){root.innerHTML=renderShelfCarousel();paintShelfIcons();}
@@ -125,7 +125,7 @@
     if(selected!=='media'||root.hidden||!document.body.classList.contains('expanded')||mediaLoading||$('mediaSource')?.getAttribute('data-state')==='open')return;mediaLoading=true;
     try{
       const next=await desktop('media');if(selected!=='media'||root.hidden||!document.body.classList.contains('expanded'))return;
-      const changed=media?.app!==next.app||media?.pinnedAppId!==next.pinnedAppId||media?.sessionId!==next.sessionId||media?.title!==next.title||media?.artist!==next.artist||media?.available!==next.available;
+      const changed=media?.app!==next.app||media?.pinnedAppId!==next.pinnedAppId||media?.title!==next.title||media?.artist!==next.artist||media?.available!==next.available;
       media=next;mediaAt=Date.now();
       if(changed){desktop('lyrics:cancel').catch(()=>{});lyrics=[];lyricsPlain='';lyricsStatus='';lyricIndex=-2;if(lyricsWanted)setTimeout(loadLyrics,0);}
       if(!mediaSurface){mountMedia();const v=await desktop('volume');volumeLevel=v.level;}
@@ -143,7 +143,7 @@
   new MutationObserver(()=>{root.dataset.tool=selected||'all';root.querySelectorAll('.widget-grid [data-page]').forEach(button=>{const icon=button.querySelector('i');if(icon&&!icon.classList.contains('ph'))icon.outerHTML=window.IslandIcons?.markup(button.dataset.page)||icon.outerHTML;});}).observe(root,{childList:true});
   window.addEventListener('island:horizontal-scroll',event=>{if(root.hidden||!selected)return;const ids=toolIds(),direction=event.detail?.direction<0?-1:1,index=ids.indexOf(selected);slideTo(ids[(index+direction+ids.length)%ids.length],direction);});
   function render(){if(!lib)return;if(selected!=='media'){mediaSurface?.dispose();mediaSurface=null;lyricsWanted=false;stopMediaPolling();document.body.classList.remove('rich-media');}if(selected!=='mirror')stopMirror();if(selected!=='prompter')stopPrompter();
-    if(!settingsMode){const id=selected||'tools';api.toolSurface({id}).then(reply=>{const select=root.querySelector('[data-tool-size]');if(reply.ok&&selected===id&&select)select.value=reply.value.toolSize||'auto';}).catch(error);}
+    if(!settingsMode&&!root.hidden){const id=selected||'tools';api.toolSurface({id}).then(reply=>{const select=root.querySelector('[data-tool-size]');if(reply.ok&&selected===id&&select)select.value=reply.value.toolSize||'auto';}).catch(error);}
     disposeCore?.();disposeCore=null;
     document.querySelectorAll('nav [data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===selected));
     if(!root.hidden){button.classList.toggle('active',selected!=='timer');document.querySelector('nav [data-tab=focus]').classList.toggle('active',selected==='timer');}

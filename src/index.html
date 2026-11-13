@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-elem 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; media-src 'self' blob:; connect-src 'none'; img-src 'self' data:">
   <title>Agent Notch</title>
+  <script src="settings-startup.js"></script>
+  <link rel="stylesheet" href="settings-startup.css">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="appearance.css">
   <script src="preferences.js" defer></script>
@@ -179,7 +181,7 @@
                   <small>Keys are encrypted with Windows secure storage.</small>
                 </div>
                 <div class="field-grid two">
-                  <label>Chat & Windows tasks<select id="assistantProvider"></select></label>
+                  <label>Text chat provider<select id="assistantProvider"></select></label>
                   <label>Dictation & recorded voice<select id="speechProvider"></select></label>
                 </div>
                 <p class="settings-intro">Groq handles chat and transcription by default. Add other providers only when you want to use them. Each key stays in its own field.</p>
@@ -241,10 +243,12 @@
   <link rel="stylesheet" href="compact.css">
   <script src="island-motion.js"></script>
   <script src="surface-motion.js"></script>
+  <script src="provider-routing.js"></script>
   <script src="providers-ui.js"></script>
   <script src="quick-access-scroll.js"></script>
   <script src="renderer.js"></script>
   <script src="settings-ui.js" defer></script>
+  <script src="routing-ui.js" defer></script>
   <link rel="stylesheet" href="settings.css">
   <script src="home-ui.js"></script>
   <script src="productivity-i18n.js"></script>

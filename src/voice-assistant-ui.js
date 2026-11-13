@@ -11,6 +11,7 @@
  <div class="voice-actions"><button id="agentStart" class="voice-primary"><span class="voice-button-icon" aria-hidden="true"></span><span id="agentStartLabel">Start listening</span></button><button id="agentStop" aria-label="Stop voice assistant">Stop</button><button id="agentNewConversation" title="Clear recent voice conversation">New conversation</button><button id="agentWake">Enable calling by name</button></div>
  <details class="voice-devices"><summary>Audio options</summary><div class="voice-device-row"><label>Microphone <select id="agentMic" aria-label="Voice microphone"><option value="">System default</option></select></label><label id="agentVoicePicker">Voice <select id="agentVoiceChoice" aria-label="Sarvam speaking voice"><option value="priya">Priya</option><option value="shubh">Shubh</option><option value="ishita">Ishita</option><option value="ratan">Ratan</option><option value="neha">Neha</option><option value="ritu">Ritu</option></select></label></div></details>`;
  document.querySelector('.view-stack').append(page);
+ $('agentVoiceChoice').replaceChildren(...window.NotchProviders.sarvamVoices.map(v=>new Option(v.label,v.id)));
  const nav=document.createElement('button');nav.dataset.tab='voiceAssistant';nav.title='Voice assistant';nav.setAttribute('aria-label','Voice assistant');nav.innerHTML='<svg viewBox="0 0 24 24"><path d="M4 10v4M8 6v12M12 3v18M16 6v12M20 10v4"/></svg><span>Voice</span>';document.querySelector('nav').insertBefore(nav,document.querySelector('nav [data-tab=notes]'));nav.onclick=()=>tab('voiceAssistant');
  const orb=window.NOTCH_ELEVEN_REACT?{available:false,draw(){},dispose(){}}:window.ElevenOrb($('agentOrb'));$('agentOrb').hidden=!orb.available;
  window.islandVoiceHold=()=>!page.hidden&&(keepOpen||waiting||speaking);
@@ -21,13 +22,13 @@
  function scroll(){const box=page.querySelector('.voice-exchange');if(follow)box.scrollTop=box.scrollHeight;}
  page.querySelector('.voice-exchange').onscroll=e=>{const b=e.currentTarget;follow=b.scrollHeight-b.scrollTop-b.clientHeight<30;};
  function render(s){config=s;const p=s.microphoneStatus||s.microphone,name=s.companion?.name||'Cutie';
-  $('agentProvider').textContent=s.companion?.chatEngine==='sarvam'?'Sarvam · '+(s.companion?.sarvamVoice||'priya'):s.companion?.chatEngine==='gemini_live'?'Gemini Live':(s.assistant||'groq')+' · '+(s.speech||'groq')+' recognition';
+  $('agentProvider').textContent=s.companion?.chatEngine==='gemini_live'?'Gemini Live':(window.NotchProviders.names[window.NotchProviders.text(s,'voice').provider]||'Voice')+' · tasks: '+window.NotchProviders.names[window.NotchProviders.text(s,'tasks').provider];
   const context=s.companion?.readingContext||'';$('agentReadingContext').textContent=context?'Reading · '+context.split(/[.\n]/)[0].replace(/^Reading /,'').slice(0,115):'';$('agentReadingContext').title=context;
   $('agentStart').disabled=!!p.blocked||p.mode==='ptt';$('agentStartLabel').textContent=recording?'Finish question':'Start listening';
   $('agentVoiceHint').textContent=p.blocked?p.reason:p.mode==='ptt'?'Hold '+p.pttShortcut+' to ask.':'Speak naturally. Pause to finish.';
   $('agentWakeStatus').textContent=s.wakeStatus?.error?s.wakeStatus.error:p.blocked?'Microphone is muted':s.wakeStatus?.enabled?'Say “Hey '+name+'”':p.mode==='always'?'Starting name activation…':'Name activation off';
   $('agentWake').textContent=p.mode==='always'?'Name activation on':'Enable calling by name';$('agentWake').setAttribute('aria-pressed',String(p.mode==='always'));
-  $('agentVoicePicker').hidden=s.companion?.chatEngine!=='sarvam';$('agentVoiceChoice').value=s.companion?.sarvamVoice||'priya';$('agentMic').value=s.voice?.inputDeviceId||'';
+  const choices=window.NotchProviders.voices(s);$('agentVoicePicker').hidden=!choices.length;$('agentVoiceChoice').replaceChildren(...choices.map(v=>new Option(v.label,v.id)));$('agentVoiceChoice').value=s.companion?.[window.NotchProviders.voiceField(s)]||choices[0]?.id||'';$('agentMic').value=s.voice?.inputDeviceId||'';
   $('agentReplay').disabled=!!p.blocked||!answer||!s.speak;for(const id of ['agentMic','agentVoiceChoice'])$(id).disabled=recording||waiting||speaking;
   if(p.blocked){recording=false;waiting=false;speaking=false;phase('muted','Microphone muted');hold();}else if(page.dataset.phase==='muted')phase('ready','Ready when you are');
  }
@@ -42,7 +43,7 @@
  $('agentCopy').onclick=()=>api.copy(answer);$('agentReplay').onclick=()=>{interrupted=null;return window.islandSpeak?.(answer).catch(showError);};
  $('agentWake').onclick=async()=>{try{const s=await refresh(),mode=s.microphone.mode==='always'?'manual':'always';await result(api.save({microphone:{mode},companion:{...s.companion,wakeEnabled:mode==='always'}}));await refresh();}catch(e){phase('error',e.message);}};
  $('agentMic').onchange=async()=>{try{await result(api.save({voice:{inputDeviceId:$('agentMic').value}}));await refresh();}catch(e){showError(e);await refresh();}};
- $('agentVoiceChoice').onchange=async()=>{try{await result(api.save({companion:{...config.companion,sarvamVoice:$('agentVoiceChoice').value}}));await refresh();}catch(e){showError(e);await refresh();}};
+ $('agentVoiceChoice').onchange=async()=>{try{await result(api.save({companion:{...config.companion,[window.NotchProviders.voiceField(config)]:$('agentVoiceChoice').value}}));await refresh();}catch(e){showError(e);await refresh();}};
  api.onSettings(render);api.onMicrophone(()=>refresh().catch(showError));refresh().then(devices).catch(showError);
  window.addEventListener('island:view',e=>{if(e.detail==='voiceAssistant'){keepOpen=true;hold();animate();devices();}else{keepOpen=false;hold();cancelAnimationFrame(frame);frame=0;}});
  window.addEventListener('island:expanded',e=>{if(e.detail)animate();else{cancelAnimationFrame(frame);frame=0;}});
@@ -53,7 +54,7 @@
   if(event.phase==='partial')$('agentHeard').textContent=event.text;
   if(event.phase==='processing'){recording=false;waiting=true;phase('processing','Thinking it through');hold();}
   if(event.phase==='delta'){if(event.raw)$('agentHeard').textContent=event.raw;answer+=event.delta;$('agentAnswer').textContent=answer;scroll();}
-  if(event.phase==='answer'){recording=false;follow=true;answer=event.text;$('agentHeard').textContent=event.raw||'';$('agentAnswer').textContent=answer;$('agentCopy').disabled=!answer;$('agentReplay').disabled=!answer||!config?.speak;waiting=!!config?.speak;keepOpen=waiting;phase(waiting?'processing':'ready',waiting?'Preparing voice':'Answer ready');hold();scroll();}
+  if(event.phase==='answer'){recording=false;follow=true;answer=event.text;$('agentHeard').textContent=event.raw||'';$('agentAnswer').textContent=answer;$('agentCopy').disabled=!answer;$('agentReplay').disabled=!answer||!config?.speak;waiting=!!config?.speak;keepOpen=waiting;phase(waiting?'processing':'ready',waiting?'Preparing voice':'Answer ready · spoken replies off');hold();scroll();}
   if(event.phase==='liveText'){if(event.raw)$('agentHeard').textContent=event.raw;if(event.text){answer=event.text;$('agentAnswer').textContent=answer;}scroll();}
   if(event.phase==='liveTurn')phase('listening','Listening');
   if(interrupted&&['idle','liveStop'].includes(event.phase)){keepOpen=interrupted!=='hide';phase('ready','Stopped');hold();return;}

@@ -1,5 +1,18 @@
 [
   {
+    "version": "0.39.0",
+    "date": "2026-11-13",
+    "title": "Independent AI roles and stable voice and media",
+    "notes": [
+      "Choose separate providers and models for text chat, voice answers, voice recognition and agentic tasks, including Grok (xAI).",
+      "Select Sarvam, Groq or Gemini Live voice presets. Spoken reply status is visible in the voice panel.",
+      "Settings uses a readiness event and cached Windows startup information instead of hidden-window polling.",
+      "Media controls follow the accent, use a compact volume slider, and retain lyrics across repeated updates.",
+      "Hidden Tools no longer applies its height to the first-open Home panel.",
+      "Default mouse-leave delay is 300 ms; pin and active voice capture still keep the panel open."
+    ]
+  },
+  {
     "version": "0.38.1",
     "date": "2026-11-13",
     "title": "Looping Quick Access",

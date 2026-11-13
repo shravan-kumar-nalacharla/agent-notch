@@ -1,6 +1,7 @@
 'use strict';
 (()=>{
  const settings=new URLSearchParams(location.search).has('settings');
+ if(settings)window.islandSettingsReady=()=>{if(window.islandSettingsUIReady&&window.islandSettingsComponentsReady&&window.islandRoutingReady){document.documentElement.classList.remove('settings-pending');window.island.settingsReady();}};
  let loaded=false;
  function load(){
   if(loaded)return;loaded=true;
