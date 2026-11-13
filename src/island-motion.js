@@ -1,7 +1,7 @@
 'use strict';
 ((root)=>{
   class IslandMotion{
-    constructor({open,close,canClose,canOpen=()=>true,changed=()=>{},intent=100,grace=1000,duration=700,setTimer=(fn,ms)=>setTimeout(fn,ms),clearTimer=id=>clearTimeout(id)}){Object.assign(this,{onOpen:open,onClose:close,canClose,canOpen,changed,intent,grace,duration,setTimer,clearTimer});this.state='DORMANT_LINE';this.timers={};this.inside=false;this.locked=false;this.pinned=false;}
+    constructor({open,close,canClose,canOpen=()=>true,changed=()=>{},intent=100,grace=300,duration=700,setTimer=(fn,ms)=>setTimeout(fn,ms),clearTimer=id=>clearTimeout(id)}){Object.assign(this,{onOpen:open,onClose:close,canClose,canOpen,changed,intent,grace,duration,setTimer,clearTimer});this.state='DORMANT_LINE';this.timers={};this.inside=false;this.locked=false;this.pinned=false;}
     phase(value){this.state=value;this.changed(value);}
     cancel(key){this.clearTimer(this.timers[key]);delete this.timers[key];}
     later(key,ms,fn){this.cancel(key);this.timers[key]=this.setTimer(()=>{delete this.timers[key];fn();},ms);}

@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-elem 'self' 'unsafe-inline'; style-src-attr 'none'; media-src 'self' blob:; connect-src 'none'; img-src 'self' data:">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-elem 'self' 'unsafe-inline'; style-src-attr 'unsafe-inline'; media-src 'self' blob:; connect-src 'none'; img-src 'self' data:">
   <title>Agent Notch</title>
+  <script src="settings-startup.js"></script>
+  <link rel="stylesheet" href="settings-startup.css">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="appearance.css">
-  <script src="vendor/blobatar.js" defer></script>
-  <script src="agent-face.js" defer></script>
   <script src="preferences.js" defer></script>
   <script src="i18n.js" defer></script>
   <script src="languages-ui.js" defer></script>
@@ -18,7 +18,7 @@
 </head>
 <body>
   <button id="activationTarget" aria-label="Open Agent Notch" title="Open Agent Notch"></button>
-  <div id="fileDropOverlay" aria-hidden="true"><b>Drop a file to convert or edit</b><small>Image · video · audio · document</small></div>
+  <div id="fileDropOverlay" aria-hidden="true"><b>Drop to keep it close</b><small>Quick Access on Home · Shelf in tools</small></div>
   <main id="island">
     <div id="companionGlow" aria-hidden="true"><i></i><i></i><i></i></div>
     <header>
@@ -45,7 +45,7 @@
         <button id="openFileActions" title="Drop files or open File actions" aria-label="Open File actions">
           <svg viewBox="0 0 24 24"><path d="m21 11-8.5 8.5a6 6 0 0 1-8.5-8.5L12.5 2.5a4 4 0 1 1 5.7 5.7L9.8 16.6a2 2 0 0 1-2.8-2.8l7.8-7.8"/></svg>
         </button>
-        <button id="mic" title="Voice assistant" aria-label="Open voice assistant">
+        <button hidden id="mic" title="Voice assistant" aria-label="Open voice assistant">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
             <rect x="9" y="3" width="6" height="12" rx="3"></rect>
             <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M8 22h8"></path>
@@ -103,7 +103,8 @@
             <button class="soft-chip" id="openSettings" title="Provider settings">Providers</button>
           </div>
           <div id="messages" role="log" aria-live="polite"></div>
-          <details id="transcriptBox" hidden><summary>Last transcript</summary>
+          <button id="chatHistory" type="button" class="chat-history" title="Open dictation history">History</button>
+          <details id="transcriptBox" hidden><summary>Review dictation draft</summary>
             <label for="transcript">Dictation</label>
             <textarea id="transcript" rows="2"></textarea>
             <div class="row">
@@ -119,7 +120,7 @@
             </button>
           </form>
           <div class="row hint">
-            <span>Hold Ctrl + Shift + Windows to type in other apps</span>
+            <span></span>
             <span id="providerLabel"></span>
           </div>
         </section>
@@ -180,7 +181,7 @@
                   <small>Keys are encrypted with Windows secure storage.</small>
                 </div>
                 <div class="field-grid two">
-                  <label>Chat & Windows tasks<select id="assistantProvider"></select></label>
+                  <label>Text chat provider<select id="assistantProvider"></select></label>
                   <label>Dictation & recorded voice<select id="speechProvider"></select></label>
                 </div>
                 <p class="settings-intro">Groq handles chat and transcription by default. Add other providers only when you want to use them. Each key stays in its own field.</p>
@@ -242,13 +243,18 @@
   <link rel="stylesheet" href="compact.css">
   <script src="island-motion.js"></script>
   <script src="surface-motion.js"></script>
+  <script src="provider-routing.js"></script>
   <script src="providers-ui.js"></script>
+  <script src="quick-access-scroll.js"></script>
   <script src="renderer.js"></script>
   <script src="settings-ui.js" defer></script>
+  <script src="routing-ui.js" defer></script>
   <link rel="stylesheet" href="settings.css">
   <script src="home-ui.js"></script>
   <script src="productivity-i18n.js"></script>
   <script src="widgets-ui.js"></script>
+  <link rel="stylesheet" href="plugins.css">
+  <script src="plugin-ui.js"></script>
   <script src="workspace-ui.js"></script>
   <script src="syntax-tokens.js"></script>
   <link rel="stylesheet" href="../node_modules/@xterm/xterm/css/xterm.css">
@@ -260,6 +266,7 @@
   <link rel="stylesheet" href="voice-assistant.css">
   <script src="vendor/elevenlabs-orb.js"></script>
   <script src="eleven-flags.js"></script>
+  <script src="voice-loop.js"></script>
   <script src="voice-assistant-ui.js"></script>
   <script src="live-playback.js"></script>
   <script src="microphone-ui.js" defer></script>
@@ -270,7 +277,14 @@
   <script src="ui-sounds-policy.js"></script>
   <script src="ui-sounds.js"></script>
   <link rel="stylesheet" href="vendor/eleven-components.css">
+  <link rel="stylesheet" href="vendor/astryx/core.css">
+  <link rel="stylesheet" href="vendor/astryx/neutral.css">
   <link rel="stylesheet" href="eleven-panels.css">
-  <script src="vendor/eleven-components.js"></script>
+  <script src="ui-loader.js"></script>
+  <link rel="stylesheet" href="pulse.css">
+  <link rel="stylesheet" href="vendor/phosphor/style.css">
+  <script src="theme-palette.js"></script>
+  <script src="refinement-ui.js"></script>
+  <link rel="stylesheet" href="shared-surfaces.css">
 </body>
 </html>

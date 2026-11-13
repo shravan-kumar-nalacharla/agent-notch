@@ -28,10 +28,10 @@ body.settings-window{--settings-muted:#a3a8b4;background:#101115;color:#f0f2f7}
 .settings-card .settings-card{border:0;background:#1c2029;margin:10px 0 0}
 .settings-window .settings-card>button{margin-top:10px;margin-right:6px}
 .settings-window label:has(input[role=switch]){display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:40px;margin:9px 0;font-size:12px;line-height:1.45;color:#d3d8e2;cursor:pointer}
-.settings-window input[type=checkbox][role=switch]{appearance:none;-webkit-appearance:none;position:relative;display:block;flex:0 0 40px;order:2;width:40px;height:23px;min-height:23px!important;margin:0;padding:0;border:1px solid #555c6b;border-radius:20px;background:#343a46;cursor:pointer;transition:background .16s,border-color .16s}
-.settings-window input[type=checkbox][role=switch]::after{content:'';position:absolute;left:3px;top:3px;width:15px;height:15px;border-radius:50%;background:#f2f5fa;transition:transform .16s}
-.settings-window input[type=checkbox][role=switch]:checked{background:#56bd9b;border-color:#56bd9b}
-.settings-window input[type=checkbox][role=switch]:checked::after{transform:translateX(17px);background:#09231b}
+.settings-window input[type=checkbox][role=switch]:not(.astryx-control *){appearance:none;-webkit-appearance:none;position:relative;display:block;flex:0 0 40px;order:2;width:40px;height:23px;min-height:23px!important;margin:0;padding:0;border:1px solid #555c6b;border-radius:20px;background:#343a46;cursor:pointer;transition:background .16s,border-color .16s}
+.settings-window input[type=checkbox][role=switch]:not(.astryx-control *)::after{content:'';position:absolute;left:3px;top:3px;width:15px;height:15px;border-radius:50%;background:#f2f5fa;transition:transform .16s}
+.settings-window input[type=checkbox][role=switch]:not(.astryx-control *):checked{background:#56bd9b;border-color:#56bd9b}
+.settings-window input[type=checkbox][role=switch]:not(.astryx-control *):checked::after{transform:translateX(17px);background:#09231b}
 .settings-window .settings-savebar{margin:0 20px 16px;padding:12px 14px;border:1px solid #353c49;border-radius:14px;background:#1b2029;min-height:64px}
 .settings-window .settings-savebar span{font-size:12px;max-width:70%}
 .settings-window .settings-savebar button{height:39px;padding:0 17px;border-radius:10px;font-size:12px}

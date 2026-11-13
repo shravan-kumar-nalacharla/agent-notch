@@ -1,5 +1,6 @@
 'use strict';
 const PROVIDERS = Object.freeze({
+  xai:{base:'https://api.x.ai/v1',chat:'grok-4.3-latest',speech:null,vision:null,capabilities:{chat:true,speech:false,vision:false,streaming:true,reasoning:true,tools:false}},
   deepgram: {capabilities:{chat:false,speech:true,vision:false,streaming:false,reasoning:false,tools:false},base:'https://api.deepgram.com/v1',chat:null,speech:'nova-3',vision:null},
   groq: { capabilities:{chat:true,speech:true,vision:true,streaming:true,reasoning:false,tools:false}, base: 'https://api.groq.com/openai/v1', chat: 'openai/gpt-oss-20b', speech: 'whisper-large-v3-turbo',vision:'qwen/qwen3.8-27b' },
   anthropic:{base:'https://api.anthropic.com/v1',chat:'claude-sonnet-5-5',speech:null,vision:null,capabilities:{chat:true,speech:false,vision:false,streaming:true,reasoning:true,tools:false}},

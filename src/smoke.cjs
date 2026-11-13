@@ -8,6 +8,7 @@ exports.run=async function({app,win,screen,getSettingsWindow,native,widgets,geom
   async function until(code){for(let i=0;i<100;i++){if(await js(code))return;await sleep(100);}throw new Error('Timed out: '+code);}
   await until("!!window.islandOpenTool&&document.getElementById('assistantProvider').options.length>=4");await sleep(400);
   await check(`window.island.version===${JSON.stringify(app.getVersion())}`,'Preload reports the packaged version');
+  if(process.argv.includes('--continuous-voice-check'))return require('./smoke-continuous-voice.cjs')({app,win,native,out,saveSnapshot});
   if(!['--notch-reminder-check','--notch-pointer-check','--background-reminder-check'].some(flag=>process.argv.includes(flag)))await js("window.island.productivity('notifications:settings',{enabled:false})");
   if(process.argv.includes('--player-fixes-check'))return require('./smoke-player-fixes.cjs')({app,win,getSettingsWindow,widgets,state,out,saveSnapshot});
   if(process.argv.includes('--eleven-components-check'))return require('./smoke-eleven-components.cjs')({app,win,native,widgets,state,out,saveSnapshot});
@@ -21,6 +22,17 @@ exports.run=async function({app,win,screen,getSettingsWindow,native,widgets,geom
   if(process.argv.includes('--workspace-check'))return require('./smoke-workspace.cjs')({app,win,native,widgets,out,saveSnapshot});
   if(process.argv.includes('--terminal-check'))return require('./smoke-terminal.cjs')({app,win,native,widgets,geometry,out,saveSnapshot});
   if(process.argv.includes('--tools-scroll-check'))return require('./smoke-tools-scroll.cjs')({app,win,widgets,out,saveSnapshot});
+  if(process.argv.includes('--plugins-check'))return require('./smoke-plugins.cjs')({win,out,saveSnapshot});
+  if(process.argv.includes('--render-gallery'))return require('./smoke-render-gallery.cjs')({win,getSettingsWindow,out,saveSnapshot});
+  if(process.argv.includes('--pulse-check'))return require('./smoke-pulse.cjs')({win,out,saveSnapshot});
+  if(process.argv.includes('--refinement-check'))return require('./smoke-refinement.cjs')({win,out,saveSnapshot});
+  if(process.argv.includes('--astryx-check'))return require('./smoke-astryx.cjs')({win,getSettingsWindow,native,out,saveSnapshot});
+  if(process.argv.includes('--resource-profile'))return require('./smoke-resource-usage.cjs')({app,win,getSettingsWindow,native,out});
+  if(process.argv.includes('--polish-check'))return require('./smoke-polish.cjs')({app,win,getSettingsWindow,out,saveSnapshot});
+  if(process.argv.includes('--surfaces-check'))return require('./smoke-surfaces.cjs')({app,win,getSettingsWindow,widgets,state,out,saveSnapshot});
+  if(process.argv.includes('--quick-access-check'))return require('./smoke-quick-access.cjs')({app,win,out,saveSnapshot});
+  if(process.argv.includes('--routing-check'))return require('./smoke-routing.cjs')({app,win,getSettingsWindow,out,saveSnapshot});
+  if(process.argv.includes('--live-provider-check'))return require('./smoke-live-provider.cjs')({app,out});
   if(process.argv.includes('--notch-reminder-check'))return require('./smoke-notch.cjs')({win,widgets,getSettingsWindow,out,saveSnapshot});
   if(process.argv.includes('--notch-pointer-check'))return require('./smoke-notch-pointer.cjs')({app,win,screen,widgets,geometry,out,saveSnapshot});
   if(process.argv.includes('--privacy-check'))return require('./smoke-privacy.cjs')({app,win,getSettingsWindow,native,state,out,saveSnapshot});

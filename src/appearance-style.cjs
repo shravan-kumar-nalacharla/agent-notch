@@ -1,0 +1,4 @@
+'use strict';
+const FONTS=['system','arial','serif','mono'];
+function validateVisualStyle(value={}){const result={};if(value.panelSize!==undefined){if(!['auto','compact','standard','spacious'].includes(value.panelSize))throw Error('Choose a supported panel size.');result.panelSize=value.panelSize;}if(value.accentColor!==undefined){if(typeof value.accentColor!=='string'||!/^#[0-9a-f]{6}$/i.test(value.accentColor))throw Error('Choose a valid accent color.');result.accentColor=value.accentColor.toLowerCase();}if(value.uiFont!==undefined){if(!FONTS.includes(value.uiFont))throw Error('Choose a supported font.');result.uiFont=value.uiFont;}for(const [key,min,max] of [['panelWidth',380,800],['panelHeight',230,650]])if(value[key]!==undefined){const n=Number(value[key]);if(!Number.isFinite(n))throw Error('Choose a valid panel size.');result[key]=n===0?0:Math.max(min,Math.min(max,Math.round(n)));}return result;}
+module.exports={validateVisualStyle,FONTS};

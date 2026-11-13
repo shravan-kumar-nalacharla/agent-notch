@@ -3,7 +3,7 @@ const MODEL='gemini-3.8-live';
 const ENDPOINT='wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
 
 // The key and socket stay in the main process; only PCM and transcripts cross IPC.
-function createLiveClient({key,instruction,onContent,onError,onToolCall,onDesktopTask,onDesktopCancel,WebSocketImpl=globalThis.WebSocket}){
+function createLiveClient({key,instruction,voice='Kore',onContent,onError,onToolCall,onDesktopTask,onDesktopCancel,WebSocketImpl=globalThis.WebSocket}){
   let socket,ready=false,closed=false,settled=false,timer,rejectConnect;
   const safe=message=>String(message).split(key).join('[redacted]').replace(/AIza[\w-]+/g,'[redacted]').slice(0,500);
   const toolResults=new Map();
@@ -19,7 +19,7 @@ function createLiveClient({key,instruction,onContent,onError,onToolCall,onDeskto
       rejectConnect=reject;
       timer=setTimeout(()=>fail('Gemini Live timed out. Check your internet connection and Gemini API access.'),15000);
       try{socket=new WebSocketImpl(ENDPOINT+'?key='+encodeURIComponent(key));socket.binaryType='arraybuffer';}catch{fail('Gemini Live could not connect. Check your connection.');return;}
-      socket.addEventListener('open',()=>{if(closed)return;socket.send(JSON.stringify({setup:{model:'models/'+MODEL,generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}},systemInstruction:{parts:[{text:instruction}]},...(tools?{tools}:{}),inputAudioTranscription:{},outputAudioTranscription:{},realtimeInputConfig:{automaticActivityDetection:{silenceDurationMs:900}},contextWindowCompression:{slidingWindow:{}}}}));});
+      socket.addEventListener('open',()=>{if(closed)return;socket.send(JSON.stringify({setup:{model:'models/'+MODEL,generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:voice}}}},systemInstruction:{parts:[{text:instruction}]},...(tools?{tools}:{}),inputAudioTranscription:{},outputAudioTranscription:{},realtimeInputConfig:{automaticActivityDetection:{silenceDurationMs:900}},contextWindowCompression:{slidingWindow:{}}}}));});
       socket.addEventListener('message',event=>{
         if(closed)return;
         try{

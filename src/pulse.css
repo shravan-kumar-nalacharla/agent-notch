@@ -1,0 +1,289 @@
+/* Shared presentation layer, loaded after legacy component skins. Geometry stays in IslandGeometry. */
+:root{--pulse-surface:#08090b;--pulse-card:#141518;--pulse-raised:#222327;--pulse-ink:#f8f8fa;--pulse-dim:#a0a0a6;--pulse-line:rgba(255,255,255,.08);--pulse-radius:36px;--pulse-inner:20px}
+body.theme-light{--pulse-surface:#fafafa;--pulse-card:#f0f0f0;--pulse-raised:#e5e5e7;--pulse-ink:#141414;--pulse-dim:#707070;--pulse-line:rgba(0,0,0,.08)}
+body:not(.settings-window){--panel:var(--pulse-card);--panel-2:var(--pulse-raised);--text:var(--pulse-ink);--muted:var(--pulse-dim);--line:var(--pulse-line);--accent:#0a84ff;font-family:"Segoe UI Variable Text","Segoe UI",sans-serif}
+body:not(.settings-window) #island{background:var(--pulse-surface);border:0;border-radius:0 0 var(--pulse-radius) var(--pulse-radius);box-shadow:0 6px 20px #0004}
+body:not(.settings-window) #companionGlow{display:none}
+body:not(.settings-window) #island::before,body:not(.settings-window) #island::after{display:none}
+body.expanded:not(.settings-window) header{height:36px;padding:0 20px;gap:8px;justify-content:space-between}
+body.expanded #greeting{position:static;display:flex;gap:7px;max-width:40%;margin:0;height:auto}
+body.expanded #date{font-size:10px;color:var(--muted);font-weight:500}
+body.expanded #time{font-size:12px;font-weight:650;color:var(--text);font-variant-numeric:tabular-nums}
+body.expanded #status{display:none}
+body.expanded #face{position:absolute;left:50%;top:5px;width:32px;height:25px;transform:translateX(-50%);gap:6px;pointer-events:auto}
+body.expanded .eye,body.expanded .eye-lid{width:6px;height:8px!important;box-shadow:none}
+body.no-mascot #face{visibility:hidden}
+body.expanded .audio-bars{display:none}
+body.expanded .header-actions{display:flex;gap:4px;margin-left:auto;align-items:center}
+body.expanded .header-actions button{width:26px;height:26px;border-radius:50%;background:transparent;color:var(--muted)}
+body.expanded .header-actions button:hover{background:var(--panel-2);color:var(--text)}
+body.expanded #microphonePrivacy{width:29px;min-width:29px;padding:5px;border:0}
+body.expanded #microphonePrivacy span{display:none}
+body.expanded:not(.settings-window) #body{height:calc(100% - 36px);padding:4px 20px 40px}
+body:not(.settings-window) nav{left:20px;right:20px;bottom:7px;height:28px;padding:0;border:0;border-radius:999px;background:var(--pulse-card);gap:2px;align-items:center}
+body:not(.settings-window) nav button{height:26px;width:32px;border-radius:999px;background:transparent;color:var(--muted)}
+body:not(.settings-window) nav button.active{background:var(--pulse-raised);color:var(--text);box-shadow:none}
+body:not(.settings-window) nav button svg{width:15px;height:15px}
+body:not(.settings-window) button:hover:not(:disabled){box-shadow:none}
+body:not(.settings-window) .carousel-head{height:26px;display:flex;gap:8px;align-items:center}
+body:not(.settings-window) .carousel-title{font-size:12px;font-weight:700;flex:1}
+body:not(.settings-window) .carousel-state{display:none}
+body:not(.settings-window) .carousel-arrow{width:24px;height:24px;border-radius:50%;background:var(--panel);color:var(--muted)}
+body:not(.settings-window) .carousel-body{padding-top:8px}
+body:not(.settings-window) .widget-heading{height:28px;margin-bottom:8px}
+body:not(.settings-window) .widget-heading b{font-size:12px}
+body:not(.settings-window) .widget-content{max-height:none;height:calc(100% - 36px);font-size:12px;overscroll-behavior:contain}
+body:not(.settings-window) .widget-row{font-size:12px;padding:9px 0;border-color:var(--line)}
+body:not(.settings-window) .widget-row small{font-size:10px;color:var(--muted)}
+body:not(.settings-window) .widget-actions button{border-radius:999px;font-size:10px;padding:5px 8px;background:var(--panel)}
+body:not(.settings-window) .widget-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+body:not(.settings-window) .widget-grid button{height:62px;border-radius:16px;background:var(--panel);color:var(--muted);font-size:10px;gap:7px}
+body:not(.settings-window) .widget-grid i{font-size:18px;color:var(--text)}
+body:not(.settings-window) .utility-nav button{font-size:10px;border-radius:999px;padding:5px 9px;height:auto}
+body:not(.settings-window) input:not([type=range]):not([type=checkbox]),body:not(.settings-window) textarea,body:not(.settings-window) select{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;font-size:12px}
+body:not(.settings-window) #home .home-live{display:flex!important;margin-top:12px;padding:10px 12px;min-height:48px;border:0;border-radius:16px;background:var(--panel)}
+body:not(.settings-window) #home .home-line{display:block!important;font-size:11px;color:var(--muted);margin:10px 1px 0;line-height:1.5}
+body:not(.settings-window) .live-primary b{font-size:12px;max-width:190px}.live-primary small{font-size:10px}.live-metrics{gap:8px}.live-metrics span{font-size:9px}.live-metrics b{font-size:12px;font-variant-numeric:tabular-nums}
+body:not(.settings-window) .quick-cell,body:not(.settings-window) .quick-icon{width:52px;height:52px;flex-basis:52px;border-radius:16px;background:var(--panel)}
+body:not(.settings-window) .quick-adds{width:94px;flex-basis:94px;grid-template-columns:repeat(3,28px);justify-content:center;border-radius:16px;height:52px;background:var(--panel)}
+body:not(.settings-window) .quick-add{position:static;width:28px;height:36px;background:transparent;font-size:16px}
+body:not(.settings-window) .shelf-cards{grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
+body:not(.settings-window) .shelf-card{height:84px;border:0;border-radius:16px;background:var(--panel);padding:10px 6px}
+body:not(.settings-window) .shelf-card span{font-size:10px}.shelf-card i{border-radius:10px}
+body:not(.settings-window) .shelf-empty{border:1px dashed var(--line);border-radius:16px;background:var(--panel)}
+body:not(.settings-window) .focus-heading b{font-size:12px}.timer-top strong{font-variant-numeric:tabular-nums}
+body:not(.settings-window) .timer-main p{font-size:10px;color:var(--muted)}
+body:not(.settings-window) .timer-actions button,body:not(.settings-window) .timer-mode button{font-size:11px;border-radius:999px}
+body:not(.settings-window) .el-player:not(.has-lyrics){gap:3px}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-track{min-height:64px;gap:12px}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-art{width:64px;height:64px;border-radius:16px}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-track h2{font-size:15px;font-weight:650}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-track p{font-size:12px}
+body:not(.settings-window) .el-player [data-slot=select-trigger]{border:0;background:transparent;padding:0;font-size:10px;color:var(--muted)}
+body:not(.settings-window) .el-player .el-player-controls #mediaPlayPause{background:var(--text);color:var(--pulse-surface)}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-player-controls{height:32px}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-player-controls #mediaPlayPause{height:32px;width:32px;min-height:32px;padding:7px}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-volume-row{height:18px;min-height:18px}
+body:not(.settings-window) .el-player.has-lyrics{grid-template-rows:24px 24px 28px 28px minmax(0,1fr)}
+body.theme-light.expanded .header-actions button,body.theme-light.expanded #microphonePrivacy{background:var(--pulse-card);color:var(--pulse-dim)}
+.pulse-stats+.pulse-stat-caption{margin:6px 0}
+body:not(.settings-window) .el-timeline [data-slot=scrub-bar-track]{height:4px;border-radius:99px;background:var(--panel-2)}
+body:not(.settings-window) .el-timeline [data-slot=scrub-bar-progress]>div{background:#80b8aa}
+.pulse-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}.pulse-stat{min-width:0;background:var(--panel);padding:12px;border-radius:16px}.pulse-stat small{display:block;color:var(--muted);font-size:10px}.pulse-stat strong{display:block;font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.4}.pulse-stat progress{width:100%;height:4px;accent-color:#80b8aa}.pulse-stat[data-unavailable=true]{opacity:.6}.pulse-stat-caption{font-size:10px;color:var(--muted)}
+body.shape-corner.expanded:not(.settings-window) #island,body.shape-pill.expanded:not(.settings-window) #island{border-radius:var(--pulse-radius)}
+@media(max-width:460px){.pulse-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.live-metrics span:nth-child(-n+2){display:none}body.expanded #date{display:none}body:not(.settings-window) .widget-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){body:not(.settings-window):not([data-motion=standard]):not([data-motion=subtle]) *{animation:none!important;transition:none!important}}
+.ph{font-size:19px;display:inline-block;vertical-align:middle}nav .ph{font-size:19px}
+.quick-drop-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;flex:0 0 54px;width:54px;height:54px;border:1px dashed color-mix(in srgb,var(--muted) 42%,transparent);border-radius:19px;background:transparent;color:var(--muted)}
+.quick-drop-add>span{font-size:24px;font-weight:300;line-height:1}.quick-drop-add.is-empty{flex-basis:190px;width:190px;height:76px}.quick-drop-add small{font-size:12px}.home-quick.drag-over .quick-drop-add{background:var(--accent-tint);border-color:var(--accent);color:var(--text)}
+body.file-dragging #fileDropOverlay{display:none!important}body.file-dragging #homeQuick{outline:1px dashed var(--muted);outline-offset:4px;border-radius:20px}
+body:not(.settings-window) #tools:has(.widget-grid){mask-image:linear-gradient(transparent,#000 12%,#000 86%,transparent);scroll-snap-type:none}
+body:not(.settings-window) .widget-grid{display:flex;flex-direction:column;gap:0;padding:48px 0 72px}
+body:not(.settings-window) .widget-grid button{display:flex;flex-direction:row;justify-content:flex-start;width:100%;height:54px;min-height:54px;gap:16px;padding:0 16px;border-radius:16px;background:transparent;font-size:24px;font-weight:650;transform:scale(var(--wheel-scale,1));transform-origin:12px center;opacity:var(--wheel-opacity,1);transition:transform .25s,opacity .25s,color .2s;scroll-snap-align:center}
+body:not(.settings-window) .widget-grid button span{text-align:left;width:auto;overflow:visible}
+body:not(.settings-window) .widget-grid button i{font-size:21px;color:var(--muted)}
+body:not(.settings-window) .widget-grid button:hover,body:not(.settings-window) .widget-grid button:focus-visible{opacity:1;transform:scale(1);color:var(--text)}
+body:not(.settings-window) .utility-nav{position:sticky;top:0;z-index:2;background:var(--pulse-surface);padding:8px 0}
+body:not(.settings-window) .pomodoro{position:relative;background:radial-gradient(ellipse at 0 100%,#bedc5830,transparent 70%),var(--panel);border-radius:24px;padding:18px 16px;gap:20px;grid-template-columns:88px 1fr;min-height:166px}
+body:not(.settings-window) .timer-top strong{font-size:38px;font-weight:550;letter-spacing:-1px;color:#d6ed83}
+body:not(.settings-window) .timer-mode{display:inline-flex;border-radius:999px;padding:3px;background:#ffffff08;gap:3px}
+body:not(.settings-window) .timer-mode button{padding:5px 10px;background:transparent;color:var(--muted)}
+body:not(.settings-window) .timer-mode button.active{background:#d6ed83;color:#18210b}
+body:not(.settings-window) .timer-actions .timer-primary{background:#d6ed83;color:#18210b;border-radius:999px;min-width:44px}
+body:not(.settings-window) .ring-progress{stroke:#d6ed83}.ring-track{stroke:#333b26}body:not(.settings-window) .timer-ring i{color:#d6ed83}
+body:not(.settings-window) .timer-duration input{font-size:12px}.timer-duration button{font-size:11px}
+body.theme-light .pomodoro{background:radial-gradient(ellipse at 0 100%,#bedc5845,transparent 70%),#f0f3e7}body.theme-light .timer-top strong{color:#4c641b}
+body:not(.settings-window) #assistant .page-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+body:not(.settings-window) #assistant .screen-guide{background:transparent;color:var(--muted);border:0;font-size:11px;padding:5px 8px}
+body:not(.settings-window) #assistant>.hint{display:none}
+.chat-history{position:absolute;right:20px;top:42px;padding:5px 10px;border-radius:999px;background:var(--panel);font-size:11px}
+#transcriptBox:not(:has(#insertDraft:not([hidden]))){display:none!important}
+body:not(.settings-window) #tools:has(.pomodoro) .carousel-body{padding-top:8px}
+/* Shared color lighting and typography; native icon fonts keep their own face. */
+body:not(.settings-window){--accent:var(--user-accent,#d6ed83);font-family:var(--user-font,"Segoe UI",sans-serif)}
+body:not(.settings-window) :is(button,input,textarea,select,.eleven-ui){font-family:inherit}
+body:not(.settings-window) :is(.home-live,.pomodoro,.pulse-stat,.shelf-empty,.widget-content,.water-module,.todo-module,.el-player,.plugin-card){background:radial-gradient(ellipse at 0 100%,color-mix(in srgb,var(--user-accent,#d6ed83) 13%,transparent),transparent 72%),var(--panel);border-radius:22px}
+body:not(.settings-window) :is(.widget-content,.water-module,.todo-module){padding:14px;box-sizing:border-box}
+body:not(.settings-window) .el-player{padding:10px 12px;box-sizing:border-box}
+body:not(.settings-window) .pomodoro{padding:20px;gap:20px;min-height:0}
+body:not(.settings-window) .timer-top strong{color:var(--user-accent,#d6ed83)}
+body:not(.settings-window) .timer-main{min-width:0}.timer-top{margin:8px 0 5px}
+body:not(.settings-window) .timer-mode button.active,body:not(.settings-window) .timer-actions .timer-primary{background:var(--user-accent,#d6ed83);color:var(--on-user-accent,#17200c)}
+body:not(.settings-window) .timer-duration{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:12px 0 0;font-size:10px;line-height:1.5}
+body:not(.settings-window) .timer-duration input{height:28px;width:52px;padding:4px 6px}
+body:not(.settings-window) .timer-duration button{height:28px;font-size:10px;padding:4px 9px;border-radius:999px}
+body:not(.settings-window) .ring-progress{stroke:var(--user-accent,#d6ed83)}body:not(.settings-window) .timer-ring i{color:var(--user-accent,#d6ed83)}
+body:not(.settings-window) .pulse-stat progress{accent-color:var(--user-accent,#d6ed83)}
+body.theme-light .timer-top strong{color:color-mix(in srgb,var(--user-accent,#d6ed83) 45%,#17200c)}
+body:not(.settings-window) .el-composer .chat-input-row{display:flex;align-items:center;gap:8px;padding:10px!important;min-height:60px;position:relative}
+body:not(.settings-window) .el-composer .chat-input-row textarea{flex:1;min-width:0;height:40px!important;min-height:40px!important;padding:10px 12px!important;line-height:20px;font-size:14px;resize:none}
+body:not(.settings-window) .el-composer .chat-input-row #chatSend{position:static!important;flex:0 0 30px;align-self:center;height:30px!important;width:30px;min-height:30px;border-radius:50%;padding:6px;background:var(--user-accent,#d6ed83);color:var(--on-user-accent,#17200c)}
+body:not(.settings-window) .el-composer .chat-input-row #chatSend svg{width:16px;height:16px}
+body:not(.settings-window) .el-composer [data-slot=card]{border-radius:22px;background:var(--panel)}
+body:not(.settings-window) .el-composer [data-slot=card],body:not(.settings-window) #note{background:radial-gradient(ellipse at 0 100%,color-mix(in srgb,var(--user-accent,#d6ed83) 12%,transparent),transparent 72%),var(--panel)}
+.response-typing::after{content:'';display:inline-block;width:5px;height:13px;margin-left:3px;background:var(--user-accent,#d6ed83);border-radius:3px;animation:typing-caret .8s ease-in-out infinite alternate}
+@keyframes typing-caret{to{opacity:.2}}
+body:not(.settings-window) .widget-grid{padding:12px 0 36px}.chat-history{position:static;align-self:flex-end;margin-top:-3px}
+
+/* Astryx surfaces preserve the compact island's shared spacing and color tokens. */
+.astryx-control{min-width:0;flex:1 1 140px;max-width:100%;font-family:inherit}
+.astryx-field{width:100%;min-width:0;color-scheme:dark}
+.astryx-field :is(input,button,select){font:inherit}
+body .astryx-field input:not([type=checkbox]){background:transparent!important;border:0!important;font-size:13px!important;min-width:0;box-shadow:none}
+body .astryx-field [role=switch]{cursor:pointer}
+body .astryx-field [role=combobox]{min-height:36px;border:0;border-radius:13px;background:var(--panel-2,#222327);color:var(--text,#f8f8fa)}
+body .astryx-field label{font-size:12px}
+body .astryx-field [data-astryx-native]{display:none!important}
+body:not(.settings-window) .widget-heading{display:flex;align-items:center;gap:7px;height:34px;flex-shrink:0}
+body:not(.settings-window) .widget-heading>b{flex:1;font-size:13px}
+body:not(.settings-window) .widget-heading>button{height:28px;width:28px;flex:0 0 28px;border-radius:50%;font-size:20px;background:var(--panel)}
+.widget-heading>.astryx-control{flex:0 1 115px}
+body:not(.settings-window) .widget-content>form{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+body:not(.settings-window) .widget-content>form>button{min-height:36px;border-radius:13px;padding:8px 14px;background:var(--user-accent,#d6ed83);color:var(--on-user-accent,#17200c)}
+body:not(.settings-window) :is(.todo-editor,.water-settings){gap:10px}
+body:not(.settings-window) .todo-module{grid-template-columns:110px minmax(0,1fr);gap:16px}
+body:not(.settings-window) .todo-editor{padding:0;border:0;background:none;display:grid;grid-template-columns:1fr 1fr}
+body:not(.settings-window) .todo-editor>.astryx-control:first-child{grid-column:1/-1}
+body:not(.settings-window) .timer-actions{display:grid;grid-template-columns:minmax(68px,1fr) 44px minmax(68px,1fr);align-items:center;min-height:34px;gap:8px}
+body:not(.settings-window) .timer-actions[data-mode=stopwatch] .timer-primary{grid-column:2}
+body:not(.settings-window) .pomodoro{min-height:224px;align-items:start;grid-template-columns:88px minmax(0,1fr)}
+body:not(.settings-window) .timer-ring-button{align-self:center}
+body:not(.settings-window) .timer-main{display:grid;grid-template-rows:32px 49px 21px 34px minmax(32px,auto);align-items:start}
+body:not(.settings-window) .timer-mode{justify-self:start}
+body:not(.settings-window) .timer-duration{margin-top:8px;flex-wrap:nowrap}
+.timer-duration .astryx-control{flex:0 0 66px}
+body:not(.settings-window) .timer-duration button{flex-shrink:0}
+body:not(.settings-window) #mic{display:none!important}
+body:not(.settings-window) #pin{opacity:.35;transition:opacity .25s,background .25s}
+body:not(.settings-window) #pin[aria-pressed=true],body.pinned #pin{opacity:1;background:color-mix(in srgb,var(--user-accent,#d6ed83) 25%,var(--panel))}
+body:not(.settings-window) #mirrorVideo{display:block;width:min(100%,290px);height:auto;aspect-ratio:1;object-fit:cover;object-position:center;border-radius:26px;margin:0 auto 10px;transform:scaleX(-1);background:var(--panel-2)}
+body:not(.settings-window) #tools[data-tool=mirror] .widget-content{padding:0;background:transparent;display:flex;align-items:center;flex-direction:column}
+body:not(.settings-window) #tools[data-tool=mirror] small{font-size:10px}
+.weather-scene{display:flex;align-items:center;gap:18px;min-height:130px}
+.weather-art{font-size:82px;filter:drop-shadow(0 8px 18px #f7bc4e30);line-height:1.2}
+.weather-scene h2{font-size:22px;margin:0 0 7px}.weather-scene p{margin:0;color:var(--muted)}
+.clipboard-toolbar{display:flex;gap:12px;align-items:center;margin-bottom:8px}.clipboard-toolbar>label{flex:1}
+.clipboard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin-top:12px}
+.clipboard-card{position:relative;aspect-ratio:1;border-radius:18px;background:color-mix(in srgb,var(--panel-2) 80%,transparent);overflow:hidden}
+.clipboard-card>button:first-child{display:flex;flex-direction:column;align-items:stretch;width:100%;height:100%;padding:13px;text-align:left;background:none}
+.clipboard-card p{font-size:12px;line-height:1.5;margin:0;overflow:hidden;flex:1;word-break:break-word}
+.clipboard-card img{width:100%;min-height:0;flex:1;object-fit:contain;border-radius:9px}
+.clipboard-card small{font-size:9px;color:var(--muted);margin-top:7px}
+.clipboard-card>button:last-child{position:absolute;bottom:6px;right:6px;border-radius:50%;background:var(--panel)}
+.water-frequency{display:flex;gap:8px;margin-top:8px}.water-frequency button{padding:7px 10px;border-radius:20px;background:var(--panel-2);font-size:11px}
+body:not(.settings-window) .el-voice{gap:7px}
+body:not(.settings-window) .el-voice-stage{display:flex;justify-content:center;align-items:center;position:relative;min-height:66px;gap:12px;padding:0}
+body:not(.settings-window) .el-voice-stage>[data-component=orb],body:not(.settings-window) .el-voice-stage canvas{width:66px!important;height:66px!important}
+body:not(.settings-window) .el-voice-labels{position:absolute;left:0;max-width:34%;font-size:11px}
+body:not(.settings-window) .el-voice-labels small{display:none}
+body:not(.settings-window) .el-bars{position:absolute;right:0;width:60px;max-height:35px}
+body:not(.settings-window) .el-voice-conversation{min-height:0;max-height:110px}
+body:not(.settings-window) .el-voice-conversation:has(.el-response:empty){display:none}
+body:not(.settings-window) .el-voice-actions{justify-content:center;gap:8px;flex-wrap:nowrap}
+body:not(.settings-window) .el-audio-options{display:flex;align-items:center;gap:12px;border:0;padding:0;margin:0}
+body:not(.settings-window) .el-selector-row{display:flex;gap:6px;flex:1;min-width:0}
+body:not(.settings-window) .el-audio-options button{font-size:10px;min-height:28px;padding:4px 8px}
+body:not(.settings-window) .el-voice-footer{margin:0;min-height:20px}
+body:not(.settings-window) .el-voice-footer>span{font-size:10px;color:var(--muted)}
+body:not(.settings-window) .el-volume-row{min-height:28px!important;height:28px!important}
+body:not(.settings-window) .el-volume-row [role=slider]{min-width:18px;min-height:18px;border:2px solid var(--user-accent,#d6ed83);background:var(--panel-2)}
+@media(max-width:440px){body:not(.settings-window) .pomodoro{gap:10px;padding:14px;grid-template-columns:66px minmax(0,1fr)}body:not(.settings-window) .timer-top strong{font-size:32px}.timer-actions button{font-size:10px!important;padding:5px!important}}
+
+.astryx-native-label{display:none!important}body:not(.settings-window) .region-ocr{display:grid;gap:12px}.region-ocr textarea{width:100%;box-sizing:border-box;resize:vertical;padding:12px;border:0!important}.region-ocr>button{border-radius:18px;padding:12px;background:var(--user-accent,#d6ed83);color:#17200c}
+
+body:not(.settings-window) .widget-heading .astryx-field button{height:30px!important;min-height:30px;padding:4px 9px;font-size:11px}body:not(.settings-window) .timer-duration>.astryx-control{flex:0 0 66px;min-width:0}.timer-duration .astryx-field{height:30px}.timer-duration .astryx-field input{padding:3px 6px!important;height:26px!important}.astryx-button{flex:0 0 auto}
+
+body .astryx-control{flex-basis:auto}
+body:not(.settings-window) .todo-form{gap:10px}
+body:not(.settings-window) .todo-form>.astryx-control{flex:0 0 auto}
+body:not(.settings-window) .todo-form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body:not(.settings-window) .todo-form-actions{margin-top:4px}
+body:not(.settings-window) .todo-pane{background:transparent;border:0;padding:0;overflow:visible}
+body:not(.settings-window) .core-tool .unit-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start;align-items:start}
+body:not(.settings-window) .core-tool .unit-form>.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+body .astryx-field [data-astryx-theme-target=selector-trigger]{border:0!important}
+body .astryx-field label{line-height:1.3;margin:0 0 5px}
+body .astryx-field>div{border-color:transparent!important}
+body:not(.settings-window) .el-voice-labels strong{font-size:12px!important;line-height:1.4}
+body:not(.settings-window) .widget-content .astryx-field>div{border-radius:14px}
+
+body .astryx-field :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector){border-color:transparent!important;box-shadow:none;background:color-mix(in srgb,var(--panel-2,#222327) 82%,transparent)!important;border-radius:13px;min-width:0}
+body .astryx-field :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector):focus-within{box-shadow:0 0 0 2px color-mix(in srgb,var(--user-accent,#d6ed83) 65%,transparent)}
+body .astryx-field .astryx-selector{min-height:34px}
+body:not(.settings-window) button{transition:background .18s,opacity .18s,transform .18s}
+body:not(.settings-window) button:active:not(:disabled){transform:scale(.96)}
+
+/* Borderless Astryx fields: one animated tonal surface owns focus. */
+[data-astryx-native]{display:none!important}
+.astryx-theme-root{display:contents}.astryx-action-host{flex:0 0 auto}
+body .astryx-control :is(input,select,textarea,button),body [data-astryx-theme] :is(.astryx-selector,.astryx-date-input,.astryx-time-input){outline:none!important;outline-offset:0!important;box-shadow:none!important}
+body .astryx-control :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector){border:0!important;box-shadow:none!important;outline:none!important;background:#1c1d21!important;transition:background-color .24s ease!important}
+body .astryx-control :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector):is(:focus,:focus-visible,:focus-within,[data-state=expanded]){background:#27282d!important;box-shadow:none!important;outline:none!important}
+body.theme-light .astryx-control :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector){background:#ededf0!important}
+body.theme-light .astryx-control :is(.astryx-text-input,.astryx-number-input,.astryx-date-input,.astryx-time-input,.astryx-selector):focus-within{background:#e2e2e7!important}
+body .astryx-control input:not([type=checkbox]){border:0!important;outline:none!important;box-shadow:none!important;background:transparent!important}
+body [data-astryx-theme] :is([role=listbox],[role=option],.astryx-selector-option-row){border:0!important;outline:none!important;box-shadow:none!important}
+body [data-astryx-theme] [role=option]:is([aria-selected=true],:focus-visible){background:#ffffff0b!important}
+body .astryx-field input[type=checkbox][role=switch]{appearance:none!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;opacity:0!important;z-index:2;cursor:pointer}
+body .astryx-field input[type=checkbox][role=switch]::after{display:none!important}
+body .astryx-switch-track{transition:background-color .2s,transform .16s!important}
+body .astryx-switch-thumb{transition:transform .22s cubic-bezier(.22,1,.36,1),background-color .2s!important}
+body .astryx-switch-field:active .astryx-switch-track{transform:scale(.96)}
+/* The glow stays at the edges and fades in after the black surface arrives. */
+body:not(.settings-window) #island::before{display:block;content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 0 100%,color-mix(in srgb,var(--edge-a,var(--user-accent)) 21%,transparent),transparent 48%),radial-gradient(ellipse at 100% 0,color-mix(in srgb,var(--edge-b,var(--user-accent)) 15%,transparent),transparent 42%);opacity:0}
+body.expanded:not(.settings-window) #island::before,body.has-voice-hud:not(.settings-window) #island::before{animation:edge-arrive .75s .08s cubic-bezier(.22,1,.36,1) both}
+@keyframes edge-arrive{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+body:not(.settings-window) :is(.pomodoro,.widget-content,.water-module,.todo-module,.el-player,.home-live){background:radial-gradient(ellipse at 0 100%,color-mix(in srgb,var(--edge-a,var(--user-accent)) 12%,transparent),transparent 48%),radial-gradient(ellipse at 100% 0,color-mix(in srgb,var(--edge-b,var(--user-accent)) 8%,transparent),transparent 40%),var(--panel)}
+body.has-voice-hud:not(.expanded):not(.settings-window) #island{background:var(--pulse-surface)!important;animation:hud-arrive .48s cubic-bezier(.22,1,.36,1) both}
+@keyframes hud-arrive{from{opacity:0;transform:translateX(-50%) translateY(-30px) scale(.92)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+body.has-voice-hud #voiceHud{display:flex!important;align-items:center;gap:8px}
+body.has-voice-hud.expanded #voiceHud{position:absolute;top:38px;left:50%;transform:translateX(-50%);width:220px;padding:8px 12px;z-index:5;background:var(--panel);border-radius:18px;animation:hud-expanded-arrive .3s ease both}
+@keyframes hud-expanded-arrive{from{opacity:0;translate:0 -8px}to{opacity:1;translate:0 0}}
+#voiceHud>.eleven-ui{display:block!important;flex:1;min-width:64px;height:24px}
+#voiceHudText{flex-shrink:0;white-space:nowrap;font-size:11px}
+body:not(.settings-window) .el-player:not(.has-lyrics){display:grid;grid-template-rows:26px minmax(40px,1fr) 30px 36px 30px;gap:4px;overflow-y:auto}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-track{min-height:0}
+body:not(.settings-window) .el-volume-row{width:100%;min-width:0;max-width:none;min-height:30px!important;height:30px!important;padding:0 2px 2px;box-sizing:border-box}
+body:not(.settings-window) .el-volume-row [data-slot=slider-track]{height:6px;background:#ffffff18;border:0}
+body:not(.settings-window) .el-volume-row [data-slot=slider-range]{background:var(--user-accent)}
+body:not(.settings-window) .el-volume-row [data-slot=slider-thumb]{width:13px;height:13px;border:0;box-shadow:none;background:var(--user-accent)}
+body:not(.settings-window) .el-player.has-lyrics .el-volume-row{width:25%;min-width:100px;max-width:calc(50% - 58px)}
+
+body .astryx-field input[type=checkbox][role=switch]{transform:none!important}body .astryx-field .astryx-switch{background:#36373c!important;border:0!important;box-shadow:none!important;transition:background-color .22s,transform .16s!important}body .astryx-field .astryx-switch[data-checked=checked]{background:color-mix(in srgb,var(--user-accent,#d6ed83) 70%,#34353a)!important}body .astryx-field .astryx-switch-thumb{background:#b6b7be!important}body .astryx-field .astryx-switch-thumb[data-checked=checked]{background:var(--on-user-accent,#17200c)!important}
+
+body.hud-leaving.has-voice-hud:not(.expanded):not(.settings-window) #island{animation:hud-leave .24s ease both}body.hud-leaving.expanded #voiceHud{animation:hud-leave-expanded .24s ease both}@keyframes hud-leave{from{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}to{opacity:0;transform:translateX(-50%) translateY(-28px) scale(.94)}}@keyframes hud-leave-expanded{to{opacity:0;translate:0 -8px}}
+
+/* Stable content rows keep chat and navigation anchored at every size. */
+body.expanded:not(.settings-window) #island{display:flex;flex-direction:column}
+body.expanded:not(.settings-window) #island>header{flex:0 0 36px}
+body.expanded:not(.settings-window) #body{height:auto;flex:1;min-height:0;box-sizing:border-box}
+body:not(.settings-window) .view-stack{flex:1;min-height:0;height:auto}
+body:not(.settings-window) #assistant:not([hidden]){height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:8px;overflow:hidden}
+body:not(.settings-window) #assistant .page-head{grid-row:1;min-height:25px}
+body:not(.settings-window) #assistant #chatHistory{grid-row:1;justify-self:end;align-self:center;margin:0}
+body:not(.settings-window) #assistant #messages{grid-row:2;min-height:0;max-height:none;height:100%;margin:0;overflow:hidden}
+body:not(.settings-window) #assistant #elevenChatComposer{grid-row:3;min-width:0;margin:0}
+body:not(.settings-window) #assistant:has(#windowsTask:not([hidden])){display:flex;flex-direction:column}
+body:not(.settings-window) #assistant:has(#windowsTask:not([hidden])) #messages,body:not(.settings-window) #assistant:has(#windowsTask:not([hidden])) #elevenChatComposer{display:none}
+body:not(.settings-window) .chatgpt-composer{padding:10px 12px!important;gap:6px;display:flex;flex-direction:column;border:0!important;box-shadow:none!important;border-radius:23px!important;background:var(--panel-2)!important}
+body:not(.settings-window) .chatgpt-composer .chat-input-row{padding:0!important;min-height:34px;display:block}
+body:not(.settings-window) .chatgpt-composer .chat-input-row textarea{field-sizing:content;width:100%;box-sizing:border-box;min-height:34px!important;height:auto!important;max-height:min(96px,25vh)!important;padding:6px 3px!important;line-height:22px;font-size:14px;outline:none!important;border:0!important;box-shadow:none!important;background:transparent!important;resize:none}
+body:not(.settings-window) .chat-composer-actions{display:flex;justify-content:space-between;align-items:center;gap:12px;height:30px}
+body:not(.settings-window) .chat-composer-actions #chatSend{position:static!important;display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;min-height:30px;border:0;border-radius:50%;padding:6px;background:var(--user-accent);color:var(--on-user-accent)}
+body:not(.settings-window) .chat-composer-actions #chatSend svg{width:17px;height:17px}
+body:not(.settings-window) .chat-composer-voice{display:flex;align-items:center}
+body:not(.settings-window) .chat-composer-voice button{background:transparent;border:0}
+body:not(.settings-window) .el-chat-thread .message{line-height:1.65}
+
+body:not(.settings-window) #assistant:not([hidden]){grid-template-columns:minmax(0,1fr) auto}body:not(.settings-window) #assistant #messages,body:not(.settings-window) #assistant #elevenChatComposer{grid-column:1/-1}body:not(.settings-window) .chatgpt-composer .chat-input-row textarea{max-height:clamp(34px,calc(var(--rich-height,315px) - 205px),96px)!important}
+
+body:not(.settings-window) #companionGlow{display:none!important}
+body.has-voice-hud:not(.expanded):not(.settings-window) #island>header{height:38px;padding:0 14px;box-sizing:border-box}
+body.has-voice-hud:not(.expanded):not(.settings-window) #voiceHud{box-sizing:border-box;width:100%;gap:8px;justify-content:space-between;overflow:hidden}
+body.has-voice-hud:not(.expanded) #voiceHudText{font-weight:500;font-size:11px}
+body:not(.settings-window) #tools:not([hidden]){height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+body:not(.settings-window) #tools>.widget-heading{flex:0 0 34px}
+body:not(.settings-window) #tools>:is(.carousel-body,.widget-content){flex:1;min-height:0;height:auto;overflow:auto}
+body:not(.settings-window) #tools>.widget-grid{flex:1;min-height:0;overflow:auto}
+
+body:not(.settings-window) #island::before{display:block!important;width:auto!important;height:auto!important}

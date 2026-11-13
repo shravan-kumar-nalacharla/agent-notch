@@ -1,5 +1,6 @@
-import * as pdfjsLib from './vendor/pdf.min.mjs';
-pdfjsLib.GlobalWorkerOptions.workerSrc = './vendor/pdf.worker.min.mjs';
+let pdfjsLib;
+window.studio.appearance().then(reply=>{if(reply.ok)window.NotchTheme.apply(document.body,reply.value);});
+window.studio.onAppearance(appearance=>window.NotchTheme.apply(document.body,appearance));
 
 const $ = id => document.getElementById(id);
 const state = { files: [], active: null, mode: null };
@@ -242,7 +243,7 @@ async function setupPdf(file) {
   $('pdfFormat').textContent = 'PDF'; $('pdfStatus').textContent = 'Loading document…'; $('pdfThumbs').innerHTML = ''; $('pdfCanvas').width = 0;
   const read = await window.studio.pdfRead(file.path); if (!read.ok) { $('pdfStatus').textContent = read.error; return toast(read.error, true); }
   const data = Uint8Array.from(atob(read.value.data), c => c.charCodeAt(0));
-  try { pdfState.doc = await pdfjsLib.getDocument({ data }).promise; pdfState.pages = Array.from({ length: pdfState.doc.numPages }, (_, index) => ({ index, rotate: 0 })); pdfState.selected = 0; $('pdfStatus').textContent = `${pdfState.doc.numPages} pages`; await renderPdfThumbs(); await renderPdfPage(); }
+  try { if(!pdfjsLib){pdfjsLib=await import('./vendor/pdf.min.mjs');pdfjsLib.GlobalWorkerOptions.workerSrc='./vendor/pdf.worker.min.mjs';}await pdfState.doc?.destroy();pdfState.doc = await pdfjsLib.getDocument({ data }).promise; pdfState.pages = Array.from({ length: pdfState.doc.numPages }, (_, index) => ({ index, rotate: 0 })); pdfState.selected = 0; $('pdfStatus').textContent = `${pdfState.doc.numPages} pages`; await renderPdfThumbs(); await renderPdfPage(); }
   catch (error) { $('pdfStatus').textContent = /password/i.test(error.message) ? 'This PDF is password-protected. Open it in a PDF app to unlock it first.' : 'This PDF could not be rendered: ' + error.message; toast($('pdfStatus').textContent, true); }
 }
 async function renderPdfPage() {

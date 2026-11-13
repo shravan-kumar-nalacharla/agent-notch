@@ -1,5 +1,98 @@
 [
   {
+    "version": "0.40.0",
+    "date": "2026-11-13",
+    "title": "Continuous voice and a stable ElevenLabs orb",
+    "notes": [
+      "Start listening stays active across commands and automatically resumes after spoken replies until Stop, Mute or Escape.",
+      "Voice selection uses lightweight icons and preserves the main ElevenLabs orb, with context restoration and cleanup.",
+      "Spoken reply status, Replay and Copy have separate layout slots."
+    ]
+  },
+  {
+    "version": "0.39.0",
+    "date": "2026-11-13",
+    "title": "Independent AI roles and stable voice and media",
+    "notes": [
+      "Choose separate providers and models for text chat, voice answers, voice recognition and agentic tasks, including Grok (xAI).",
+      "Select Sarvam, Groq or Gemini Live voice presets. Spoken reply status is visible in the voice panel.",
+      "Settings uses a readiness event and cached Windows startup information instead of hidden-window polling.",
+      "Media controls follow the accent, use a compact volume slider, and retain lyrics across repeated updates.",
+      "Hidden Tools no longer applies its height to the first-open Home panel.",
+      "Default mouse-leave delay is 300 ms; pin and active voice capture still keep the panel open."
+    ]
+  },
+  {
+    "version": "0.38.1",
+    "date": "2026-11-13",
+    "title": "Looping Quick Access",
+    "notes": [
+      "Mouse-wheel and trackpad scrolling move Quick Access horizontally in a continuous loop.",
+      "The add button stays visible outside the scrolling items. Scroll snapping no longer blocks gradual movement."
+    ]
+  },
+  {
+    "version": "0.38.0",
+    "date": "2026-11-13",
+    "title": "Shared themes, readable accents and clear dictation",
+    "notes": [
+      "Settings, thoughts and reminders share your notch colors and fonts. Black and white accents stay readable.",
+      "Global dictation replaces the open notch even when pinned. Thoughts and reminders animate in and out.",
+      "Voice hotkey and cloud audio are enabled for fresh settings. Right-click no longer opens Settings.",
+      "Quick Access scrubs smoothly. More Tools has a clean header. Save messages use clean text.",
+      "The assistant bundle loads when needed instead of at collapsed startup; auxiliary windows can throttle in the background."
+    ]
+  },
+  {
+    "version": "0.37.0",
+    "date": "2026-11-13",
+    "title": "Stable layouts and borderless controls",
+    "notes": [
+      "Chat keeps its rounded composer at the bottom across all panel sizes, with conversation scrolling above it.",
+      "Switches respond reliably to pointer input, labels exclude hidden option text, and focus uses a subtle tonal transition instead of borders.",
+      "One global size setting replaces the temporary tool-size picker. Settings and the tools list scroll faster.",
+      "The notch and File Studio share accent-derived corner colors; dictation animates in and out with its spectrum and transcription state.",
+      "Media volume stays visible. Repeated layout notifications no longer restart the same resize animation.",
+      "Controls share one React root; the hidden voice orb and PDF viewer load on demand. UI build dependencies and source maps are excluded from the runtime package."
+    ]
+  },
+  {
+    "version": "0.36.0",
+    "date": "2026-11-13",
+    "title": "Astryx controls and a smoother island",
+    "notes": [
+      "Actual Astryx switches, text and number fields, date/time pickers, selectors and form buttons replace native controls.",
+      "All tools share looping previous/next navigation, including enabled plugins; the separate carousel entry is removed.",
+      "Visible closing morph, directional page transitions, fixed timer controls, compact voice layout, square mirror and colored weather scenes.",
+      "Settings open fully assembled, with saved width, height, accent color and font options. Default mouse-following eyes replace Blobatar.",
+      "Clipboard history shows square text and image previews and uses Electron's asynchronous clipboard API.",
+      "Select a screen area to extract text with Windows OCR and copy it immediately. Hydration offers five- and ten-minute schedules."
+    ]
+  },
+  {
+    "version": "0.35.1",
+    "date": "2026-11-13",
+    "title": "Clearer drops and a softer workspace",
+    "notes": [
+      "Quick Access shows a dotted drop target while empty; drops go to Quick Access or Shelf without opening File Studio.",
+      "Tool names scroll in a wheel-style list, with slower scrolling and smooth panel resizing.",
+      "Soft accent lighting across panels, improved timer spacing, and saved accent color and font choices in Appearance.",
+      "Aligned chat input controls, an existing-history shortcut, and progressive assistant replies that respect reduced motion.",
+      "Phosphor menu and header icons are bundled for offline use."
+    ]
+  },
+  {
+    "version": "0.35.0",
+    "date": "2026-11-13",
+    "title": "Refined island UI and plugin workspace",
+    "notes": [
+      "Shared dark and light island surfaces, compact navigation, larger media artwork and stable system metric tiles.",
+      "Home restores live context alongside Quick Access, with file, folder and application actions and reordering.",
+      "Plugin marketplace, review and lifecycle controls, JSON-lines runtime, starter creator and SDK examples.",
+      "Staggered content entrances and header scrolling for expanded tool sizes."
+    ]
+  },
+  {
     "version": "0.34.3",
     "date": "2026-11-12",
     "title": "Compact home icons",

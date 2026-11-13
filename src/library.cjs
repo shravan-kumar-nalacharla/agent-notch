@@ -69,7 +69,7 @@ function createLibrary(folder, now = Date.now, monotonic = now===Date.now?()=>pe
       case 'history:add': if(data.retentionDays!==0)data.history.unshift({id:randomUUID(),at:now(),kind:String(value.kind||'dictation').slice(0,40),raw:String(value.raw||'').slice(0,20000),text:String(value.text||'').slice(0,40000),seconds:Math.max(0,Number(value.seconds)||0),app:String(value.app||'').slice(0,150),recognizedLanguage:String(value.recognizedLanguage||'unknown').slice(0,20),outputScript:String(value.outputScript||'auto').slice(0,20),responseLanguage:String(value.responseLanguage||'').slice(0,20)}); data.history=data.history.slice(0,5000); break;
       case 'history:clear': data.history=[]; break;
       case 'clips:enable': data.clipboardEnabled=value.enabled===true; break;
-      case 'clips:add': if(data.clipboardEnabled && !require('./clipboard-privacy.cjs').sensitiveClipboard(value.text)){data.clips=[{id:randomUUID(),at:now(),text:value.text},...data.clips.filter(x=>x.text!==value.text)].slice(0,500);} break;
+      case 'clips:add': {const image=typeof value.image==='string'&&/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(value.image)&&value.image.length<=1500000?value.image:'';if(data.clipboardEnabled&&(image||!require('./clipboard-privacy.cjs').sensitiveClipboard(value.text))){data.clips=[{id:randomUUID(),at:now(),text:image?'':value.text,image},...data.clips.filter(x=>image?x.image!==image:x.text!==value.text)].slice(0,500);let bytes=0;data.clips=data.clips.filter(x=>(bytes+=(x.image||x.text||'').length)<=12000000);}break;}
       case 'clips:remove': data.clips=data.clips.filter(x=>x.id!==value.id);break;
       case 'clips:clear': data.clips=[]; break;
       case 'meeting:save': { const item={id:value.id||randomUUID(),at:now(),title:text(value.title||'Meeting',200),transcript:String(value.transcript||'').slice(0,400000),notes:String(value.notes||'').slice(0,100000)}; data.meetings=[item,...data.meetings.filter(x=>x.id!==item.id)].slice(0,100); break; }
@@ -103,7 +103,7 @@ function createLibrary(folder, now = Date.now, monotonic = now===Date.now?()=>pe
     for(const item of [...data.snippets].sort((a,b)=>b.trigger.length-a.trigger.length))output=output.replace(new RegExp(`(?<![\\p{L}\\p{N}_])${esc(item.trigger)}(?![\\p{L}\\p{N}_])`,'giu'),()=>item.expansion);
     return output;
   }
-  return {view,action,tick,transform,save,quoteState:()=>structuredClone({quiet:data.quiet,focus:!!(data.timer&&!data.timer.paused||data.stopwatch?.running)})};
+  return {view,action,tick,transform,save,clock:clockSnapshot,preferences:()=>({clipboardEnabled:data.clipboardEnabled,mediaAppId:data.mediaAppId,city:data.city}),quoteState:()=>structuredClone({quiet:data.quiet,focus:!!(data.timer&&!data.timer.paused||data.stopwatch?.running)})};
 }
 function stats(history) {
   const dict=history.filter(x=>x.kind==='dictation');const words=dict.reduce((n,x)=>n+(x.text.trim()?x.text.trim().split(/\s+/).length:0),0);const seconds=dict.reduce((n,x)=>n+x.seconds,0);

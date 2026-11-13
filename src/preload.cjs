@@ -5,6 +5,8 @@ const eventPools=new Map();
 function listen(channel,callback){let pool=eventPools.get(channel);if(!pool){pool=new Set();eventPools.set(channel,pool);ipcRenderer.on(channel,(_event,value)=>{for(const cb of [...pool])try{const pending=cb(value);pending?.catch?.(e=>console.error('UI event handler:',e.message));}catch(e){console.error('UI event handler:',e.message);}});}const entry=value=>callback(value);pool.add(entry);return()=>pool.delete(entry);}
 const studioMode=typeof location!=='undefined'&&(location.pathname.endsWith('/file-studio.html')||location.pathname.endsWith('file-studio.html'));
 contextBridge.exposeInMainWorld('studio', {
+  appearance:()=>ipcRenderer.invoke('studio:appearance'),
+  onAppearance:callback=>listen('settings:changed',value=>callback(value.appearance||{})),
   inspect:paths=>ipcRenderer.invoke('studio:inspect',{paths}),
   choose:()=>ipcRenderer.invoke('studio:choose'),
   metadata:options=>ipcRenderer.invoke('studio:metadata',options),
@@ -62,6 +64,8 @@ if(!studioMode)contextBridge.exposeInMainWorld('island', {
   onProductivityDiagnostic:callback=>listen('productivity:diagnostic',callback),
   save: value => ipcRenderer.invoke('state:save', value),
   quick: (op,value={}) => ipcRenderer.invoke('quick:'+op,value),
+  plugins: (op,value={}) => ipcRenderer.invoke('plugins:action',{op,value}),
+  onPlugins: callback => listen('plugins:changed',callback),
   savedProviderKeys:()=>ipcRenderer.invoke('settings:keys'),
   testProvider: value => ipcRenderer.invoke('provider:test', value),
   cancelAsk:id=>ipcRenderer.invoke('assistant:cancel',id),
@@ -95,6 +99,7 @@ if(!studioMode)contextBridge.exposeInMainWorld('island', {
   onLayout:callback=>listen('window:layout',callback),
   expand: on => ipcRenderer.invoke('window:expand', on),
   settings: target => ipcRenderer.invoke('window:settings',target),
+  settingsReady:()=>ipcRenderer.send('settings:ready'),
   onSettingsSection:callback=>listen('settings:section',callback),
   closeWindow: () => ipcRenderer.invoke('window:close'),
   library: (op,value={}) => op ? ipcRenderer.invoke('library:action',{op,value}) : ipcRenderer.invoke('library:get'),

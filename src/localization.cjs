@@ -2,7 +2,7 @@
 const LANGUAGES=Object.freeze(['en','hi','te','hinglish','tenglish']);
 const LABELS={en:'English',hi:'हिंदी',te:'తెలుగు',hinglish:'Hinglish',tenglish:'Tenglish'};
 const LOCALES={en:'en-IN',hi:'hi-IN',te:'te-IN',hinglish:'hi-Latn-IN',tenglish:'te-Latn-IN'};
-const DEFAULTS=Object.freeze({uiLanguage:'en',quoteLanguage:'follow_ui',quoteTone:'balanced',speechInput:'auto',dictationMode:'follow_ui',voiceResponseLanguage:'follow_input',spokenLanguage:'follow_response',allowCodeSwitch:true,cloudAudioConsent:false,punctuation:true,preserveEnglishTerms:true,spokenReplyEnabled:false});
+const DEFAULTS=Object.freeze({uiLanguage:'en',quoteLanguage:'follow_ui',quoteTone:'balanced',speechInput:'auto',dictationMode:'follow_ui',voiceResponseLanguage:'follow_input',spokenLanguage:'follow_response',allowCodeSwitch:true,cloudAudioConsent:true,punctuation:true,preserveEnglishTerms:true,spokenReplyEnabled:false});
 function validateLanguages(value={}){
  const next={...DEFAULTS},enums={uiLanguage:LANGUAGES,quoteLanguage:['follow_ui',...LANGUAGES],quoteTone:['balanced','cinematic','quiet'],speechInput:['auto','en-IN','hi-IN','te-IN'],dictationMode:['follow_ui',...LANGUAGES],voiceResponseLanguage:['follow_input','follow_ui',...LANGUAGES],spokenLanguage:['follow_response','en','hi','te']};
  for(const[key,allowed]of Object.entries(enums))if(value[key]!==undefined){if(!allowed.includes(value[key]))throw new Error('Invalid language preference: '+key);next[key]=value[key];}

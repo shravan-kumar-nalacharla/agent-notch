@@ -4,7 +4,7 @@
 
 import * as React from "react"
 import type { ElevenLabs } from "@elevenlabs/elevenlabs-js"
-import { Check, ChevronsUpDown, Pause, Play } from "lucide-react"
+import { Check, ChevronsUpDown, Pause, Play, Mic } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import {
@@ -20,7 +20,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/registry/elevenlabs-ui/ui/command"
-import { Orb } from "@/registry/elevenlabs-ui/ui/orb"
 import {
   Popover,
   PopoverContent,
@@ -69,7 +68,7 @@ function VoicePicker({
             {selectedVoice ? (
               <div className="flex items-center gap-2 overflow-hidden">
                 <div className="relative size-6 shrink-0 overflow-visible">
-                  <Orb static agentState={null} className="absolute inset-0" />
+                  <Mic className="size-5 text-muted-foreground" />
                 </div>
                 <span className="truncate">{selectedVoice.name}</span>
               </div>
@@ -130,10 +129,9 @@ function VoicePickerItem({
 
   const handlePreview = React.useCallback(
     async (e: React.MouseEvent) => {
+      if (!audioItem) return
       e.preventDefault()
       e.stopPropagation()
-
-      if (!audioItem) return
 
       if (isPlaying) {
         player.pause()
@@ -164,10 +162,7 @@ function VoicePickerItem({
         onMouseLeave={() => setIsHovered(false)}
         onClick={handlePreview}
       >
-        <Orb
-          agentState={isPlaying ? "talking" : undefined}
-          className="pointer-events-none absolute inset-0"
-        />
+        <Mic className="size-5 text-muted-foreground" aria-hidden="true" />
         {preview && isHovered && (
           <div className="pointer-events-none absolute inset-0 flex size-8 shrink-0 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm transition-opacity hover:bg-black/50">
             {isPlaying ? (

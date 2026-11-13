@@ -12,7 +12,7 @@
   const running=new WeakMap();
   function animateSurface(el,on,{width=470,height=250,mode='standard',floating=false,initial=null}={}){
     const old=running.get(el),r=el.getBoundingClientRect(),current=old?{width:r.width,height:r.height,y:r.top,scale:1,opacity:+getComputedStyle(el).opacity,radius:25}:null;old?.cancel();
-    const small={width:Math.min(174,width),height:26,y:-32,scale:.94,opacity:0,radius:14},large={width,height,y:0,scale:1,opacity:1,radius:25};
+    const small={width:Math.min(174,width),height:26,y:-32,scale:.94,opacity:0,radius:14},large={width,height,y:0,scale:1,opacity:1,radius:36};
     if(floating){small.y=-20;large.y=0;}
     const duration=mode==='off'?0:mode==='subtle'?180:on?700:440;
     const keyframes=mode==='subtle'?[{opacity:on?0:1},{opacity:on?1:0}]:frames(initial||current||(on?small:large),on?large:small,duration);
@@ -20,7 +20,9 @@
     return animation.finished.catch(()=>{}).finally(()=>{if(running.get(el)===animation){running.delete(el);animation.cancel();}});
   }
   function animatePage(el,direction=1,mode='standard'){
-    if(mode==='off')return;return el.animate([{opacity:.1,transform:`translateX(${direction*32}px) scale(.98)`},{opacity:1,transform:'translateX(0) scale(1)'}],{duration:mode==='subtle'?160:360,easing:'cubic-bezier(.22,1,.36,1)'});
+    if(mode==='off')return;el.getAnimations().forEach(animation=>animation.cancel());return el.animate([{opacity:0,transform:`translateX(${direction*28}px) scale(.985)`},{opacity:1,transform:'translateX(0) scale(1)'}],{duration:mode==='subtle'?180:420,easing:'cubic-bezier(.22,1,.36,1)'});
   }
-  const api={PRESETS,spring,frames,animateSurface,animatePage};if(typeof module!=='undefined')module.exports=api;else root.IslandSurface=api;
+  function cascade(el,mode='standard'){if(mode==='off')return;const nodes=[...el.querySelectorAll('.page:not([hidden]) > *, .pulse-stat')].filter(node=>node.getClientRects().length).slice(0,6);return nodes.map((node,index)=>node.animate([{opacity:0,transform:'translateY(7px)'},{opacity:1,transform:'translateY(0)'}],{duration:mode==='subtle'?160:280,delay:mode==='subtle'?0:index*55,easing:'cubic-bezier(.22,1,.36,1)',fill:'backwards'}));}
+  function fromRestY(from,to=0,duration=750,preset=PRESETS.y){return Array.from({length:61},(_,i)=>{const offset=i/60,p=i===60?1:spring(offset*duration/1000,preset);return{offset,opacity:Math.min(1,offset*3),transform:`translateY(${from+(to-from)*p}px)`};});}
+  const api={PRESETS,spring,frames,fromRestY,animateSurface,animatePage,cascade};if(typeof module!=='undefined')module.exports=api;else root.IslandSurface=api;
 })(globalThis);

@@ -1,0 +1,2 @@
+html.settings-pending body #island{visibility:hidden!important}
+html.settings-pending body::after{content:'Opening settings…';position:fixed;inset:0;display:grid;place-items:center;z-index:9999;color:var(--text,#f8f8fa);font:500 17px var(--user-font,'Segoe UI',sans-serif);background:radial-gradient(ellipse at 0 100%,color-mix(in srgb,var(--edge-a,#666) 12%,transparent),transparent 45%),var(--surface,#08090b)}

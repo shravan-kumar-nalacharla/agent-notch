@@ -1,0 +1,2 @@
+const{test}=require('node:test'),assert=require('node:assert/strict');const{readPNG}=require('../src/clipboard-images.cjs');
+test('async clipboard image reads preserve original PNG bytes and bound memory',async()=>{const bytes=Buffer.from('png fixture');assert.deepEqual(await readPNG({read:async()=>[{types:['image/png'],getType:async()=>new Blob([bytes])}]}),bytes);assert.equal(await readPNG({read:async()=>[{types:['image/png'],getType:async()=>({size:1200000,arrayBuffer:()=>assert.fail('Oversized image must not be read')})}]}),null);});

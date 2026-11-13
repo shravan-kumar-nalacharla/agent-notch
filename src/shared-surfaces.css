@@ -1,0 +1,61 @@
+/* Auxiliary surfaces use the same saved palette as the notch. */
+body .el-voice-stage .el-orb{background:transparent}
+body .el-voice-footer{display:grid;grid-template-columns:minmax(0,1fr) auto 32px 32px;align-items:center;gap:7px;min-height:32px}
+body .el-voice-footer>button[aria-pressed]{width:auto;min-width:112px;height:26px;padding:3px 7px;white-space:nowrap}
+body .el-voice-footer>button[aria-label]{width:32px;min-width:32px;height:32px;padding:5px}
+body [data-slot=command-item]>div:has(>svg){display:grid;place-items:center}
+.eleven-ui{--el-primary:var(--user-accent);--primary:var(--user-accent);--color-primary:var(--user-accent);--color-primary-foreground:var(--on-user-accent);--color-ring:var(--user-accent)}
+body .el-player [data-slot=slider-range],body .el-player [data-slot=scrub-bar-progress]>div{background:var(--user-accent)!important}
+body:not(.settings-window) .el-player:not(.has-lyrics) .el-volume-row{width:150px;min-width:120px;max-width:40%;height:22px!important;min-height:22px!important}
+body:not(.settings-window) .el-player .el-volume-row [data-slot=slider-thumb]{width:9px;height:9px;min-width:9px;min-height:9px;border:0;box-shadow:none;outline:0;background:var(--user-accent)}
+body:not(.settings-window) .el-player .el-volume-row [data-slot=slider-track]{height:4px}
+body .el-lyric-line.current{animation:none}
+.role-routing p{font-size:12px;color:var(--muted);margin:6px 0 12px}.role-routing small{display:block;color:var(--muted);line-height:1.6}
+.el-voice-footer>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.el-voice-footer button{flex-shrink:0;font-size:11px}
+.settings-window .settings-savebar .astryx-action-host,.settings-window .settings-savebar .astryx-action-host span{max-width:none}
+.settings-window .settings-savebar .astryx-action-host button{min-width:120px;background:var(--user-accent);color:var(--on-user-accent)}
+body #homeQuick{display:flex;align-items:center;gap:10px}
+body #homeQuickGrid{flex:1;min-width:0;scroll-snap-type:none;scroll-behavior:auto;overflow-anchor:none}
+body #homeQuickGrid .quick-cell{scroll-snap-align:none}
+body #homeQuick>.quick-drop-add{flex-shrink:0}
+body #homeQuick:has(>.quick-drop-add.is-empty) #homeQuickGrid{display:none}
+body .astryx-field .astryx-switch[data-checked=checked]{background:var(--user-accent)!important}
+body.has-quote-hud #quietMoment[data-mode=automatic] #quietText{color:var(--text)}
+body.settings-window{background:var(--surface);color:var(--text);font-family:var(--user-font);--settings-muted:var(--muted)}
+body.settings-window #island{background:var(--surface);isolation:isolate}
+body.settings-window #island::before{content:'';display:block!important;position:fixed;inset:0;width:auto;height:auto;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 0 100%,color-mix(in srgb,var(--edge-a) 13%,transparent),transparent 42%),radial-gradient(ellipse at 100% 100%,color-mix(in srgb,var(--edge-b) 11%,transparent),transparent 40%)}
+.settings-window .settings-heading,.settings-window .settings-savebar{border:0;background:transparent}
+.settings-window .settings-savebar{background:var(--panel)}
+.settings-window .provider-card,.settings-window .settings-card,.settings-window details,.settings-window .settings-card .settings-card{background:var(--panel);border:0;border-radius:22px}
+.settings-window .settings-nav button{color:var(--muted);border:0;box-shadow:none;transition:background .24s,color .24s}
+.settings-window .settings-nav button.active{background:var(--panel-2);color:var(--user-accent);box-shadow:none}
+.settings-window .provider-card h4,.settings-window .settings-card h4,.settings-window .settings-group label,.settings-window details>summary{color:var(--text)}
+.settings-window .provider-card-heading small{background:var(--panel-2);color:var(--user-accent)!important}
+.settings-window .provider-key-row button{background:var(--panel-2);color:var(--text)}
+.settings-window .provider-card-footer button{color:var(--muted)}
+.settings-window button:focus-visible{outline:0;background:var(--panel-2)}
+.settings-window #saveSettings{background:var(--user-accent);color:var(--on-user-accent)}
+body.has-quote-hud:not(.expanded) #quietMoment,body #quietMoment{background:transparent;color:var(--text);font-family:var(--user-font)}
+body #quietMoment button{color:var(--muted);border:0;background:transparent}
+body #quietMoment button[aria-pressed=true]{color:var(--user-accent)}
+body.has-reminder-hud:not(.settings-window) #island{background:var(--surface)!important}
+body.has-reminder-hud #notchReminder{font-family:var(--user-font);color:var(--text)}
+body #notchReminder button{border:0;background:var(--panel-2);color:var(--text);transition:background .24s,transform .18s}
+body #notchReminder button.primary{background:var(--user-accent);color:var(--on-user-accent);border:0}
+body #notchReminder button:active{transform:scale(.95)}
+body #notchReminder input,body #notchReminder select{border:0;outline:0;background:var(--panel);color:var(--text);transition:background .24s}
+body #notchReminder input:focus,body #notchReminder select:focus{outline:0;background:var(--panel-2)}
+body #notchReminder .reminder-copy small,body #notchReminder .notch-snooze,body #notchReminder .notch-duration,body #notchReminder .notch-pages,body #notchTimerHint{color:var(--muted)}
+body #notchReminder .reminder-art,body #notchTimer{color:var(--user-accent)}
+body #notchReminder .notch-progress{background:var(--panel-2)}body #notchReminder .notch-progress i{background:var(--user-accent)}
+body.has-quote-hud:not(.settings-window) #island::before,body.has-reminder-hud:not(.settings-window) #island::before{opacity:1!important;display:block!important}
+body.has-reminder-hud:not(.settings-window) #island{animation:auxiliary-enter .52s cubic-bezier(.18,.85,.25,1) both}
+body.has-reminder-hud.reminder-leaving:not(.settings-window) #island{animation:auxiliary-leave .32s cubic-bezier(.4,0,.8,.2) both}
+/* A global dictation session replaces the open panel even while pinned. */
+body.has-voice-hud:not(.settings-window) #island>#body{display:none!important}
+body.has-voice-hud:not(.settings-window) #island>header>*:not(#voiceHud){display:none!important}
+body.has-voice-hud:not(.settings-window) #island{height:38px!important;min-height:38px!important;max-height:38px!important}
+@keyframes auxiliary-enter{from{opacity:0;transform:translateX(-50%) translateY(-30px) scale(.94)}to{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+@keyframes auxiliary-leave{from{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}to{opacity:0;transform:translateX(-50%) translateY(-30px) scale(.94)}}
+@media(prefers-reduced-motion:reduce){body.has-reminder-hud:not(.settings-window) #island{animation:none}}
+body[data-motion=off].has-reminder-hud:not(.settings-window) #island{animation:none}

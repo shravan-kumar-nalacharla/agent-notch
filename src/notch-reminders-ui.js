@@ -4,6 +4,13 @@
   const api=window.island;let current,viewKey='',snapshot,working=false,voiceSuppressed=false,taskSuppressed=false,interactiveSuppressed=document.body.classList.contains('expanded'),lastVisible;const acknowledged=new Set();
   const pending=document.createElement('button');pending.id='pendingReminders';pending.hidden=true;pending.type='button';pending.setAttribute('aria-label','Open pending reminders');pending.title='Open pending reminders';const mic=document.getElementById('microphonePrivacy');mic.before(pending);pending.onclick=()=>call('open',{section:'notifications'}).catch(error=>window.islandShowError?.(error.message));
   const panel=document.createElement('section');panel.id='notchReminder';panel.setAttribute('aria-label','Reminder');panel.hidden=true;document.getElementById('island').append(panel);
+  let hideTimer;
+  function present(visible){
+    if(visible===lastVisible)return;const wasVisible=lastVisible;lastVisible=visible;clearTimeout(hideTimer);
+    if(visible){document.body.classList.remove('reminder-leaving');panel.hidden=false;document.body.classList.add('has-reminder-hud');api.setReminderHud(true);return;}
+    const finish=()=>{if(lastVisible)return;panel.hidden=true;document.body.classList.remove('has-reminder-hud','reminder-leaving');api.setReminderHud(false);window.dispatchEvent(new Event('island:layout-change'));};
+    if(wasVisible&&!voiceSuppressed&&!taskSuppressed&&!interactiveSuppressed&&document.body.dataset.motion!=='off'&&!matchMedia('(prefers-reduced-motion: reduce)').matches){document.body.classList.add('reminder-leaving');hideTimer=setTimeout(finish,320);}else finish();
+  }
   const filters=document.createElementNS('http://www.w3.org/2000/svg','svg');filters.setAttribute('width','0');filters.setAttribute('height','0');filters.setAttribute('aria-hidden','true');
   // Runtime white key keeps the original GIF decoder, frame timing and loop intact.
   filters.innerHTML='<defs><filter id="notch-white-key" color-interpolation-filters="sRGB"><feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 10 10 10 0 -29" result="white"/><feComposite in="SourceGraphic" in2="white" operator="out"/></filter></defs>';document.body.append(filters);
@@ -12,7 +19,7 @@
   const button=(action,label,primary=false)=>`<button type="button" data-reminder-action="${action}" ${primary?'class="primary"':''}>${escape(t(label))}</button>`;
   const time=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
   async function call(op,value={}){const result=await api.productivity(op,value);if(!result.ok)throw new Error(result.error);return result.value;}
-  function render(value){snapshot=value;const available=value.cards||[],pendingCount=Math.max(available.length,value.pendingCount||0);pending.hidden=!interactiveSuppressed||pendingCount===0;pending.textContent='♧ '+Math.min(99,pendingCount)+(pendingCount>99?'+':'');const cards=(voiceSuppressed||taskSuppressed||interactiveSuppressed)?[]:available;current=cards.find(c=>c.id===value.selected)||cards[0];const visible=!!current;panel.hidden=!visible;document.body.classList.toggle('has-reminder-hud',visible);if(visible!==lastVisible){lastVisible=visible;api.setReminderHud(visible);}window.dispatchEvent(new Event('island:layout-change'));
+  function render(value){snapshot=value;const available=value.cards||[],pendingCount=Math.max(available.length,value.pendingCount||0);pending.hidden=!interactiveSuppressed||pendingCount===0;pending.textContent='♧ '+Math.min(99,pendingCount)+(pendingCount>99?'+':'');const cards=(voiceSuppressed||taskSuppressed||interactiveSuppressed)?[]:available;current=cards.find(c=>c.id===value.selected)||cards[0];const visible=!!current;present(visible);window.dispatchEvent(new Event('island:layout-change'));
     if(!visible){if(viewKey&&!voiceSuppressed&&!taskSuppressed&&!interactiveSuppressed)window.dispatchEvent(new Event('island:reminder-closed'));viewKey='';return;}
     const key=[current.id,current.phase,current.asset].join(':');
     if(key!==viewKey){viewKey=key;const water=current.kind==='water',timed=['book','course','workout'].includes(current.kind)&&!current.rest;
@@ -38,3 +45,4 @@
   api.onVisibility?.(visible=>{if(visible&&snapshot)render(snapshot);});
   api.onNotch(render);call('notch:get').then(render).catch(()=>{});window.NotchReminderUI={get current(){return current;}};
 })();
+

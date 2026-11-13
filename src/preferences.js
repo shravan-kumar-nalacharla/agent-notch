@@ -31,18 +31,12 @@
       <label>Your name<input id="profileName" maxlength="50" placeholder="How should Agent Notch address you?"></label>
       ${choose('islandShape', 'Shape', [['notch', 'Dynamic Notch'], ['corner', 'Corner Island'], ['pill', 'Floating pill'], ['line', 'Minimal line']])}
       ${choose('islandTheme', 'Theme', [['system', 'Follow Windows'], ['dark', 'Dark'], ['light', 'Light']])}
+      <div class="settings-card"><h4>Size, colors and typography</h4>${choose('islandPanelSize','Application size',[['auto','Automatic — fit each panel'],['compact','Compact'],['standard','Medium'],['spacious','Large']])}<div class="row"><label>Panel width (0 = automatic)<input id="islandPanelWidth" type="number" min="0" max="800" step="10" value="0"></label><label>Panel height (0 = automatic)<input id="islandPanelHeight" type="number" min="0" max="650" step="10" value="0"></label></div><label>Accent color<input id="islandAccentColor" type="color" value="#d6ed83"></label>${choose('islandUIFont','Interface font',[['system','Segoe UI — Windows default'],['arial','Arial — clean sans serif'],['serif','Georgia — serif'],['mono','Cascadia / Consolas — monospace']])}<small>The accent colors panel lighting, timer controls and selected actions.</small></div>
       ${check('pinIsland', 'Keep the island fully open')}
       ${choose('islandDisplay', 'Screen', [['primary', 'Primary screen'], ['cursor', 'Screen under pointer']])}
       ${check('islandMinimal', 'Use a thin line when closed')}
       ${check('islandMascot', 'Show the eyes companion')}
-      <h3 class="dock-heading">Agent face</h3>
-      ${check('faceEnabled', 'Show a blob companion instead of the eyes')}
-      <label>Blob seed<input id="faceSeed" maxlength="80" placeholder="Any name or phrase"></label>
-      ${choose('faceShape', 'Blob shape', [['organic', 'Organic'], ['round', 'Round'], ['boxy', 'Boxy'], ['capsule', 'Capsule'], ['nub', 'Nub'], ['cloud', 'Cloud'], ['droplet', 'Droplet'], ['hexagon', 'Hexagon'], ['sun', 'Sun'], ['triangle', 'Triangle']])}
-      <label>Hue <span id="faceHueValue">165</span><input id="faceHue" type="range" min="0" max="360" step="1" value="165"></label>
-      ${choose('faceExpression', 'Expression', [['idle', 'Idle'], ['happy', 'Happy'], ['sad', 'Sad'], ['mad', 'Mad'], ['surprised', 'Surprised'], ['wink', 'Wink'], ['sleepy', 'Sleepy'], ['smug', 'Smug'], ['unsure', 'Unsure'], ['scared', 'Scared'], ['love', 'Love'], ['shy', 'Shy'], ['sick', 'Sick'], ['thinking', 'Thinking']])}
-      <div id="facePreview" class="face-preview" aria-label="Agent face preview"></div>
-      <small class="settings-hint">The blob replaces the two eyes in the notch. Click it for a small reaction. It never covers the status text or buttons.</small>
+
       ${check('islandFullscreen', 'Hide while another app is full screen')}
       ${check('islandAutoClose', 'Close when the pointer leaves')}
       ${check('islandStartup', 'Start with Windows')}
@@ -76,6 +70,7 @@
   $('islandGroup').addEventListener('change', event => {if(event.target.matches('[data-favorite]') && document.querySelectorAll('[data-favorite]:checked').length>8){event.target.checked=false;$('settingsSaveStatus').textContent='Choose up to eight extra shortcuts.';}});
   window.islandSettingsDirty=false;window.islandSettingsRevision=0;
   $('settings').addEventListener('input', () => {window.islandSettingsDirty=true;window.islandSettingsRevision++;$('settingsSaveStatus').textContent = 'Unsaved changes';savebar.classList.remove('saved');window.islandUpdateVoiceReadiness?.();});
+  $('islandPanelSize').addEventListener('change',()=>{$('islandPanelWidth').value=0;$('islandPanelHeight').value=0;window.islandAstryx?.scan();});
   const favoriteTools = [['media','Media'],['water','Water'],['shelf','Shelf'],['todo','Tasks'],['clips','Clipboard'],['reminders','Reminders'],['mirror','Mirror'],['prompter','Teleprompter'],['system','System'],['dictionary','Dictionary'],['snippets','Snippets'],['history','History'],['meetings','Meetings'],['projects','Projects'],['weather','Weather'],['calendar','Calendar']];
   $('islandGroup').insertAdjacentHTML('beforeend', '<h3 class="dock-heading">Bottom menu shortcuts</h3><small>Home, chat, notes, Focus Time, Agents and Settings stay available. All features stays last. Choose up to eight extra shortcuts.</small><div class="favorite-options">' + favoriteTools.map(([id,label]) => `<label class="check"><input type="checkbox" data-favorite="${id}">${label}</label>`).join('') + '</div>');
 
@@ -83,7 +78,7 @@
     <h3 class="dock-heading">Compact activation</h3>
     ${choose('islandDensity','Card size',[['compact','Compact · 410 DIP'],['default','Default · 470 DIP'],['roomy','Roomy · 540 DIP']])}
     ${choose('islandMotion','Motion',[['standard','Standard'],['subtle','Subtle'],['off','Off']])}
-    <div class="field-grid two"><label>Idle line width (82–118 DIP)<input id="lineWidth" type="number" min="82" max="118"></label><label>Idle line thickness (2–3 DIP)<input id="lineHeight" type="number" min="2" max="3"></label><label>Line opacity (0.12–0.75)<input id="lineOpacity" type="number" min="0.12" max="0.75" step="0.05"></label><label>Hover intent (0–400 ms)<input id="hoverIntent" type="number" min="0" max="400"></label><label>Close grace (1000–5000 ms)<input id="closeGrace" type="number" min="1000" max="5000"></label></div>`);
+    <div class="field-grid two"><label>Idle line width (82–118 DIP)<input id="lineWidth" type="number" min="82" max="118"></label><label>Idle line thickness (2–3 DIP)<input id="lineHeight" type="number" min="2" max="3"></label><label>Line opacity (0.12–0.75)<input id="lineOpacity" type="number" min="0.12" max="0.75" step="0.05"></label><label>Hover intent (0–400 ms)<input id="hoverIntent" type="number" min="0" max="400"></label><label>Close delay (100–5000 ms)<input id="closeGrace" type="number" min="100" max="5000"></label></div>`);
   $('islandGroup').insertAdjacentHTML('beforeend',`<div class="settings-card"><h4>Sound feedback</h4>${check('uiSoundsEnabled','Enable all app sound effects')}${check('uiSoundsHover','Subtle button hover sounds')}<label>Sound effect volume<input id="uiSoundsVolume" type="range" min="0" max="100" step="5"></label><small>Turn this off to disable every app sound effect, including clicks, Enter, mute, no-speech/errors, timers and reminders. Spoken answers and music have their own volume. Silent during capture and spoken replies.</small></div>`);
   $('historyGroup').insertAdjacentHTML('beforebegin', `<section id="quietGroup" class="settings-group"><h3>Quiet Moments</h3><small>Curated offline thoughts stay inside the open island. Paused during voice, focus and Do not disturb.</small>${check('quietEnabled','Enable Quiet Moments')}${check('quietDnd','Do not disturb')}${check('quietAllDay','Show throughout the day')}${choose('quietCategory','Category',[['mixed','Mixed'],['calm','Calm'],['focus','Focus'],['motivation','Motivation'],['philosophy','Philosophy']])}<div class="field-grid two">${[['quietMorningStart','Morning from',6],['quietMorningEnd','Morning until',11],['quietEveningStart','Evening from',17],['quietEveningEnd','Evening until',22],['quietCap','Thoughts per day',8],['quietCooldown','Average interval in minutes',45]].map(([id,label,value])=>`<label>${label}<input id="${id}" type="number" value="${value}"></label>`).join('')}</div><small id="quietFavorites"></small></section>`);
   $('providerAdvancedOptions').innerHTML=`<div id="deepseekOptions" hidden><small>Official DeepSeek API. Flash is the default; use Pro deliberately for more complex requests. Speech and screen capture use separate providers.</small><label>Model presets<select id="deepseekPreset"><option value="deepseek-flash">DeepSeek Flash</option><option value="deepseek-v4-pro">DeepSeek V4 Pro</option></select></label>${check('deepseekThinking','Enable thinking for typed chat')}${check('deepseekStream','Stream typed chat replies')}<small id="providerUsage">No token usage recorded yet.</small><button type="button" id="deepseekPricing">Official models & pricing</button></div>`;
@@ -93,9 +88,9 @@
   $('lyricsDiagnostics').onclick=async()=>{const r=await api.desktop('lyrics:diagnostics');$('lyricsDiagnosticsOutput').textContent=r.ok?JSON.stringify(r.value||{status:'No lookup yet'},null,2):r.error;};
   $('lyricsNetwork').onclick=async()=>{$('lyricsDiagnosticsOutput').textContent='Testing…';const r=await api.desktop('lyrics:network-test');$('lyricsDiagnosticsOutput').textContent=r.ok?JSON.stringify(r.value,null,2):r.error;};
   $('voiceGroup').insertAdjacentHTML('afterbegin', `<div class="group-heading"><h3>Your companion</h3><small>The wake name uses the installed Windows recognizer locally. It listens only when enabled. Cloud voice uses your selected provider. Mute stops the wake recognizer; unmute restores the saved listening mode.</small></div><label>Companion name<input id="companionName" maxlength="30" placeholder="Cutie"></label>${check('wakeEnabled','Listen for hey + companion name')}${choose('companionTts','Reply voice engine',[['sarvam','Sarvam Bulbul — natural Indian voice'],['groq','Groq Orpheus — natural voice'],['system','Installed Windows voice — offline']])}${choose('companionVoice','Natural voice',['hannah','diana','autumn','austin','daniel','troy'].map(v=>[v,v]))}<label>Installed voice<select id="companionSystemVoice"><option value="">Best available installed voice</option></select></label><div class="row"><button type="button" id="voicePreview">Save & hear voice</button><button type="button" id="wakeCheck">Wake engine status</button></div><small id="companionStatus"></small>`);
-  $('voiceGroup').insertAdjacentHTML('afterbegin', `<div class="group-heading"><h3>Voice conversation</h3><small>Standard uses your selected transcription and assistant providers. Gemini Live streams audio to Google only when you select it. Tap the microphone or press Escape to stop. Use headphones to prevent speaker echo.</small></div>${choose('chatEngine','Conversation engine',[['standard','Standard — Groq by default'],['sarvam','Sarvam — speech, answers & natural voice'],['gemini_live','Gemini Live — optional Google voice']])}<p id="geminiLiveStatus" role="status"></p><div class="row"><button type="button" id="geminiKeySetup">Get a Gemini API key</button><button type="button" id="geminiKeySettings">Enter Gemini key</button></div><small>Save the Gemini key under AI & API keys. Allow cloud audio and enable Read assistant answers aloud for spoken Live replies. Standard chat and global dictation keep their selected speech provider. Windows task actions are available in both conversation modes.</small>`);
+  $('voiceGroup').insertAdjacentHTML('afterbegin', `<div class="group-heading"><h3>Voice conversation</h3><small>Standard uses your selected transcription and assistant providers. Gemini Live streams audio to Google only when you select it. Tap the microphone or press Escape to stop. Use headphones to prevent speaker echo.</small></div>${choose('chatEngine','Conversation mode',[['standard','Selected voice provider'],['sarvam','Sarvam — speech, answers & natural voice'],['gemini_live','Gemini Live — optional Google voice']])}<p id="geminiLiveStatus" role="status"></p><div class="row"><button type="button" id="geminiKeySetup">Get a Gemini API key</button><button type="button" id="geminiKeySettings">Enter Gemini key</button></div><small>Save the Gemini key under AI & API keys. Allow cloud audio and enable Read assistant answers aloud for spoken Live replies. Standard chat and global dictation keep their selected speech provider. Windows task actions are available in both conversation modes.</small>`);
   $('voiceGroup').insertAdjacentHTML('afterbegin','<label>Current book or topic (optional)<textarea id="readingContext" maxlength="1000" rows="2" placeholder="For example: Thus Spoke Zarathustra; explain older English in modern English"></textarea></label><small>This saved context is sent to your selected voice provider when you ask a question. Recent voice questions are remembered in memory for 30 minutes; New conversation clears them.</small>');
-  $('voiceGroup').insertAdjacentHTML('afterbegin',`${choose('sarvamVoice','Sarvam natural voice',[['priya','Priya'],['shubh','Shubh'],['ishita','Ishita'],['ratan','Ratan'],['neha','Neha'],['ritu','Ritu']])}<p id="sarvamStatus" role="status"></p><div id="sarvamActions" class="row"><button type="button" id="sarvamKeySettings">Enter Sarvam key</button><button type="button" id="sarvamKeySetup">Get a Sarvam API key</button><button type="button" id="enableSarvamPtt">Use Sarvam with push-to-talk</button></div>`);
+  $('voiceGroup').insertAdjacentHTML('afterbegin',`${choose('sarvamVoice','Sarvam natural voice',window.NotchProviders.sarvamVoices.map(v=>[v.id,v.label]))}<p id="sarvamStatus" role="status"></p><div id="sarvamActions" class="row"><button type="button" id="sarvamKeySettings">Enter Sarvam key</button><button type="button" id="sarvamKeySetup">Get a Sarvam API key</button><button type="button" id="enableSarvamPtt">Use Sarvam with push-to-talk</button></div>`);
   $('sarvamKeySetup').onclick=()=>api.openSarvamSetup();
   $('sarvamKeySettings').onclick=()=>{document.querySelector('[data-settings-target="providerGroup"]').click();$('key-sarvam').scrollIntoView({block:'center'});$('key-sarvam').focus();};
   $('enableSarvamPtt').onclick=async()=>{$('chatEngine').value='sarvam';$('companionTts').value='sarvam';$('listeningMode').value='ptt';$('speak').checked=true;$('chatEngine').dispatchEvent(new Event('change',{bubbles:true}));if(!$('cloudAudioConsent').checked){$('sarvamStatus').textContent='Allow cloud audio below before enabling Sarvam push-to-talk.';return;}const saved=await window.islandSaveSettings(),status=await api.get();$('sarvamStatus').textContent=saved?'Settings saved. '+(status.value?.voiceStatus?.message||'Check voice readiness above.'):'Not saved. Check the save status.';};
@@ -106,7 +101,7 @@
   $('voiceGroup').insertAdjacentHTML('beforeend', `${check('readTypedReplies','Also read typed chat replies aloud')}<button id="groqVoiceSetup" type="button">Groq voice setup / model terms</button><small>Installed Windows voice works offline. Groq voice may need a separate model-access or terms step in your Groq account. Typed chat stays silent unless explicitly enabled above.</small>`);
   $('groqVoiceSetup').onclick=()=>api.openVoiceSetup();
   function installedVoices(){const selected=$('companionSystemVoice').value;$('companionSystemVoice').replaceChildren(new Option('Best available installed voice',''));for(const voice of speechSynthesis.getVoices())$('companionSystemVoice').add(new Option(voice.name+' · '+voice.lang,voice.voiceURI));$('companionSystemVoice').value=selected;}
-  installedVoices();speechSynthesis.addEventListener('voiceschanged',installedVoices);
+  if(!new URLSearchParams(location.search).has('settings'))installedVoices();else document.addEventListener('click',event=>{if(event.target.closest('[data-settings-target=voiceGroup]'))installedVoices();});speechSynthesis.addEventListener('voiceschanged',installedVoices);
   $('voicePreview').onclick=async()=>{if(!await window.islandSaveSettings())return;try{$('companionStatus').textContent='Preparing voice…';await window.islandSpeak("Hi. I'm "+$('companionName').value+'. How can I help?',{preview:true});$('companionStatus').textContent='Voice preview complete.';}catch(e){$('companionStatus').textContent=e.message;}};
   $('wakeCheck').onclick=async()=>{const r=await api.companionCheck();$('companionStatus').textContent=r.ok?(r.value.enabled?'Listening for hey '+r.value.name:'Wake name is off')+' · Recognizers: '+(r.value.recognizers.join(', ')||'none'):r.error;};
   $('aboutGroup').insertAdjacentHTML('beforeend', `<h3 class="dock-heading">Updates</h3><p id="updateState" role="status">Checking for updates…</p><div class="row"><button type="button" id="checkUpdates">Check for updates</button><button type="button" id="installUpdate" hidden>Restart and install</button></div><small>Updates come from the public Agent Notch release channel. Settings, encrypted keys and local data are kept. Restart waits while recording, capturing, using the terminal, editing unsaved settings or running a task.</small>`);
@@ -175,18 +170,11 @@
     }
   }
 
-  function facePreview(){
-    const el=$('facePreview');if(!el)return;
-    if(!window.AgentFace){el.textContent='Face preview is unavailable.';return;}
-    el.innerHTML=window.AgentFace.svg({seed:$('faceSeed')?.value||$('profileName')?.value||'Agent Notch',shape:$('faceShape').value,hue:+$('faceHue').value,expression:$('faceExpression').value,size:104});
-    $('faceHueValue').textContent=$('faceHue').value;
-  }
-  ['faceShape','faceHue','faceExpression','faceEnabled','faceSeed','profileName'].forEach(id=>$(id)?.addEventListener('input',facePreview));
   function load(state) {
     if (!state) return;
     const voice = state.voice || {};
     const appearance = state.appearance || {};window.islandLoadWindowRules?.(appearance);
-    $('islandDensity').value=appearance.density||'default';$('islandMotion').value=appearance.motion||'standard';$('lineWidth').value=appearance.lineWidthDip||100;$('lineHeight').value=appearance.lineHeightDip||2;$('lineOpacity').value=appearance.lineOpacity??.35;$('hoverIntent').value=appearance.hoverIntentMs??100;$('closeGrace').value=appearance.mouseleaveGraceMs??1000;
+    $('islandDensity').value=appearance.density||'default';$('islandMotion').value=appearance.motion||'standard';$('lineWidth').value=appearance.lineWidthDip||100;$('lineHeight').value=appearance.lineHeightDip||2;$('lineOpacity').value=appearance.lineOpacity??.35;$('hoverIntent').value=appearance.hoverIntentMs??100;$('closeGrace').value=appearance.mouseleaveGraceMs??300;
     const q=state.quietMoments||{};$('quietEnabled').checked=q.enabled!==false;$('quietDnd').checked=!!q.dnd;$('quietAllDay').checked=q.allDay!==false;$('quietCategory').value=q.category||'mixed';for(const [id,key,fallback]of [['quietMorningStart','morningStart',6],['quietMorningEnd','morningEnd',11],['quietEveningStart','eveningStart',17],['quietEveningEnd','eveningEnd',22],['quietCap','dailyCap',8],['quietCooldown','cooldownMinutes',45]])$(id).value=q[key]??fallback;
     $('deepseekThinking').checked=!!state.deepseek?.thinking;$('deepseekStream').checked=state.deepseek?.stream!==false;
     if(!$('visionProvider').options.length)for(const[p,config]of Object.entries(state.providers)){if(config.vision){const option=document.createElement('option');option.value=p;option.textContent=p;$('visionProvider').append(option);}}$('visionProvider').value=state.visionProvider||(state.providers[state.assistant]?.vision?state.assistant:state.speech);
@@ -206,10 +194,10 @@
     $('profileName').value = state.profileName || '';
     $('islandShape').value = appearance.shape || 'notch';
     $('islandTheme').value = appearance.theme || 'system';
+    $('islandPanelSize').value=appearance.panelSize||'auto';$('islandPanelWidth').value=appearance.panelWidth||0;$('islandPanelHeight').value=appearance.panelHeight||0;$('islandAccentColor').value=appearance.accentColor||'#d6ed83';$('islandUIFont').value=appearance.uiFont||'system';
     $('pinIsland').checked = !!appearance.pinned;
     $('islandMinimal').checked = !!appearance.minimal;
     $('islandMascot').checked = appearance.mascot !== false;
-    const face=appearance.face||{};$('faceEnabled').checked=!!face.enabled;const legacyShape={'squircle':'organic'}[face.shape]||face.shape,legacyExpression={'curious':'thinking'}[face.expression]||face.expression;$('faceSeed').value=face.seed||$('profileName')?.value||'Agent Notch';$('faceShape').value=legacyShape||'organic';$('faceHue').value=face.hue??165;$('faceExpression').value=legacyExpression||'idle';facePreview();
     $('islandFullscreen').checked = appearance.hideFullscreen !== false;
     $('islandAutoClose').checked = appearance.autoClose !== false;
     $('islandStartup').checked = !!state.autostart;
@@ -244,12 +232,12 @@
       display: $('islandDisplay').value,
       shape: $('islandShape').value,
       theme: $('islandTheme').value,
+      accentColor:$('islandAccentColor').value,uiFont:$('islandUIFont').value,panelSize:$('islandPanelSize').value,panelWidth:+$('islandPanelWidth').value,panelHeight:+$('islandPanelHeight').value,
       pinned: $('pinIsland').checked,
       minimal: $('islandMinimal').checked,
       mascot: $('islandMascot').checked,
       hideFullscreen: $('islandFullscreen').checked,
-      autoClose: $('islandAutoClose').checked,
-      face:{enabled:$('faceEnabled').checked,seed:$('faceSeed').value.slice(0,80),shape:$('faceShape').value,hue:+$('faceHue').value,expression:$('faceExpression').value}
+      autoClose: $('islandAutoClose').checked
     },
     autostart: $('islandStartup').checked
     ,
