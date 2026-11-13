@@ -29,6 +29,7 @@ exports.run=async function({app,win,screen,getSettingsWindow,native,widgets,geom
   if(process.argv.includes('--resource-profile'))return require('./smoke-resource-usage.cjs')({app,win,getSettingsWindow,native,out});
   if(process.argv.includes('--polish-check'))return require('./smoke-polish.cjs')({app,win,getSettingsWindow,out,saveSnapshot});
   if(process.argv.includes('--surfaces-check'))return require('./smoke-surfaces.cjs')({app,win,getSettingsWindow,widgets,state,out,saveSnapshot});
+  if(process.argv.includes('--quick-access-check'))return require('./smoke-quick-access.cjs')({app,win,out,saveSnapshot});
   if(process.argv.includes('--notch-reminder-check'))return require('./smoke-notch.cjs')({win,widgets,getSettingsWindow,out,saveSnapshot});
   if(process.argv.includes('--notch-pointer-check'))return require('./smoke-notch-pointer.cjs')({app,win,screen,widgets,geometry,out,saveSnapshot});
   if(process.argv.includes('--privacy-check'))return require('./smoke-privacy.cjs')({app,win,getSettingsWindow,native,state,out,saveSnapshot});

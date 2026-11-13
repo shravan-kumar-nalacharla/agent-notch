@@ -1,5 +1,14 @@
 [
   {
+    "version": "0.38.1",
+    "date": "2026-11-13",
+    "title": "Looping Quick Access",
+    "notes": [
+      "Mouse-wheel and trackpad scrolling move Quick Access horizontally in a continuous loop.",
+      "The add button stays visible outside the scrolling items. Scroll snapping no longer blocks gradual movement."
+    ]
+  },
+  {
     "version": "0.38.0",
     "date": "2026-11-13",
     "title": "Shared themes, readable accents and clear dictation",

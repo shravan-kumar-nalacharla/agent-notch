@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const $ = id => document.getElementById(id);
 const settingsMode = new URLSearchParams(location.search).has('settings');
@@ -530,14 +530,15 @@ window.island.onVoice?.(event => {
   }
 });
 
-let homeQuickSeq=0;
+let homeQuickSeq=0,homeQuickKey='';
 function quickName(path){return String(path||'').split(/[\\/]/).filter(Boolean).pop()||'Item';}
 async function renderHomeQuick(){
   const grid=$('homeQuickGrid');if(!grid)return;const serial=++homeQuickSeq;
   try{
     const listReply=await window.island.quick('get');const paths=listReply?.ok===false?[]:(listReply?.value??listReply??[]);
+    const key=JSON.stringify(paths);if(key===homeQuickKey&&$('homeQuick').querySelector(':scope > .quick-drop-add'))return;
     const iconReply=paths.length?await window.island.quick('icons'):null;const icons=iconReply?.ok===false?[]:(iconReply?.value??iconReply??[]);
-    if(serial!==homeQuickSeq)return;grid.replaceChildren();
+    if(serial!==homeQuickSeq)return;grid.replaceChildren();$('homeQuick').querySelector(':scope > .quick-drop-add')?.remove();
     for(const [index,item] of icons.entries()){
       const cell=document.createElement('div');cell.className='quick-cell'+(item.unavailable?' unavailable':'');cell.title=item.path;cell.draggable=true;cell.dataset.index=String(index);cell.dataset.path=item.path;
       const button=document.createElement('button');button.type='button';button.className='quick-icon';button.setAttribute('aria-label',item.name||quickName(item.path));
@@ -549,15 +550,14 @@ async function renderHomeQuick(){
       cell.ondragstart=event=>{event.dataTransfer.setData('text/x-agent-notch-quick-index',String(index));event.dataTransfer.effectAllowed='move';};cell.ondragover=event=>{if(event.dataTransfer.types.includes('text/x-agent-notch-quick-index'))event.preventDefault();};cell.ondrop=async event=>{const from=Number(event.dataTransfer.getData('text/x-agent-notch-quick-index'));if(Number.isInteger(from)){event.preventDefault();await window.island.quick('reorder',{from,to:index});renderHomeQuick();}};
       cell.append(button,remove);grid.append(cell);
     }
-    const add=document.createElement('button');add.type='button';add.className='quick-drop-add'+(icons.length?'':' is-empty');add.title='Add files, folders or apps';add.setAttribute('aria-label',icons.length?'Add to Quick Access':'Add to Quick Access or drop your files here');const plus=document.createElement('span');plus.textContent='+';plus.setAttribute('aria-hidden','true');add.append(plus);if(!icons.length){const hint=document.createElement('small');hint.textContent='Drop your files here';add.append(hint);}add.onclick=()=>window.island.quick('menuAdd').then(reply=>{if(!reply.ok)showError(reply);});grid.append(add);
+    const add=document.createElement('button');add.type='button';add.className='quick-drop-add'+(icons.length?'':' is-empty');add.title='Add files, folders or apps';add.setAttribute('aria-label',icons.length?'Add to Quick Access':'Add to Quick Access or drop your files here');const plus=document.createElement('span');plus.textContent='+';plus.setAttribute('aria-hidden','true');add.append(plus);if(!icons.length){const hint=document.createElement('small');hint.textContent='Drop your files here';add.append(hint);}add.onclick=()=>window.island.quick('menuAdd').then(reply=>{if(!reply.ok)showError(reply);});$('homeQuick').append(add);quickScroller.refresh();
+    homeQuickKey=key;
   }catch(error){if(serial===homeQuickSeq)grid.replaceChildren();}
 }
 $('homeQuick')?.addEventListener('dragover',event=>{if(event.dataTransfer?.types?.includes('Files')){event.preventDefault();$('homeQuick').classList.add('drag-over');}});
 $('homeQuick')?.addEventListener('dragleave',()=>$('homeQuick').classList.remove('drag-over'));
 $('homeQuick')?.addEventListener('drop',()=>$('homeQuick').classList.remove('drag-over'));
-let quickScrollTarget=0,quickScrollFrame=0;
-$('homeQuickGrid')?.addEventListener('scroll',()=>{if(!quickScrollFrame)quickScrollTarget=$('homeQuickGrid').scrollLeft;},{passive:true});
-$('homeQuickGrid')?.addEventListener('wheel',event=>{const grid=$('homeQuickGrid');if(grid.scrollWidth<=grid.clientWidth+1)return;if(Math.abs(event.deltaY)<Math.abs(event.deltaX))return;event.preventDefault();const delta=Math.sign(event.deltaY)*Math.min(110,Math.abs(event.deltaY)*.85);quickScrollTarget=Math.max(0,Math.min(grid.scrollWidth-grid.clientWidth,quickScrollTarget+delta));if(state?.appearance?.motion==='off'){grid.scrollLeft=quickScrollTarget;return;}if(quickScrollFrame)return;const frame=()=>{const gap=quickScrollTarget-grid.scrollLeft;if(Math.abs(gap)<1){grid.scrollLeft=quickScrollTarget;quickScrollFrame=0;return;}grid.scrollLeft+=Math.sign(gap)*Math.min(24,Math.max(1,Math.abs(gap)*.2));quickScrollFrame=requestAnimationFrame(frame);};quickScrollFrame=requestAnimationFrame(frame);},{passive:false});
+const quickScroller=window.createQuickAccessScroll($('homeQuickGrid'),{reduced:()=>state?.appearance?.motion==='off'||matchMedia('(prefers-reduced-motion: reduce)').matches});
 function applyState(value) {
   state = value;
   const appearance = value.appearance || {};
@@ -830,5 +830,3 @@ result(window.island.get()).then(value => {
     tab('home');
   }
 }).catch(showError);
-
-

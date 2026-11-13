@@ -1,4 +1,9 @@
 /* Auxiliary surfaces use the same saved palette as the notch. */
+body #homeQuick{display:flex;align-items:center;gap:10px}
+body #homeQuickGrid{flex:1;min-width:0;scroll-snap-type:none;scroll-behavior:auto;overflow-anchor:none}
+body #homeQuickGrid .quick-cell{scroll-snap-align:none}
+body #homeQuick>.quick-drop-add{flex-shrink:0}
+body #homeQuick:has(>.quick-drop-add.is-empty) #homeQuickGrid{display:none}
 body .astryx-field .astryx-switch[data-checked=checked]{background:var(--user-accent)!important}
 body.has-quote-hud #quietMoment[data-mode=automatic] #quietText{color:var(--text)}
 body.settings-window{background:var(--surface);color:var(--text);font-family:var(--user-font);--settings-muted:var(--muted)}
